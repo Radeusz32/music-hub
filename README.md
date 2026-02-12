@@ -1,96 +1,136 @@
-- Blade (this project) version: **[github.com/nunomaduro/laravel-starter-kit](https://github.com/nunomaduro/laravel-starter-kit)**
-- Inertia & React version: **[github.com/nunomaduro/laravel-starter-kit-inertia-react](https://github.com/nunomaduro/laravel-starter-kit-inertia-react)**
+# Laravel Sail – Uruchomienie projektu lokalnie
+
+Projekt oparty o Laravel uruchamiany lokalnie przy użyciu Docker + Laravel Sail.
+Całe środowisko (PHP, MySQL, Node) działa w kontenerach.
+
+============================================================
+
+KROK 0 – WymAGANIA
+
+Na komputerze muszą być zainstalowane:
+- Docker
+- Docker Compose (plugin)
+- Git
+
+Sprawdzenie:
+docker --version
+docker compose version
+git --version
+
+============================================================
+
+KROK 1 – Klonowanie projektu
+
+git clone <URL_REPOZYTORIUM>
+cd <NAZWA_PROJEKTU>
+
+============================================================
+
+KROK 2 – Konfiguracja pliku .env
+
+Skopiuj plik środowiskowy:
+
+cp .env.example .env
+
+Upewnij się, że plik .env zawiera co najmniej:
+
+APP_NAME=Laravel
+APP_ENV=local
+APP_KEY=
+APP_DEBUG=true
+APP_URL=http://localhost
+
+APP_PORT=80
+
+DB_CONNECTION=mysql
+DB_HOST=mysql
+DB_PORT=3306
+DB_DATABASE=laravel
+DB_USERNAME=sail
+DB_PASSWORD=password
+
+WWWUSER=1000
+WWWGROUP=1000
+
+============================================================
+
+KROK 3 – Uruchomienie kontenerów Docker piewszy raz 
+
+docker run --rm \
+  -u "$(id -u):$(id -g)" \
+  -v "$(pwd):/var/www/html" \
+  -w /var/www/html \
+  laravelsail/php83-composer \
+  composer install --ignore-platform-reqs
+
+KROK 4 – Uruchomienie kontenerów  
+./vendor/bin/sail up -d
 
 
-<p align="center">
-    <a href="https://youtu.be/VhzP0XWGTC4" target="_blank">
-        <img src="/art/banner.png" alt="Overview Laravel Starter Kit" style="width:70%;">
-    </a>
-</p>
+KROK 5 – Wygenerowanie klucza aplikacji
 
-<p>
-    <a href="https://github.com/nunomaduro/laravel-starter-kit/actions"><img src="https://github.com/nunomaduro/laravel-starter-kit/actions/workflows/tests.yml/badge.svg" alt="Build Status"></a>
-    <a href="https://packagist.org/packages/nunomaduro/laravel-starter-kit"><img src="https://img.shields.io/packagist/dt/nunomaduro/laravel-starter-kit" alt="Total Downloads"></a>
-    <a href="https://packagist.org/packages/nunomaduro/laravel-starter-kit"><img src="https://img.shields.io/packagist/v/nunomaduro/laravel-starter-kit" alt="Latest Stable Version"></a>
-    <a href="https://packagist.org/packages/nunomaduro/laravel-starter-kit"><img src="https://img.shields.io/packagist/l/nunomaduro/laravel-starter-kit" alt="License"></a>
-</p>
+./vendor/bin/sail artisan key:generate
 
-**Laravel Starter Kit** is an ultra-strict, type-safe [Laravel](https://laravel.com) skeleton engineered for developers who refuse to compromise on code quality. This opinionated starter kit enforces rigorous development standards through meticulous tooling configuration and architectural decisions that prioritize type safety, immutability, and fail-fast principles.
+============================================================
 
-## Why This Starter Kit?
+KROK 6 – Migracje bazy danych i seederow
 
-Modern PHP has evolved into a mature, type-safe language, yet many Laravel projects still operate with loose conventions and optional typing. This starter kit changes that paradigm by enforcing:
+./vendor/bin/sail artisan migrate:fresh --seed
 
-- **100% Type Coverage**: Every method, property, and parameter is explicitly typed
-- **Zero Tolerance for Code Smells**: Rector and PHPStan at maximum strictness catch issues before they become bugs
-- **Immutable-First Architecture**: Data structures favor immutability to prevent unexpected mutations
-- **Fail-Fast Philosophy**: Errors are caught at compile-time, not runtime
-- **Automated Code Quality**: Pre-configured tools ensure consistent, pristine code across your entire team
-- **Just Better Laravel Defaults**: Thanks to **[Essentials](https://github.com/nunomaduro/essentials)** / strict models, auto eager loading, immutable dates, and more...
 
-This isn't just another Laravel boilerplate—it's a statement that PHP applications can and should be built with the same rigor as strongly-typed languages like Rust or TypeScript.
+============================================================
 
-## Getting Started
+KROK 7 – Instalacja zależności frontendowych
 
-> **Requires [PHP 8.4+](https://php.net/releases/)**.
+./vendor/bin/sail npm install
 
-Create your type-safe Laravel application using [Composer](https://getcomposer.org):
+============================================================
 
-```bash
-composer create-project nunomaduro/laravel-starter-kit --prefer-dist example-app
-```
+KROK 8 – Uruchomienie Vite (frontend)
 
-### Initial Setup
+./vendor/bin/sail npm run dev
 
-Navigate to your project and complete the setup:
 
-```bash
-cd example-app
+============================================================
 
-# Setup project
-composer setup
+KROK 9 – Dostęp do aplikacji
 
-# Start the development server
-composer dev
-```
+Aplikacja:
+http://localhost
 
-### Optional: Browser Testing Setup
+PhpMyAdmin
+http://localhost:8080
+============================================================
 
-If you plan to use Pest's browser testing capabilities:
+PRZYDATNE KOMENDY
 
-```bash
-npm install playwright
-npx playwright install
-```
+./vendor/bin/sail up -d
+./vendor/bin/sail down
+./vendor/bin/sail artisan
+./vendor/bin/sail tinker
+./vendor/bin/sail composer
+./vendor/bin/sail npm
 
-### Verify Installation
 
-Run the test suite to ensure everything is configured correctly:
+ZATRZYMANIE ŚRODOWISKA
 
-```bash
-composer test
-```
+./vendor/bin/sail down
 
-You should see 100% test coverage and all quality checks passing.
+Usunięcie kontenerów razem z bazą danych:
 
-## Available Tooling
+./vendor/bin/sail down -v
 
-### Development
-- `composer dev` - Starts Laravel server, queue worker, log monitoring, and Vite dev server concurrently
+============================================================
 
-### Code Quality
-- `composer lint` - Runs Rector (refactoring), Pint (PHP formatting), and Prettier (JS/TS formatting)
-- `composer test:lint` - Dry-run mode for CI/CD pipelines
+UWAGI KOŃCOWE
 
-### Testing
-- `composer test:type-coverage` - Ensures 100% type coverage with Pest
-- `composer test:types` - Runs PHPStan at level 9 (maximum strictness)
-- `composer test:unit` - Runs Pest tests with 100% code coverage requirement
-- `composer test` - Runs the complete test suite (type coverage, unit tests, linting, static analysis)
+- Projekt nie wymaga lokalnej instalacji PHP ani MySQL
+- Całość działa w Dockerze
+- DB_HOST musi być ustawione na "mysql"
+- Każdy krok wykonuj po kolei
 
-### Maintenance
-- `composer update:requirements` - Updates all PHP and NPM dependencies to latest versions
+============================================================
 
-## License
+LICENCJA
 
-**Laravel Starter Kit** was created by **[Nuno Maduro](https://x.com/enunomaduro)** under the **[MIT license](https://opensource.org/licenses/MIT)**.
+MIT
