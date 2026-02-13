@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Stancl\Tenancy\Database\Models\Domain;
-use Stancl\Tenancy\Database\Models\Tenant;
+use App\Models\Central\Tenant;
+use App\Models\Central\Domain;
 
 return [
     'tenant_model' => Tenant::class,
@@ -148,7 +148,7 @@ return [
      * either using the Redis facade or by injecting it as a dependency.
      */
     'redis' => [
-        'prefix_base' => 'tenant', // Each key in Redis will be prepended by this prefix_base, followed by the tenant id.
+        'prefix_base' => 'tenant_', // Each key in Redis will be prepended by this prefix_base, followed by the tenant id.
         'prefixed_connections' => [ // Redis connections whose keys are prefixed, to separate one tenant's keys from another.
             // 'default',
         ],
@@ -193,7 +193,7 @@ return [
      * Parameters used by the tenants:seed command.
      */
     'seeder_parameters' => [
-        '--class' => 'DatabaseSeeder', // root seeder class
+        '--class' => Database\Seeders\TenantDatabaseSeeder::class, // root seeder class
         // '--force' => true, // This needs to be true to seed tenant databases in production
     ],
 ];
