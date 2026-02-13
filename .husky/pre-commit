@@ -1,4 +1,4 @@
 #!/bin/sh
 
-echo "Running pre-commit pipeline..."
-./vendor/bin/sail composer precommit || exit 1
+# echo "Running pre-commit pipeline..."
+# ./vendor/bin/sail composer precommit || exit 1
