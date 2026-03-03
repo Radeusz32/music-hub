@@ -12,7 +12,9 @@ Route::middleware([
 ])
     ->group(function () {
 
-        Route::get('/', function () {
+        Route::redirect('/', '/dashboard');
+
+        Route::get('/dashboard', function () {
             return Inertia::render('Tenant/Dashboard');
         })->name('tenant.dashboard');
 

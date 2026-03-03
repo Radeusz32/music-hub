@@ -9,21 +9,22 @@
     "prepare": "husky"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.1.18",
+    "@tailwindcss/vite": "^4.2.1",
     "@vitejs/plugin-vue": "^6.0.4",
     "concurrently": "^9.2.1",
     "husky": "^9.1.7",
     "laravel-vite-plugin": "^2.1.0",
-    "npm-check-updates": "^19.3.2",
+    "npm-check-updates": "^19.6.3",
     "playwright": "^1.58.2",
     "prettier": "^3.8.1",
     "prettier-plugin-organize-imports": "^4.3.0",
     "prettier-plugin-tailwindcss": "^0.7.2",
-    "tailwindcss": "^4.1.18",
+    "tailwindcss": "^4.2.1",
     "vite": "^7.3.1"
   },
   "dependencies": {
-    "@inertiajs/vue3": "^2.3.14",
-    "vue": "^3.5.28"
+    "@inertiajs/vue3": "^2.3.17",
+    "vue": "^3.5.29",
+    "ziggy-js": "^2.6.1"
   }
 }
