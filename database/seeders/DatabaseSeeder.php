@@ -12,6 +12,7 @@ final class DatabaseSeeder extends Seeder
     {
         $this->call([
             CentralTenantSeeder::class,
+            
         ]);
     }
 }

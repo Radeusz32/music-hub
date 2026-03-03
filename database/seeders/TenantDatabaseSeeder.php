@@ -33,6 +33,6 @@ final class TenantDatabaseSeeder extends Seeder
             'password' => Hash::make('password'),
         ]);
 
-        $user->assignRole('owner');
+        
     }
 }
