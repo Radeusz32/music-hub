@@ -66,12 +66,13 @@ function logout() {
 
         <div class="p-4">
             <Button
+                type="button"
+                label="Wyloguj się"
+                icon="pi pi-sign-out"
+                :loading="logoutForm.processing"
                 @click="logout"
-                class="w-full py-2 rounded-md text-sm"
-                style="background: var(--surface-hover)"
-            >
-                Wyloguj się
-            </Button>
+                class="w-full justify-center rounded-[var(--border-radius)] px-4 py-2 text-sm font-medium transition"
+            />
         </div>
     </aside>
 </template>

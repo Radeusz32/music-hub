@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Central\Tenant;
+use Illuminate\Database\Seeder;
 
 final class CentralTenantSeeder extends Seeder
 {
@@ -14,7 +14,7 @@ final class CentralTenantSeeder extends Seeder
         $tenantSlug = 'music1';
         $baseDomain = config('app.base_domain');
 
-        $tenant = Tenant::create(); 
+        $tenant = Tenant::create();
 
         $tenant->domains()->create([
             'domain' => "{$tenantSlug}.{$baseDomain}",

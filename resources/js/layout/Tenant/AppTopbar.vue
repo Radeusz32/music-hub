@@ -40,7 +40,7 @@ function submitSearch() {
                 <input
                     v-model="searchForm.q"
                     type="text"
-                    placeholder="Search here..."
+                    placeholder="Wyszukaj..."
                     class="px-4 py-2 text-sm rounded-md focus:outline-none"
                     style="
                         background: var(--surface-ground);

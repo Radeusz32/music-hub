@@ -6,6 +6,4 @@ namespace App\Models\Central;
 
 use Stancl\Tenancy\Database\Models\Domain as BaseDomain;
 
-final class Domain extends BaseDomain
-{
-}
+final class Domain extends BaseDomain {}

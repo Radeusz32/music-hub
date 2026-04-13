@@ -31,8 +31,7 @@ const topProducts = computed(() => [
         <div class="dashboard">
             <!-- PAGE HEADER -->
             <div class="page-header">
-                <h1>SoundBase 🚀</h1>
-                <p>Welcome back.</p>
+                <p>Witaj ponownie, user</p>
             </div>
 
             <!-- STATS GRID -->

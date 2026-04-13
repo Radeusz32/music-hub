@@ -39,7 +39,35 @@ final class HandleInertiaRequests extends Middleware
     {
         return [
             ...parent::share($request),
-            //
+
+            'auth' => fn () => $this->resolveAuth($request),
+        ];
+    }
+
+    private function resolveAuth(Request $request): ?array
+    {
+        $user = $request->user();
+
+        if (! $user) {
+            return null;
+        }
+
+        return [
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+            ],
+
+            // jeśli używasz spatie/permission
+            // 'permissions' => $user->getAllPermissions()
+            //     ->pluck('name')
+            //     ->values(),
+
+            // jeśli masz features w jakiejś relacji
+            // 'features' => $user->features()
+            //     ->pluck('name')
+            //     ->values(),
         ];
     }
 }

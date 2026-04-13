@@ -40,3 +40,9 @@ rebuild:
 	docker volume prune -f
 	$(SAIL) up -d --build
 	$(SAIL) artisan optimize:clear
+
+cache-clear:
+	$(SAIL) php artisan optimize:clear
+	$(SAIL) php artisan route:clear
+	$(SAIL) php artisan config:clear
+	$(SAIL) php artisan cache:clear

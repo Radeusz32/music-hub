@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Models\Central\Tenant;
 use App\Models\Central\Domain;
+use App\Models\Central\Tenant;
 
 return [
     'tenant_model' => Tenant::class,

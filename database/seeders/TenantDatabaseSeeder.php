@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Models\Tenant\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use App\Models\Tenant\User;
 use Spatie\Permission\Models\Role;
 
 final class TenantDatabaseSeeder extends Seeder
@@ -33,6 +33,5 @@ final class TenantDatabaseSeeder extends Seeder
             'password' => Hash::make('password'),
         ]);
 
-        
     }
 }
