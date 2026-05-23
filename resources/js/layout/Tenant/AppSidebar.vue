@@ -33,7 +33,7 @@ function toggleGroup(label: string): void {
 
 <template>
     <aside
-        class="flex flex-col overflow-hidden transition-all duration-300"
+        class="fixed inset-y-0 left-0 z-40 flex flex-col overflow-hidden transition-all duration-300 lg:relative lg:inset-auto lg:z-auto"
         :class="open ? 'w-64' : 'w-0'"
         style="
             background: linear-gradient(180deg, #0d1424 0%, #080c18 100%);

@@ -16,6 +16,12 @@ function toggleSidebar(): void {
         class="flex min-h-screen font-sans"
         style="background: var(--surface-ground); color: var(--text-color)"
     >
+        <div
+            v-if="sidebarOpen"
+            class="fixed inset-0 z-30 bg-black/50 lg:hidden"
+            @click="toggleSidebar"
+        />
+
         <AppSidebar :open="sidebarOpen" />
 
         <div class="flex min-w-0 flex-1 flex-col">
