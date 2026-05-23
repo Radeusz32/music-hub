@@ -108,6 +108,7 @@ Route::middleware([
 
         Route::prefix('trading')
             ->name('tenant.trading.')
+            ->middleware('feature:trading')
             ->group(function (): void {
                 Route::prefix('events')
                     ->name('events.')
@@ -145,6 +146,7 @@ Route::middleware([
 
         Route::prefix('analytics')
             ->name('tenant.analytics.')
+            ->middleware('feature:analytics')
             ->group(function (): void {
                 Route::get('/overview', fn () => Inertia::render('Tenant/Analytics/Overview'))
                     ->name('overview');
@@ -167,6 +169,7 @@ Route::middleware([
 
         Route::prefix('integrations')
             ->name('tenant.integrations.')
+            ->middleware('feature:integrations')
             ->group(function (): void {
                 Route::get('/allegro', fn () => Inertia::render('Tenant/Integrations/Allegro'))
                     ->name('allegro');
@@ -186,6 +189,7 @@ Route::middleware([
 
         Route::prefix('users')
             ->name('tenant.users.')
+            ->middleware('feature:users')
             ->group(function (): void {
                 Route::get('/', fn () => Inertia::render('Tenant/Users/Index'))
                     ->name('index');
@@ -205,6 +209,7 @@ Route::middleware([
 
         Route::prefix('settings')
             ->name('tenant.settings.')
+            ->middleware('feature:settings')
             ->group(function (): void {
                 Route::get('/profile', fn () => Inertia::render('Tenant/Settings/Profile'))
                     ->name('profile');
