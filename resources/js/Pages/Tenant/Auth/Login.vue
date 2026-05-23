@@ -129,20 +129,6 @@ const labelClass = "mb-2 block text-xs font-semibold uppercase tracking-wider";
 
                     <!-- Content -->
                     <div class="relative z-10 flex flex-col items-center gap-6">
-                        <div
-                            class="flex h-16 w-16 items-center justify-center rounded-2xl"
-                            style="
-                                background: linear-gradient(
-                                    135deg,
-                                    #0ea5e9 0%,
-                                    #6366f1 100%
-                                );
-                                box-shadow: 0 0 40px rgba(14, 165, 233, 0.4);
-                            "
-                        >
-                            <i class="pi pi-music text-2xl text-white" />
-                        </div>
-
                         <div>
                             <h2
                                 class="mb-3 text-4xl font-bold tracking-tight"

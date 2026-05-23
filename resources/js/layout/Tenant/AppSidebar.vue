@@ -43,29 +43,14 @@ function toggleGroup(label: string): void {
     >
         <!-- Brand -->
         <div
-            class="flex items-center gap-3 px-5 py-5"
+            class="flex items-center px-5 py-5"
             style="border-bottom: 1px solid rgba(56, 189, 248, 0.07)"
         >
-            <div
-                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
-                style="
-                    background: linear-gradient(
-                        135deg,
-                        #0ea5e9 0%,
-                        #6366f1 100%
-                    );
-                    box-shadow: 0 0 20px rgba(14, 165, 233, 0.35);
-                "
+            <span
+                class="text-sm font-bold tracking-wide"
+                style="color: var(--text-color)"
+                >{{ companyName }}</span
             >
-                <i class="pi pi-music text-sm text-white" />
-            </div>
-            <div class="flex flex-col leading-tight">
-                <span
-                    class="text-sm font-bold tracking-wide"
-                    style="color: var(--text-color)"
-                    >{{ companyName }}</span
-                >
-            </div>
         </div>
 
         <!-- Navigation -->
