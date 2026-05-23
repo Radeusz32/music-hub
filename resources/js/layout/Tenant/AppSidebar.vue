@@ -29,38 +29,6 @@ function toggleGroup(label: string): void {
     expandedGroups.value[label] = !isGroupExpanded(label);
 }
 
-/* ── Icon maps ── */
-const itemIcons: Record<string, string> = {
-    "tenant.dashboard": "pi-home",
-    "tenant.inventory.records.index": "pi-database",
-    "tenant.inventory.movements.index": "pi-sort-alt",
-    "tenant.trading.events.index": "pi-calendar",
-    "tenant.trading.events.create": "pi-plus-circle",
-    "tenant.trading.listings.index": "pi-list",
-    "tenant.trading.sales.index": "pi-shopping-cart",
-    "tenant.trading.analytics": "pi-chart-line",
-    "tenant.analytics.overview": "pi-chart-pie",
-    "tenant.analytics.sales": "pi-dollar",
-    "tenant.analytics.artists": "pi-star",
-    "tenant.analytics.reports": "pi-file",
-    "tenant.integrations.allegro": "pi-shopping-bag",
-    "tenant.integrations.discogs": "pi-music",
-    "tenant.integrations.api": "pi-code",
-    "tenant.users.index": "pi-users",
-    "tenant.users.invites": "pi-user-plus",
-    "tenant.settings.profile": "pi-user",
-    "tenant.settings.organization": "pi-briefcase",
-    "tenant.settings.billing": "pi-credit-card",
-};
-
-const groupMeta: Record<string, { icon: string; color: string }> = {
-    Magazyn: { icon: "pi-box", color: "#f97316" },
-    Giełdy: { icon: "pi-shop", color: "#4ade80" },
-    Analityka: { icon: "pi-chart-bar", color: "#a78bfa" },
-    Integracje: { icon: "pi-link", color: "#60a5fa" },
-    Użytkownicy: { icon: "pi-users", color: "#f472b6" },
-    Ustawienia: { icon: "pi-cog", color: "#94a3b8" },
-};
 </script>
 
 <template>
@@ -118,7 +86,7 @@ const groupMeta: Record<string, { icon: string; color: string }> = {
                         <i
                             :class="[
                                 'pi',
-                                itemIcons[item.name!] ?? 'pi-circle',
+                                        item.icon ?? 'pi-circle',
                                 'text-base w-4 text-center',
                                 route().current(item.name)
                                     ? 'text-sky-400'
@@ -145,14 +113,11 @@ const groupMeta: Record<string, { icon: string; color: string }> = {
                                 <i
                                     :class="[
                                         'pi',
-                                        groupMeta[item.label]?.icon ??
-                                            'pi-folder',
+                                        item.icon ?? 'pi-folder',
                                         'text-xs',
                                     ]"
                                     :style="{
-                                        color:
-                                            groupMeta[item.label]?.color ??
-                                            '#94a3b8',
+                                        color: item.color ?? '#94a3b8',
                                     }"
                                 />
                                 <span>{{ item.label }}</span>
@@ -186,13 +151,13 @@ const groupMeta: Record<string, { icon: string; color: string }> = {
                                 <i
                                     :class="[
                                         'pi',
-                                        itemIcons[child.name!] ?? 'pi-circle',
+                                        child.icon ?? 'pi-circle',
                                         'text-sm w-4 text-center',
                                     ]"
                                     :style="
                                         route().current(child.name)
                                             ? 'color: #38bdf8;'
-                                            : `color: ${groupMeta[item.label]?.color ?? '#94a3b8'}66;`
+                                            : `color: ${item.color ?? '#94a3b8'}66;`
                                     "
                                 />
                                 <span>{{ child.label }}</span>

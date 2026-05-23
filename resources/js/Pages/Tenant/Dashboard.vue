@@ -33,63 +33,6 @@ const topProducts = computed(() => [
             <div class="page-header">
                 <p>Witaj ponownie, user</p>
             </div>
-
-            <!-- STATS GRID -->
-            <div class="stats-grid">
-                <div class="card">
-                    <h4>Total Sales</h4>
-                    <p class="value">{{ stats.totalSales }}</p>
-                </div>
-
-                <div class="card">
-                    <h4>Total Orders</h4>
-                    <p class="value">{{ stats.totalOrders }}</p>
-                </div>
-
-                <div class="card">
-                    <h4>Products Sold</h4>
-                    <p class="value">{{ stats.productsSold }}</p>
-                </div>
-
-                <div class="card">
-                    <h4>New Customers</h4>
-                    <p class="value">{{ stats.newCustomers }}</p>
-                </div>
-            </div>
-
-            <!-- MAIN GRID -->
-            <div class="main-grid">
-                <!-- TOP PRODUCTS -->
-                <div class="card">
-                    <h3>Top Products</h3>
-
-                    <div
-                        v-for="product in topProducts"
-                        :key="product.name"
-                        class="product-row"
-                    >
-                        <span>{{ product.name }}</span>
-                        <span class="badge">{{ product.sales }}</span>
-                    </div>
-                </div>
-
-                <!-- EARNINGS -->
-                <div class="card earnings">
-                    <h3>Earnings</h3>
-                    <p class="value large">{{ stats.earnings }}</p>
-
-                    <div class="progress">
-                        <div
-                            class="progress-bar"
-                            :style="{ width: stats.profitPercent + '%' }"
-                        />
-                    </div>
-
-                    <p class="muted">
-                        Profit is {{ stats.profitPercent }}% this month
-                    </p>
-                </div>
-            </div>
         </div>
     </AppLayout>
 </template>
