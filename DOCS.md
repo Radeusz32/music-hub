@@ -135,9 +135,14 @@ resources/js/
 ## Enums
 
 ### `FeatureEnum` — available modules
-| Case | Value |
-|---|---|
-| `Inventory` | `inventory` |
+| Case | Value | Label |
+|---|---|---|
+| `Inventory` | `inventory` | Magazyn |
+| `Trading` | `trading` | Giełdy |
+| `Analytics` | `analytics` | Analityka |
+| `Integrations` | `integrations` | Integracje |
+| `Users` | `users` | Użytkownicy |
+| `Settings` | `settings` | Ustawienia |
 
 ### `RoleEnum` — tenant user roles
 | Case | Value |
@@ -204,10 +209,12 @@ Authenticated routes additionally use `auth`. Feature-gated groups use `feature:
 
 | Prefix | Middleware | Module |
 |---|---|---|
-| `/inventory` | `feature:inventory` | Inventory |
-| `/trading` | — | Trading (placeholder) |
-| `/analytics` | — | Analytics (placeholder) |
-| `/integrations` | — | Integrations (placeholder) |
+| `/inventory` | `feature:inventory` | Magazyn |
+| `/trading` | `feature:trading` | Giełdy |
+| `/analytics` | `feature:analytics` | Analityka |
+| `/integrations` | `feature:integrations` | Integracje |
+| `/users` | `feature:users` | Użytkownicy |
+| `/settings` | `feature:settings` | Ustawienia |
 
 ---
 
