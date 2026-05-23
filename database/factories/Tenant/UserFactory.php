@@ -25,7 +25,8 @@ final class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
+            'first_name' => fake()->firstName(),
+            'last_name' => fake()->lastName(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => self::$password ??= Hash::make('password'),
@@ -36,7 +37,8 @@ final class UserFactory extends Factory
     public function owner(): self
     {
         return $this->state(fn (array $attributes): array => [
-            'name' => 'Tenant Owner',
+            'first_name' => 'Tenant',
+            'last_name' => 'Owner',
             'email' => 'owner@music1.test',
         ])->afterCreating(function (User $user): void {
             $user->syncRoles([RoleEnum::Owner->value]);

@@ -15,6 +15,8 @@ use Spatie\Permission\Traits\HasRoles;
 
 /**
  * @property-read int $id
+ * @property-read string $first_name
+ * @property-read string $last_name
  * @property-read string $name
  * @property-read string $email
  * @property-read CarbonInterface|null $email_verified_at
@@ -34,7 +36,8 @@ final class User extends Authenticatable implements MustVerifyEmail
     protected string $guard_name = GuardEnum::Web->value;
 
     protected $fillable = [
-        'name',
+        'first_name',
+        'last_name',
         'email',
         'password',
     ];
@@ -44,6 +47,11 @@ final class User extends Authenticatable implements MustVerifyEmail
         'remember_token',
     ];
 
+    public function getNameAttribute(): string
+    {
+        return "{$this->first_name} {$this->last_name}";
+    }
+
     /**
      * @return array<string, string>
      */
@@ -51,7 +59,8 @@ final class User extends Authenticatable implements MustVerifyEmail
     {
         return [
             'id' => 'integer',
-            'name' => 'string',
+            'first_name' => 'string',
+            'last_name' => 'string',
             'email' => 'string',
             'email_verified_at' => 'datetime',
             'password' => 'hashed',

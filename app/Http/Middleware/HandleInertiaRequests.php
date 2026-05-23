@@ -67,6 +67,8 @@ final class HandleInertiaRequests extends Middleware
         return [
             'user' => [
                 'id' => $user->id,
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
                 'name' => $user->name,
                 'email' => $user->email,
             ],
