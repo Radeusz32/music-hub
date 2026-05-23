@@ -29,6 +29,11 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (
+            Stancl\Tenancy\Exceptions\TenantCouldNotBeIdentifiedOnDomainException $e,
+            Illuminate\Http\Request $request,
+        ) {
+            abort(404);
+        });
     })
     ->create();

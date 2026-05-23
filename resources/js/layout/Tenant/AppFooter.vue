@@ -2,13 +2,14 @@
 
 <template>
     <footer
-        class="h-12 flex items-center justify-center text-xs"
+        class="flex h-10 items-center justify-center text-xs"
         style="
-            background: var(--surface-card);
-            border-top: 1px solid var(--surface-border);
-            color: var(--text-color-secondary);
+            background: #080c18;
+            border-top: 1px solid rgba(56, 189, 248, 0.07);
+            color: rgba(148, 163, 184, 0.4);
         "
     >
-        © {{ new Date().getFullYear() }} SoundBase
+        © {{ new Date().getFullYear() }} SoundBase &mdash; Wszelkie prawa
+        zastrzeżone
     </footer>
 </template>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { usePage, useForm } from "@inertiajs/vue3";
 
 const emit = defineEmits<{
@@ -10,51 +10,168 @@ const page = usePage();
 
 const user = computed(() => page.props?.auth?.user ?? null);
 
-const searchForm = useForm({
-    q: "",
+const userInitials = computed<string>(() => {
+    const name: string = user.value?.name ?? "";
+    return (
+        name
+            .split(" ")
+            .slice(0, 2)
+            .map((w: string) => w.charAt(0).toUpperCase())
+            .join("") || "U"
+    );
 });
 
-function submitSearch() {
-    if (!searchForm.q) return;
+const searchForm = useForm({ q: "" });
 
+function submitSearch(): void {
+    if (!searchForm.q.trim()) return;
     searchForm.get(route("search"), {
         preserveScroll: true,
         preserveState: true,
         replace: true,
     });
 }
+
+const searchFocused = ref(false);
 </script>
 
 <template>
     <header
-        class="h-16 flex items-center justify-between px-6"
+        class="flex h-16 shrink-0 items-center justify-between px-5 gap-4"
         style="
-            background: var(--surface-card);
-            border-bottom: 1px solid var(--surface-border);
+            background: linear-gradient(90deg, #0d1424 0%, #080c18 100%);
+            border-bottom: 1px solid rgba(56, 189, 248, 0.08);
         "
     >
-        <div class="flex items-center gap-4">
-            <button @click="emit('toggle-sidebar')" class="text-xl">☰</button>
+        <!-- Left: toggle + search -->
+        <div class="flex items-center gap-3">
+            <!-- Hamburger -->
+            <button
+                class="flex h-8 w-8 items-center justify-center rounded-lg text-base transition-all duration-150"
+                style="
+                    color: rgba(148, 163, 184, 0.7);
+                    background: none;
+                    border: none;
+                    cursor: pointer;
+                "
+                @click="emit('toggle-sidebar')"
+                @mouseover="
+                    ($event.currentTarget as HTMLElement).style.background =
+                        'rgba(56,189,248,0.08)';
+                    ($event.currentTarget as HTMLElement).style.color =
+                        '#38bdf8';
+                "
+                @mouseleave="
+                    ($event.currentTarget as HTMLElement).style.background =
+                        'none';
+                    ($event.currentTarget as HTMLElement).style.color =
+                        'rgba(148,163,184,0.7)';
+                "
+            >
+                <i class="pi pi-bars" />
+            </button>
 
+            <!-- Search -->
             <form @submit.prevent="submitSearch">
-                <input
-                    v-model="searchForm.q"
-                    type="text"
-                    placeholder="Wyszukaj..."
-                    class="px-4 py-2 text-sm rounded-md focus:outline-none"
-                    style="
-                        background: var(--surface-ground);
-                        border: 1px solid var(--surface-border);
-                    "
-                />
+                <div
+                    class="relative flex items-center transition-all duration-200"
+                    :style="searchFocused ? 'width: 280px;' : 'width: 220px;'"
+                >
+                    <i
+                        class="pi pi-search absolute left-3 text-xs pointer-events-none"
+                        style="color: rgba(148, 163, 184, 0.5)"
+                    />
+                    <input
+                        v-model="searchForm.q"
+                        type="text"
+                        placeholder="Wyszukaj..."
+                        class="w-full rounded-lg py-2 pl-8 pr-4 text-sm outline-none transition-all duration-200"
+                        style="
+                            background: rgba(255, 255, 255, 0.04);
+                            border: 1px solid rgba(56, 189, 248, 0.1);
+                            color: var(--text-color);
+                        "
+                        @focus="
+                            searchFocused = true;
+                            (
+                                $event.target as HTMLInputElement
+                            ).style.borderColor = 'rgba(56,189,248,0.4)';
+                            (
+                                $event.target as HTMLInputElement
+                            ).style.background = 'rgba(56,189,248,0.05)';
+                            (
+                                $event.target as HTMLInputElement
+                            ).style.boxShadow =
+                                '0 0 0 3px rgba(56,189,248,0.07)';
+                        "
+                        @blur="
+                            searchFocused = false;
+                            (
+                                $event.target as HTMLInputElement
+                            ).style.borderColor = 'rgba(56,189,248,0.1)';
+                            (
+                                $event.target as HTMLInputElement
+                            ).style.background = 'rgba(255,255,255,0.04)';
+                            (
+                                $event.target as HTMLInputElement
+                            ).style.boxShadow = 'none';
+                        "
+                    />
+                </div>
             </form>
         </div>
 
-        <div
-            class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-medium"
-            style="background: var(--surface-hover)"
-        >
-            {{ user?.name?.charAt(0) ?? "U" }}
+        <!-- Right: notification bell + avatar -->
+        <div class="flex items-center gap-2">
+            <!-- Bell -->
+            <button
+                class="relative flex h-8 w-8 items-center justify-center rounded-lg text-base transition-all duration-150"
+                style="
+                    color: rgba(148, 163, 184, 0.7);
+                    background: none;
+                    border: none;
+                    cursor: pointer;
+                "
+                @mouseover="
+                    ($event.currentTarget as HTMLElement).style.background =
+                        'rgba(56,189,248,0.08)';
+                    ($event.currentTarget as HTMLElement).style.color =
+                        '#38bdf8';
+                "
+                @mouseleave="
+                    ($event.currentTarget as HTMLElement).style.background =
+                        'none';
+                    ($event.currentTarget as HTMLElement).style.color =
+                        'rgba(148,163,184,0.7)';
+                "
+            >
+                <i class="pi pi-bell" />
+                <!-- notification dot -->
+                <span
+                    class="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full"
+                    style="
+                        background: #38bdf8;
+                        box-shadow: 0 0 6px rgba(56, 189, 248, 0.8);
+                    "
+                />
+            </button>
+
+            <!-- Avatar -->
+            <div
+                class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-xs font-bold uppercase select-none transition-all duration-150"
+                style="
+                    background: linear-gradient(
+                        135deg,
+                        #0ea5e9 0%,
+                        #6366f1 100%
+                    );
+                    color: #fff;
+                    box-shadow: 0 0 14px rgba(14, 165, 233, 0.25);
+                "
+                :title="user?.name ?? 'Użytkownik'"
+            >
+                {{ userInitials }}
+            </div>
         </div>
     </header>
 </template>

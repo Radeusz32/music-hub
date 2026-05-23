@@ -42,6 +42,8 @@ final class HandleInertiaRequests extends Middleware
             ...parent::share($request),
 
             'auth' => fn () => $this->resolveAuth($request),
+
+            'tenant' => fn () => $this->resolveTenantData(),
         ];
     }
 
@@ -74,6 +76,20 @@ final class HandleInertiaRequests extends Middleware
             'roles' => $roles,
 
             'features' => $this->resolveFeatures(),
+        ];
+    }
+
+    /** @return array{company_name: string|null}|null */
+    private function resolveTenantData(): ?array
+    {
+        $tenant = tenancy()->tenant;
+
+        if (! $tenant instanceof Tenant) {
+            return null;
+        }
+
+        return [
+            'company_name' => $tenant->company_name,
         ];
     }
 

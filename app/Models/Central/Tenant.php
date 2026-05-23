@@ -17,6 +17,7 @@ final class Tenant extends BaseTenant implements TenantWithDatabase
 
     protected $fillable = [
         'id',
+        'company_name',
     ];
 
     /** @return BelongsToMany<Feature, $this> */

@@ -13,10 +13,12 @@ final class CentralTenantSeeder extends Seeder
 {
     public function run(): void
     {
-        $tenantSlug = 'music1';
+        $tenantSlug = 'beskidvinyl';
         $baseDomain = config('app.base_domain');
 
-        $tenant = Tenant::create();
+        $tenant = Tenant::create([
+            'company_name' => 'Beskid Vinyl',
+        ]);
 
         $tenant->domains()->create([
             'domain' => "{$tenantSlug}.{$baseDomain}",

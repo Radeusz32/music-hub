@@ -1,6 +1,11 @@
 <script setup lang="ts">
-import { useForm } from "@inertiajs/vue3";
-import { computed } from "vue";
+import { useForm, usePage } from "@inertiajs/vue3";
+import { route } from "ziggy-js";
+import { computed, ref } from "vue";
+
+const companyName = computed<string>(
+    () => (usePage().props.tenant as any)?.company_name ?? "SoundBase",
+);
 
 interface LoginForm {
     email: string;
@@ -24,6 +29,8 @@ const submit = (): void => {
     });
 };
 
+const showPassword = ref(false);
+
 const hasGlobalError = computed<boolean>(() => {
     return (
         Object.keys(form.errors).length > 0 &&
@@ -32,151 +39,318 @@ const hasGlobalError = computed<boolean>(() => {
     );
 });
 
-const inputClass =
-    "w-full rounded-[var(--border-radius)] border border-[var(--surface-border)] bg-[var(--surface-ground)] px-4 py-3 text-[var(--text-color)] transition outline-none placeholder:text-[var(--text-color-secondary)] focus:border-[var(--primary-color)] focus:ring-2 focus:ring-[var(--primary-color)]/20";
-
-const labelClass =
-    "mb-2 block text-sm font-medium text-[var(--text-color-secondary)]";
+const labelClass = "mb-2 block text-xs font-semibold uppercase tracking-wider";
 </script>
 
 <template>
     <div
-        class="flex min-h-screen items-center justify-center bg-[var(--surface-ground)] px-4 text-[var(--text-color)]"
+        class="flex min-h-screen items-center justify-center px-4"
+        style="background: var(--surface-ground); color: var(--text-color)"
     >
-        <Card
-            class="w-full max-w-6xl overflow-hidden rounded-2xl border border-[var(--surface-border)] bg-[var(--surface-card)] shadow-2xl"
+        <!-- Ambient glow -->
+        <div
+            class="pointer-events-none fixed inset-0 overflow-hidden"
+            aria-hidden="true"
         >
-            <template #content>
-                <div class="grid min-h-[620px] md:grid-cols-2">
+            <div
+                class="absolute -left-64 -top-64 h-[600px] w-[600px] rounded-full opacity-10"
+                style="
+                    background: radial-gradient(
+                        circle,
+                        #0ea5e9 0%,
+                        transparent 70%
+                    );
+                "
+            />
+            <div
+                class="absolute -bottom-64 -right-64 h-[500px] w-[500px] rounded-full opacity-8"
+                style="
+                    background: radial-gradient(
+                        circle,
+                        #6366f1 0%,
+                        transparent 70%
+                    );
+                "
+            />
+        </div>
+
+        <div
+            class="relative w-full max-w-5xl overflow-hidden rounded-2xl"
+            style="
+                background: var(--surface-card);
+                border: 1px solid rgba(56, 189, 248, 0.12);
+                box-shadow:
+                    0 30px 80px rgba(0, 0, 0, 0.6),
+                    0 0 0 1px rgba(56, 189, 248, 0.06),
+                    0 0 60px rgba(56, 189, 248, 0.04);
+            "
+        >
+            <div class="grid min-h-[620px] md:grid-cols-2">
+                <!-- Left panel -->
+                <div
+                    class="relative hidden flex-col items-center justify-center overflow-hidden px-12 py-16 text-center md:flex"
+                    style="
+                        background: linear-gradient(
+                            135deg,
+                            #0c1a35 0%,
+                            #070b18 100%
+                        );
+                    "
+                >
+                    <!-- Grid lines decoration -->
                     <div
-                        class="hidden md:flex flex-col items-center justify-center bg-gradient-to-br from-[var(--primary-color)] to-amber-400 px-12 py-16 text-center text-[var(--primary-color-text)]"
-                    >
-                        <h2 class="mb-4 text-4xl font-semibold tracking-tight">
-                            Welcome back to SoundBase
-                        </h2>
+                        class="pointer-events-none absolute inset-0 opacity-5"
+                        style="
+                            background-image:
+                                linear-gradient(
+                                    rgba(56, 189, 248, 0.5) 1px,
+                                    transparent 1px
+                                ),
+                                linear-gradient(
+                                    90deg,
+                                    rgba(56, 189, 248, 0.5) 1px,
+                                    transparent 1px
+                                );
+                            background-size: 40px 40px;
+                        "
+                    />
 
-                        <p class="max-w-sm text-base leading-7 opacity-90">
-                            Manage your tenant, users and features from a
-                            single, scalable SaaS platform.
-                        </p>
-                    </div>
+                    <!-- Glow orb -->
+                    <div
+                        class="absolute top-1/2 left-1/2 h-80 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full opacity-20 blur-3xl"
+                        style="
+                            background: radial-gradient(
+                                circle,
+                                #38bdf8 0%,
+                                transparent 60%
+                            );
+                        "
+                    />
 
-                    <div class="flex items-center px-6 py-10 sm:px-10 md:px-12">
-                        <div class="mx-auto w-full max-w-md">
-                            <h1
-                                class="mb-2 text-4xl font-semibold tracking-tight"
+                    <!-- Content -->
+                    <div class="relative z-10 flex flex-col items-center gap-6">
+                        <div
+                            class="flex h-16 w-16 items-center justify-center rounded-2xl"
+                            style="
+                                background: linear-gradient(
+                                    135deg,
+                                    #0ea5e9 0%,
+                                    #6366f1 100%
+                                );
+                                box-shadow: 0 0 40px rgba(14, 165, 233, 0.4);
+                            "
+                        >
+                            <i class="pi pi-music text-2xl text-white" />
+                        </div>
+
+                        <div>
+                            <h2
+                                class="mb-3 text-4xl font-bold tracking-tight"
+                                style="color: var(--text-color)"
                             >
-                                Login
-                            </h1>
-
+                                Witaj, {{ companyName }}
+                            </h2>
                             <p
-                                class="mb-8 text-sm text-[var(--text-color-secondary)]"
+                                class="max-w-xs text-sm leading-7"
+                                style="color: rgba(148, 163, 184, 0.75)"
                             >
-                                Enter your credentials to access your tenant.
+                                Kompleksowy system zarządzania dla sklepów z
+                                muzyką. Magazyn, giełdy, analityka — wszystko w
+                                jednym miejscu.
                             </p>
+                        </div>
 
-                            <form @submit.prevent="submit" class="space-y-6">
-                                <div>
-                                    <label for="email" :class="labelClass">
-                                        Email
-                                    </label>
-
-                                    <InputText
-                                        id="email"
-                                        v-model="form.email"
-                                        type="email"
-                                        autocomplete="username"
-                                        :class="inputClass"
-                                    />
-
-                                    <p
-                                        v-if="form.errors.email"
-                                        class="mt-2 text-sm text-red-400"
-                                    >
-                                        {{ form.errors.email }}
-                                    </p>
-                                </div>
-
-                                <div>
-                                    <label for="password" :class="labelClass">
-                                        Password
-                                    </label>
-
-                                    <Password
-                                        id="password"
-                                        v-model="form.password"
-                                        :feedback="false"
-                                        toggleMask
-                                        autocomplete="current-password"
-                                        class="w-full"
-                                        :pt="{
-                                            root: { class: 'relative w-full' },
-                                            pcInputText: {
-                                                root: { class: inputClass },
-                                            },
-                                            inputIconContainer: {
-                                                class: 'absolute inset-y-0 right-0 flex items-center pr-4 text-[var(--text-color-secondary)]',
-                                            },
-                                        }"
-                                    />
-
-                                    <p
-                                        v-if="form.errors.password"
-                                        class="mt-2 text-sm text-red-400"
-                                    >
-                                        {{ form.errors.password }}
-                                    </p>
-                                </div>
-
-                                <div class="flex items-center gap-3">
-                                    <Checkbox
-                                        inputId="remember"
-                                        v-model="form.remember"
-                                        binary
-                                        :pt="{
-                                            root: {
-                                                class: 'flex items-center',
-                                            },
-                                            box: {
-                                                class: [
-                                                    'flex h-4 w-4 items-center justify-center rounded border transition',
-                                                    form.remember
-                                                        ? 'border-[var(--primary-color)] bg-[var(--primary-color)] text-[var(--primary-color-text)]'
-                                                        : 'border-[var(--surface-border)] bg-[var(--surface-ground)] text-transparent',
-                                                ],
-                                            },
-                                            icon: {
-                                                class: 'text-[10px] font-bold',
-                                            },
-                                        }"
-                                    />
-
-                                    <label
-                                        for="remember"
-                                        class="cursor-pointer text-sm text-[var(--text-color-secondary)]"
-                                    >
-                                        Remember me
-                                    </label>
-                                </div>
-
-                                <Button
-                                    type="submit"
-                                    label="Login"
-                                    :loading="form.processing"
-                                    class="w-full rounded-[var(--border-radius)] bg-[var(--primary-color)] px-4 py-3 font-semibold text-[var(--primary-color-text)] transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                        <!-- Feature pills -->
+                        <div class="flex flex-col gap-2 w-full max-w-xs">
+                            <div
+                                v-for="feat in [
+                                    'Zarządzanie magazynem',
+                                    'Integracja z Allegro & Discogs',
+                                    'Analityka sprzedaży',
+                                ]"
+                                :key="feat"
+                                class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs text-left"
+                                style="
+                                    background: rgba(56, 189, 248, 0.07);
+                                    border: 1px solid rgba(56, 189, 248, 0.12);
+                                    color: rgba(148, 163, 184, 0.8);
+                                "
+                            >
+                                <i
+                                    class="pi pi-check-circle text-xs"
+                                    style="color: #38bdf8"
                                 />
-
-                                <div
-                                    v-if="hasGlobalError"
-                                    class="rounded-[var(--border-radius)] border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300"
-                                >
-                                    Invalid credentials.
-                                </div>
-                            </form>
+                                {{ feat }}
+                            </div>
                         </div>
                     </div>
                 </div>
-            </template>
-        </Card>
+
+                <!-- Right: form -->
+                <div
+                    class="flex items-center px-6 py-10 sm:px-10 md:px-12"
+                    style="background: var(--surface-card)"
+                >
+                    <div class="mx-auto w-full max-w-md">
+                        <h1
+                            class="mb-2 text-3xl font-bold tracking-tight"
+                            style="color: var(--text-color)"
+                        >
+                            Zaloguj się
+                        </h1>
+                        <p
+                            class="mb-8 text-sm"
+                            style="color: var(--text-color-secondary)"
+                        >
+                            Wprowadź swoje dane logowania, aby uzyskać dostęp.
+                        </p>
+
+                        <form @submit.prevent="submit" class="space-y-5">
+                            <!-- Email -->
+                            <div>
+                                <label
+                                    for="email"
+                                    :class="labelClass"
+                                    style="color: var(--text-color-secondary)"
+                                >
+                                    Adres e-mail
+                                </label>
+                                <InputText
+                                    id="email"
+                                    v-model="form.email"
+                                    type="email"
+                                    autocomplete="username"
+                                    placeholder="twoj@email.pl"
+                                    class="sb-field"
+                                />
+                                <p
+                                    v-if="form.errors.email"
+                                    class="mt-1.5 text-xs text-red-400"
+                                >
+                                    {{ form.errors.email }}
+                                </p>
+                            </div>
+
+                            <!-- Password -->
+                            <div>
+                                <label
+                                    for="password"
+                                    :class="labelClass"
+                                    style="color: var(--text-color-secondary)"
+                                >
+                                    Hasło
+                                </label>
+                                <div class="relative">
+                                    <input
+                                        id="password"
+                                        v-model="form.password"
+                                        :type="
+                                            showPassword ? 'text' : 'password'
+                                        "
+                                        autocomplete="current-password"
+                                        placeholder="••••••••"
+                                        class="sb-field pr-10"
+                                    />
+                                    <button
+                                        type="button"
+                                        tabindex="-1"
+                                        class="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer border-none bg-transparent p-0 text-slate-400/55 transition-colors duration-150 hover:text-sky-400"
+                                        @click="showPassword = !showPassword"
+                                    >
+                                        <i
+                                            :class="[
+                                                'pi text-sm',
+                                                showPassword
+                                                    ? 'pi-eye-slash'
+                                                    : 'pi-eye',
+                                            ]"
+                                        />
+                                    </button>
+                                </div>
+                                <p
+                                    v-if="form.errors.password"
+                                    class="mt-1.5 text-xs text-red-400"
+                                >
+                                    {{ form.errors.password }}
+                                </p>
+                            </div>
+
+                            <!-- Remember me -->
+                            <label
+                                class="flex cursor-pointer select-none items-center gap-3"
+                            >
+                                <span
+                                    class="p-checkbox"
+                                    :class="{
+                                        'p-checkbox-checked': form.remember,
+                                    }"
+                                >
+                                    <input
+                                        v-model="form.remember"
+                                        type="checkbox"
+                                        class="p-checkbox-input"
+                                    />
+                                    <span class="p-checkbox-box">
+                                        <i
+                                            v-if="form.remember"
+                                            class="pi pi-check p-checkbox-icon"
+                                        />
+                                    </span>
+                                </span>
+                                <span
+                                    class="text-sm"
+                                    style="color: var(--text-color-secondary)"
+                                >
+                                    Zapamiętaj mnie
+                                </span>
+                            </label>
+
+                            <!-- Submit -->
+                            <button
+                                type="submit"
+                                :disabled="form.processing"
+                                class="flex w-full items-center justify-center gap-2 rounded-[var(--border-radius)] px-4 py-3 text-sm font-semibold transition-all duration-150"
+                                style="
+                                    background: linear-gradient(
+                                        135deg,
+                                        #0ea5e9 0%,
+                                        #6366f1 100%
+                                    );
+                                    color: #fff;
+                                    border: none;
+                                    cursor: pointer;
+                                    box-shadow: 0 0 24px
+                                        rgba(14, 165, 233, 0.25);
+                                "
+                            >
+                                <i
+                                    v-if="form.processing"
+                                    class="pi pi-spin pi-spinner text-sm"
+                                />
+                                {{
+                                    form.processing
+                                        ? "Logowanie..."
+                                        : "Zaloguj się"
+                                }}
+                            </button>
+
+                            <!-- Global error -->
+                            <div
+                                v-if="hasGlobalError"
+                                class="flex items-center gap-2 rounded-[var(--border-radius)] px-4 py-3 text-sm"
+                                style="
+                                    background: rgba(248, 113, 113, 0.08);
+                                    border: 1px solid rgba(248, 113, 113, 0.25);
+                                    color: #f87171;
+                                "
+                            >
+                                <i class="pi pi-exclamation-circle text-sm" />
+                                Nieprawidłowe dane logowania.
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
