@@ -47,34 +47,57 @@ Route::middleware([
         */
 
         Route::prefix('inventory')
-            ->name('tenant.inventory.')
+            ->middleware('feature:inventory')
             ->group(function (): void {
                 Route::prefix('records')
-                    ->name('records.')
                     ->group(function (): void {
-                        Route::get('/', fn () => Inertia::render('Tenant/Inventory/Records/Index'))
-                            ->name('index');
+                        Route::get('/', [InventoryController::class, 'index'])
+                            ->name('tenant.inventory.records.index')
+                            ->middleware('permission:inventory-records-read');
 
-                        Route::get('/create', fn () => Inertia::render('Tenant/Inventory/Records/Create'))
-                            ->name('create');
-                    });
+                        Route::get('/create', [InventoryController::class, 'create'])
+                            ->name('tenant.inventory.records.create')
+                            ->middleware('permission:inventory-records-create');
 
-                Route::prefix('stock')
-                    ->name('stock.')
-                    ->group(function (): void {
-                        Route::get('/', fn () => Inertia::render('Tenant/Inventory/Stock/Index'))
-                            ->name('index');
+                        Route::post('/', [InventoryController::class, 'store'])
+                            ->name('tenant.inventory.records.store')
+                            ->middleware('permission:inventory-records-create');
+
+                        Route::get('/{inventoryRecord}', [InventoryController::class, 'show'])
+                            ->name('tenant.inventory.records.show')
+                            ->middleware('permission:inventory-records-read');
+
+                        Route::get('/{inventoryRecord}/edit', [InventoryRecordController::class, 'edit'])
+                            ->name('tenant.inventory.records.edit')
+                            ->middleware('permission:inventory-records-update');
+
+                        Route::put('/{inventoryRecord}', [InventoryController::class, 'update'])
+                            ->name('tenant.inventory.records.update')
+                            ->middleware('permission:inventory-records-update');
+
+                        Route::delete('/{inventoryRecord}', [InventoryController::class, 'destroy'])
+                            ->name('tenant.inventory.records.destroy')
+                            ->middleware('permission:inventory-records-delete');
                     });
 
                 Route::prefix('movements')
-                    ->name('movements.')
                     ->group(function (): void {
-                        Route::get('/', fn () => Inertia::render('Tenant/Inventory/Movements/Index'))
-                            ->name('index');
-                    });
+                        Route::get('/', [InventoryMovementController::class, 'index'])
+                            ->name('tenant.inventory.movements.index')
+                            ->middleware('permission:inventory-movements-read');
 
-                Route::get('/alerts', fn () => Inertia::render('Tenant/Inventory/Alerts/Index'))
-                    ->name('alerts');
+                        Route::post('/', [InventoryMovementController::class, 'store'])
+                            ->name('tenant.inventory.movements.store')
+                            ->middleware('permission:inventory-movements-create');
+
+                        Route::get('/{inventoryMovement}', [InventoryMovementController::class, 'show'])
+                            ->name('tenant.inventory.movements.show')
+                            ->middleware('permission:inventory-movements-read');
+
+                        Route::delete('/{inventoryMovement}', [InventoryMovementController::class, 'destroy'])
+                            ->name('tenant.inventory.movements.destroy')
+                            ->middleware('permission:inventory-movements-delete');
+                    });
             });
 
         /*

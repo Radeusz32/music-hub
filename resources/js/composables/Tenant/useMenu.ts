@@ -1,8 +1,7 @@
-// resources/js/composables/Tenant/useMenu.ts
-
 import { computed } from "vue";
-import { usePage } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
+import { usePermissions } from "./usePermissions";
+import { useFeatures } from "./useFeatures";
 
 export interface MenuItem {
     label: string;
@@ -10,26 +9,21 @@ export interface MenuItem {
     url?: string;
     permission?: string;
     feature?: string;
+    visible?: boolean | (() => boolean);
     children?: MenuItem[];
 }
 
 export function useMenu() {
-    const page = usePage();
-    console.log(usePage().props);
-    console.log(page.props.auth);
-    console.log(page.props.auth?.user);
+    const { hasPermission } = usePermissions();
+    const { hasFeature } = useFeatures();
 
-    const permissions = computed<string[]>(
-        () => page.props.auth?.permissions ?? [],
-    );
+    const isVisible = (visible?: boolean | (() => boolean)): boolean => {
+        if (typeof visible === "function") {
+            return visible();
+        }
 
-    const features = computed<string[]>(() => page.props.auth?.features ?? []);
-
-    const hasPermission = (permission?: string) =>
-        !permission || permissions.value.includes(permission);
-
-    const hasFeature = (feature?: string) =>
-        !feature || features.value.includes(feature);
+        return visible ?? true;
+    };
 
     const rawMenu: MenuItem[] = [
         {
@@ -37,12 +31,6 @@ export function useMenu() {
             name: "tenant.dashboard",
             url: route("tenant.dashboard"),
         },
-
-        /*
-    |------------------------------------------------------------------
-    | Inventory (WMS)
-    |------------------------------------------------------------------
-    */
         {
             label: "Magazyn",
             feature: "inventory",
@@ -53,35 +41,12 @@ export function useMenu() {
                     url: route("tenant.inventory.records.index"),
                 },
                 {
-                    label: "Dodaj płytę",
-                    name: "tenant.inventory.records.create",
-                    url: route("tenant.inventory.records.create"),
-                    permission: "records.create",
-                },
-                {
-                    label: "Stany magazynowe",
-                    name: "tenant.inventory.stock.index",
-                    url: route("tenant.inventory.stock.index"),
-                },
-                {
                     label: "Ruchy magazynowe",
                     name: "tenant.inventory.movements.index",
                     url: route("tenant.inventory.movements.index"),
                 },
-                {
-                    label: "Alerty stanów",
-                    name: "tenant.inventory.alerts",
-                    url: route("tenant.inventory.alerts"),
-                    feature: "inventory.alerts",
-                },
             ],
         },
-
-        /*
-    |------------------------------------------------------------------
-    | Trading (Giełdy)
-    |------------------------------------------------------------------
-    */
         {
             label: "Giełdy",
             feature: "trading",
@@ -115,12 +80,6 @@ export function useMenu() {
                 },
             ],
         },
-
-        /*
-    |------------------------------------------------------------------
-    | Analytics
-    |------------------------------------------------------------------
-    */
         {
             label: "Analityka",
             feature: "analytics",
@@ -148,12 +107,6 @@ export function useMenu() {
                 },
             ],
         },
-
-        /*
-    |------------------------------------------------------------------
-    | Integracje (Pro+)
-    |------------------------------------------------------------------
-    */
         {
             label: "Integracje",
             feature: "integrations",
@@ -176,12 +129,6 @@ export function useMenu() {
                 },
             ],
         },
-
-        /*
-    |------------------------------------------------------------------
-    | Użytkownicy
-    |------------------------------------------------------------------
-    */
         {
             label: "Użytkownicy",
             feature: "users",
@@ -197,20 +144,8 @@ export function useMenu() {
                     url: route("tenant.users.invites"),
                     permission: "users.invite",
                 },
-                {
-                    label: "Role i uprawnienia",
-                    name: "tenant.users.roles",
-                    url: route("tenant.users.roles"),
-                    permission: "roles.manage",
-                },
             ],
         },
-
-        /*
-    |------------------------------------------------------------------
-    | Ustawienia
-    |------------------------------------------------------------------
-    */
         {
             label: "Ustawienia",
             children: [
@@ -230,6 +165,7 @@ export function useMenu() {
                     name: "tenant.settings.billing",
                     url: route("tenant.settings.billing"),
                     feature: "billing",
+                    visible: true,
                 },
             ],
         },
@@ -239,7 +175,9 @@ export function useMenu() {
         return items
             .filter(
                 (item) =>
-                    hasPermission(item.permission) && hasFeature(item.feature),
+                    hasFeature(item.feature) &&
+                    hasPermission(item.permission) &&
+                    isVisible(item.visible),
             )
             .map((item) => ({
                 ...item,
@@ -250,7 +188,7 @@ export function useMenu() {
             );
     };
 
-    const menu = computed(() => filterMenu(rawMenu));
+    const menu = computed<MenuItem[]>(() => filterMenu(rawMenu));
 
     return { menu };
 }

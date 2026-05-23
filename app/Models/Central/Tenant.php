@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models\Central;
 
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Stancl\Tenancy\Contracts\TenantWithDatabase;
 use Stancl\Tenancy\Database\Concerns\HasDatabase;
 use Stancl\Tenancy\Database\Concerns\HasDomains;
@@ -17,4 +18,10 @@ final class Tenant extends BaseTenant implements TenantWithDatabase
     protected $fillable = [
         'id',
     ];
+
+    /** @return BelongsToMany<Feature, $this> */
+    public function features(): BelongsToMany
+    {
+        return $this->belongsToMany(Feature::class);
+    }
 }

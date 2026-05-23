@@ -46,3 +46,8 @@ cache-clear:
 	$(SAIL) php artisan route:clear
 	$(SAIL) php artisan config:clear
 	$(SAIL) php artisan cache:clear
+
+reset:
+	$(SAIL) php artisan migrate:fresh --seed
+	$(SAIL) php artisan tenants:seed
+	$(SAIL) php artisan tenant:remove-unused

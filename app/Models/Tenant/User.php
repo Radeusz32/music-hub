@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Models\Tenant;
 
+use App\Enums\GuardEnum;
 use Carbon\CarbonInterface;
-use Database\Factories\UserFactory;
+use Database\Factories\Tenant\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Traits\HasRoles;
 
 /**
  * @property-read int $id
@@ -24,11 +26,19 @@ use Illuminate\Notifications\Notifiable;
 final class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, HasRoles, Notifiable;
 
     /**
      * @var list<string>
      */
+    protected string $guard_name = GuardEnum::Web->value;
+
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+    ];
+
     protected $hidden = [
         'password',
         'remember_token',

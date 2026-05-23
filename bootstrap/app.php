@@ -23,7 +23,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'tenant' => InitializeTenancyByDomain::class,
+            'permission' => Spatie\Permission\Middleware\PermissionMiddleware::class,
             'prevent-central' => PreventAccessFromCentralDomains::class,
+            'feature' => App\Http\Middleware\CheckFeature::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

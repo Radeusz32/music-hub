@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Models\Central\Tenant;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -52,6 +53,15 @@ final class HandleInertiaRequests extends Middleware
             return null;
         }
 
+        $roles = $user->getRoleNames()
+            ->values()
+            ->all();
+
+        $permissions = $user->getAllPermissions()
+            ->pluck('name')
+            ->values()
+            ->all();
+
         return [
             'user' => [
                 'id' => $user->id,
@@ -59,15 +69,27 @@ final class HandleInertiaRequests extends Middleware
                 'email' => $user->email,
             ],
 
-            // jeśli używasz spatie/permission
-            // 'permissions' => $user->getAllPermissions()
-            //     ->pluck('name')
-            //     ->values(),
+            'permissions' => $permissions,
 
-            // jeśli masz features w jakiejś relacji
-            // 'features' => $user->features()
-            //     ->pluck('name')
-            //     ->values(),
+            'roles' => $roles,
+
+            'features' => $this->resolveFeatures(),
         ];
+    }
+
+    /** @return list<string> */
+    private function resolveFeatures(): array
+    {
+        $tenant = tenancy()->tenant;
+
+        if (! $tenant instanceof Tenant) {
+            return [];
+        }
+
+        return $tenant->features
+            ->pluck('name')
+            ->map(fn ($feature) => $feature->value)
+            ->values()
+            ->all();
     }
 }

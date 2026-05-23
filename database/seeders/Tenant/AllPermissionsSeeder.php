@@ -2,17 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Database\Seeders;
+namespace Database\Seeders\Tenant;
 
 use Illuminate\Database\Seeder;
 
-final class DatabaseSeeder extends Seeder
+final class AllPermissionsSeeder extends Seeder
 {
     public function run(): void
     {
         $this->call([
-            FeaturesSeeder::class,
-            CentralTenantSeeder::class,
+            InventoryPermissionsSeeder::class,
         ]);
     }
 }

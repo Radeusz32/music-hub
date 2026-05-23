@@ -4,34 +4,19 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
-use App\Models\Tenant\User;
+use Database\Seeders\Tenant\AllPermissionsSeeder;
+use Database\Seeders\Tenant\OwnerSeeder;
+use Database\Seeders\Tenant\RolesSeeder;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Role;
 
 final class TenantDatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $this->seedRoles();
-        $this->seedOwner();
-    }
-
-    private function seedRoles(): void
-    {
-        Role::create([
-            'name' => 'owner',
-            'guard_name' => 'tenant',
+        $this->call([
+            RolesSeeder::class,
+            AllPermissionsSeeder::class,
+            OwnerSeeder::class,
         ]);
-    }
-
-    private function seedOwner(): void
-    {
-        $user = User::create([
-            'name' => 'Tenant Owner',
-            'email' => 'owner@music1.test',
-            'password' => Hash::make('password'),
-        ]);
-
     }
 }
