@@ -5,6 +5,7 @@ SAIL := ./vendor/bin/sail
 
 up:
 	$(SAIL) up -d
+	$(SAIL) npm run dev
 
 down:
 	$(SAIL) down
