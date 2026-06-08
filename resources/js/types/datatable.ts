@@ -34,11 +34,20 @@ export interface NumberRangeColumnFilter {
     max?: number;
 }
 
+export interface BooleanColumnFilter {
+    type: "boolean";
+    /** Tooltip for the "true" (✓) toggle. */
+    trueLabel?: string;
+    /** Tooltip for the "false" (✗) toggle. */
+    falseLabel?: string;
+}
+
 export type ColumnFilter =
     | SelectColumnFilter
     | DateRangeColumnFilter
     | NumberColumnFilter
-    | NumberRangeColumnFilter;
+    | NumberRangeColumnFilter
+    | BooleanColumnFilter;
 
 export interface ColumnDef {
     key: string;

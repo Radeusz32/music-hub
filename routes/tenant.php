@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Tenant\Auth\AuthController;
 use App\Http\Controllers\Tenant\Inventory\InventoryRecordController;
+use App\Http\Controllers\Tenant\Users\UserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -192,14 +193,35 @@ Route::middleware([
             ->name('tenant.users.')
             ->middleware('feature:users')
             ->group(function (): void {
-                Route::get('/', fn () => Inertia::render('Tenant/Users/Index'))
-                    ->name('index');
+                Route::get('/', [UserController::class, 'index'])
+                    ->name('index')
+                    ->middleware('permission:users-read');
+
+                Route::post('/', [UserController::class, 'store'])
+                    ->name('store')
+                    ->middleware('permission:users-create');
+
+                Route::post('/bulk-destroy', [UserController::class, 'bulkDestroy'])
+                    ->name('bulk-destroy')
+                    ->middleware('permission:users-delete');
 
                 Route::get('/invites', fn () => Inertia::render('Tenant/Users/Invites'))
                     ->name('invites');
 
                 Route::get('/roles', fn () => Inertia::render('Tenant/Users/Roles'))
                     ->name('roles');
+
+                Route::get('/{user}', [UserController::class, 'show'])
+                    ->name('show')
+                    ->middleware('permission:users-read');
+
+                Route::put('/{user}', [UserController::class, 'update'])
+                    ->name('update')
+                    ->middleware('permission:users-update');
+
+                Route::delete('/{user}', [UserController::class, 'destroy'])
+                    ->name('destroy')
+                    ->middleware('permission:users-delete');
             });
 
         /*

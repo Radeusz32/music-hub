@@ -6,6 +6,8 @@ import { useForm } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
 import { computed, ref, watch } from "vue";
 import { useToast } from "@/composables/useToast";
+import { usePermissions } from "@/composables/Tenant/usePermissions";
+import { useFeatures } from "@/composables/Tenant/useFeatures";
 import DataTable, {
     type Pagination,
 } from "@/Pages/Tenant/Components/DataTable.vue";
@@ -45,6 +47,20 @@ const modalTitle = computed(() =>
 
 /* ── Toast ── */
 const toast = useToast();
+
+/* ── CRUD capabilities (feature + permission gated) ── */
+const { hasPermission } = usePermissions();
+const { hasFeature } = useFeatures();
+
+const canCreate = computed(
+    () => hasFeature("inventory") && hasPermission("inventory-records-create"),
+);
+const canUpdate = computed(
+    () => hasFeature("inventory") && hasPermission("inventory-records-update"),
+);
+const canDelete = computed(
+    () => hasFeature("inventory") && hasPermission("inventory-records-delete"),
+);
 
 /* ── Form ── */
 const form = useForm({ ...defaultInventoryForm });
@@ -155,17 +171,8 @@ function submitImport(): void {
             <!-- Toolbar -->
             <template #toolbar>
                 <div class="table-toolbar">
-                    <a
-                        :href="
-                            route('tenant.inventory.records.export-template')
-                        "
-                        download
-                        class="btn-ghost"
-                    >
-                        <i class="pi pi-download" />
-                        Szablon
-                    </a>
                     <button
+                        v-if="canCreate"
                         type="button"
                         class="btn-import"
                         @click="openImport"
@@ -173,7 +180,12 @@ function submitImport(): void {
                         <i class="pi pi-upload" />
                         Importuj
                     </button>
-                    <button type="button" class="btn-add" @click="openAdd">
+                    <button
+                        v-if="canCreate"
+                        type="button"
+                        class="btn-add"
+                        @click="openAdd"
+                    >
                         <i class="pi pi-plus" />
                         Dodaj płytę
                     </button>
@@ -193,6 +205,8 @@ function submitImport(): void {
                 search-placeholder="Szukaj płyt, artystów..."
                 row-route="tenant.inventory.records.show"
                 empty-message="Brak płyt w magazynie"
+                :can-edit="canUpdate"
+                :can-delete="canDelete"
                 @search="table.onSearchInput"
                 @sort="table.toggleSort"
                 @page="table.goToPage"

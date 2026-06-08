@@ -3,7 +3,7 @@ import { ref, computed } from "vue";
 import { Link, useForm, usePage } from "@inertiajs/vue3";
 
 const companyName = computed<string>(
-    () => (usePage().props.tenant as any)?.company_name ?? 'SoundBase',
+    () => (usePage().props.tenant as any)?.company_name ?? "SoundBase",
 );
 import { route } from "ziggy-js";
 import { useMenu } from "@/composables/Tenant/useMenu";
@@ -28,7 +28,6 @@ function isGroupExpanded(label: string): boolean {
 function toggleGroup(label: string): void {
     expandedGroups.value[label] = !isGroupExpanded(label);
 }
-
 </script>
 
 <template>
@@ -71,7 +70,7 @@ function toggleGroup(label: string): void {
                         <i
                             :class="[
                                 'pi',
-                                        item.icon ?? 'pi-circle',
+                                item.icon ?? 'pi-circle',
                                 'text-base w-4 text-center',
                                 route().current(item.name)
                                     ? 'text-sky-400'
@@ -108,19 +107,23 @@ function toggleGroup(label: string): void {
                                 <span>{{ item.label }}</span>
                             </div>
                             <i
-                                :class="[
-                                    'pi text-[10px] transition-transform duration-200',
+                                class="pi pi-chevron-right text-[10px] transition-transform duration-300 ease-in-out"
+                                :style="
                                     isGroupExpanded(item.label)
-                                        ? 'pi-chevron-down'
-                                        : 'pi-chevron-right',
-                                ]"
+                                        ? 'transform: rotate(90deg)'
+                                        : 'transform: rotate(0deg)'
+                                "
                             />
                         </button>
 
                         <!-- Children -->
                         <div
-                            v-if="isGroupExpanded(item.label)"
-                            class="mt-0.5 flex flex-col gap-0.5"
+                            class="mt-0.5 flex flex-col gap-0.5 overflow-hidden transition-all duration-300 ease-in-out"
+                            :style="
+                                isGroupExpanded(item.label)
+                                    ? 'max-height: 500px; opacity: 1;'
+                                    : 'max-height: 0; opacity: 0;'
+                            "
                         >
                             <Link
                                 v-for="child in item.children"

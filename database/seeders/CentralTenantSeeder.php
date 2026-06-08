@@ -26,6 +26,7 @@ final class CentralTenantSeeder extends Seeder
 
         $features = Feature::whereIn('name', [
             FeatureEnum::Inventory->value,
+            FeatureEnum::Users->value,
         ])->get();
 
         $tenant->features()->sync($features);

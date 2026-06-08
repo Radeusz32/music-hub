@@ -17,7 +17,7 @@ final class UserFactory extends Factory
 {
     protected $model = User::class;
 
-    private static ?string $password = null;
+    private static ?string $password = 'password';
 
     /**
      * @return array<string, mixed>
@@ -28,6 +28,14 @@ final class UserFactory extends Factory
             'first_name' => fake()->firstName(),
             'last_name' => fake()->lastName(),
             'email' => fake()->unique()->safeEmail(),
+            'phone' => fake()->numerify('### ### ###'),
+            'street' => fake()->streetName(),
+            'building_number' => (string) fake()->numberBetween(1, 200),
+            'apartment_number' => fake()->boolean(60) ? (string) fake()->numberBetween(1, 80) : null,
+            'postal_code' => fake()->numerify('##-###'),
+            'city' => fake()->city(),
+            'pesel' => fake()->unique()->numerify('###########'),
+            'is_active' => fake()->boolean(80),
             'email_verified_at' => now(),
             'password' => self::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
@@ -40,9 +48,18 @@ final class UserFactory extends Factory
             'first_name' => 'Tenant',
             'last_name' => 'Owner',
             'email' => 'owner@music1.test',
+            'is_active' => true,
+            'email_verified_at' => now(),
         ])->afterCreating(function (User $user): void {
             $user->syncRoles([RoleEnum::Owner->value]);
         });
+    }
+
+    public function inactive(): self
+    {
+        return $this->state(fn (array $attributes): array => [
+            'is_active' => false,
+        ]);
     }
 
     public function admin(): self

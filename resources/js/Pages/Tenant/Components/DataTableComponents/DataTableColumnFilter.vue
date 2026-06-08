@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { onBeforeUnmount, ref, watch } from "vue";
 import type {
+    BooleanColumnFilter,
     ColumnDef,
     DateRangeColumnFilter,
     NumberColumnFilter,
     NumberRangeColumnFilter,
 } from "@/types/datatable";
 import DatePicker from "@/Components/DatePicker.vue";
+import Tooltip from "@/Components/Tooltip.vue";
 
 defineOptions({ name: "DataTableColumnFilter" });
 
@@ -76,6 +78,12 @@ function onRangeTo(key: string, value: number | null): void {
     rangeTo.value = value;
     emitDebounced(key, value === null ? "" : String(value));
 }
+
+/* ── Boolean toggle (✓ / ✗ icons, click again to clear) ── */
+function toggleBoolean(value: "1" | "0"): void {
+    const current = props.filterValues[props.column.key];
+    emit("filter", props.column.key, current === value ? "" : value);
+}
 </script>
 
 <template>
@@ -83,13 +91,54 @@ function onRangeTo(key: string, value: number | null): void {
         <!-- SELECT -->
         <BaseDropdown
             v-if="column.filter?.type === 'select'"
+            searchable
             :model-value="filterValues[column.key] ?? null"
             :options="column.filter.options"
-            placeholder="Wszystkie"
-            empty-label="Wszystkie"
             clearable
             @update:model-value="emit('filter', column.key, $event ?? '')"
         />
+
+        <!-- BOOLEAN (clickable ✓ / ✗) -->
+        <div
+            v-else-if="column.filter?.type === 'boolean'"
+            class="dt-bool"
+            role="group"
+        >
+            <Tooltip
+                :content="
+                    (column.filter as BooleanColumnFilter).trueLabel ?? 'Tak'
+                "
+                position="top"
+            >
+                <button
+                    type="button"
+                    class="dt-bool-btn dt-bool-btn--true"
+                    :class="{
+                        'dt-bool-btn--active': filterValues[column.key] === '1',
+                    }"
+                    @click="toggleBoolean('1')"
+                >
+                    <i class="pi pi-check" />
+                </button>
+            </Tooltip>
+            <Tooltip
+                :content="
+                    (column.filter as BooleanColumnFilter).falseLabel ?? 'Nie'
+                "
+                position="top"
+            >
+                <button
+                    type="button"
+                    class="dt-bool-btn dt-bool-btn--false"
+                    :class="{
+                        'dt-bool-btn--active': filterValues[column.key] === '0',
+                    }"
+                    @click="toggleBoolean('0')"
+                >
+                    <i class="pi pi-times" />
+                </button>
+            </Tooltip>
+        </div>
 
         <!-- DATE RANGE -->
         <div v-else-if="column.filter?.type === 'date-range'" class="dt-range">
@@ -212,6 +261,48 @@ function onRangeTo(key: string, value: number | null): void {
     display: flex;
     flex-direction: column;
     gap: 0.2rem;
+}
+
+/* ── Boolean toggle ── */
+.dt-bool {
+    display: flex;
+    justify-content: center;
+    gap: 0.3rem;
+}
+
+.dt-bool-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 7px;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    background: rgba(148, 163, 184, 0.05);
+    color: rgba(148, 163, 184, 0.5);
+    font-size: 0.72rem;
+    cursor: pointer;
+    transition:
+        background 0.15s,
+        border-color 0.15s,
+        color 0.15s;
+}
+
+.dt-bool-btn:hover {
+    color: #cbd5e1;
+    border-color: rgba(148, 163, 184, 0.32);
+}
+
+.dt-bool-btn--true.dt-bool-btn--active {
+    background: rgba(74, 222, 128, 0.14);
+    border-color: rgba(74, 222, 128, 0.4);
+    color: #4ade80;
+}
+
+.dt-bool-btn--false.dt-bool-btn--active {
+    background: rgba(248, 113, 113, 0.14);
+    border-color: rgba(248, 113, 113, 0.4);
+    color: #f87171;
 }
 
 /* Compact the number inputs to match the small date-range filter inputs */

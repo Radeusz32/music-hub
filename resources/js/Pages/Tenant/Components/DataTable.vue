@@ -34,6 +34,8 @@ const props = withDefaults(
         search?: string;
         searchPlaceholder?: string;
         rowRoute?: string;
+        canEdit?: boolean;
+        canDelete?: boolean;
     }>(),
     {
         filterValues: () => ({}),
@@ -42,6 +44,8 @@ const props = withDefaults(
         searchable: false,
         search: "",
         searchPlaceholder: "Szukaj...",
+        canEdit: true,
+        canDelete: true,
     },
 );
 
@@ -246,7 +250,10 @@ onBeforeUnmount(() => {
         </div>
 
         <!-- Sub-toolbar: filters + bulk actions -->
-        <div v-if="hasActiveFilters || selectedCount >= 2" class="dt-subbar">
+        <div
+            v-if="hasActiveFilters || (canDelete && selectedCount >= 2)"
+            class="dt-subbar"
+        >
             <!-- Filters section -->
             <div v-if="hasActiveFilters" class="dt-section">
                 <span class="dt-section-label">
@@ -264,7 +271,10 @@ onBeforeUnmount(() => {
             </div>
 
             <!-- Bulk actions section -->
-            <div v-if="selectedCount >= 2" class="dt-section dt-section--bulk">
+            <div
+                v-if="canDelete && selectedCount >= 2"
+                class="dt-section dt-section--bulk"
+            >
                 <span class="dt-section-label">
                     <i class="pi pi-check-square" />
                     Akcje grupowe
@@ -341,6 +351,8 @@ onBeforeUnmount(() => {
                         :columns="columns"
                         :selected="selectedIds.includes(row.id)"
                         :href="rowHref(row)"
+                        :can-edit="canEdit"
+                        :can-delete="canDelete"
                         @toggle="toggleRow"
                         @edit="emit('edit', $event)"
                         @delete="requestDelete"

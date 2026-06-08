@@ -1,5 +1,7 @@
 <script setup lang="ts">
-withDefaults(
+import { onBeforeUnmount, ref } from "vue";
+
+const props = withDefaults(
     defineProps<{
         content: string;
         position?: "top" | "bottom" | "left" | "right";
@@ -10,16 +12,99 @@ withDefaults(
         delay: 0,
     },
 );
+
+const GAP = 7;
+
+const hostRef = ref<HTMLElement | null>(null);
+const visible = ref(false);
+const coords = ref<{ top: number; left: number }>({ top: 0, left: 0 });
+
+let showTimer: ReturnType<typeof setTimeout> | null = null;
+
+function updatePosition(): void {
+    const host = hostRef.value;
+    if (!host) {
+        return;
+    }
+
+    const r = host.getBoundingClientRect();
+
+    switch (props.position) {
+        case "top":
+            coords.value = { top: r.top - GAP, left: r.left + r.width / 2 };
+            break;
+        case "bottom":
+            coords.value = { top: r.bottom + GAP, left: r.left + r.width / 2 };
+            break;
+        case "left":
+            coords.value = { top: r.top + r.height / 2, left: r.left - GAP };
+            break;
+        case "right":
+            coords.value = { top: r.top + r.height / 2, left: r.right + GAP };
+            break;
+    }
+}
+
+function show(): void {
+    const reveal = (): void => {
+        updatePosition();
+        visible.value = true;
+        window.addEventListener("scroll", onReposition, true);
+        window.addEventListener("resize", onReposition);
+    };
+
+    if (props.delay > 0) {
+        showTimer = setTimeout(reveal, props.delay);
+    } else {
+        reveal();
+    }
+}
+
+function hide(): void {
+    if (showTimer) {
+        clearTimeout(showTimer);
+        showTimer = null;
+    }
+    visible.value = false;
+    window.removeEventListener("scroll", onReposition, true);
+    window.removeEventListener("resize", onReposition);
+}
+
+function onReposition(): void {
+    if (visible.value) {
+        updatePosition();
+    }
+}
+
+onBeforeUnmount(hide);
 </script>
 
 <template>
-    <div class="tooltip-host">
+    <span
+        ref="hostRef"
+        class="tooltip-host"
+        @mouseenter="show"
+        @mouseleave="hide"
+    >
         <slot />
-        <span class="tooltip-bubble" :class="`tooltip-bubble--${position}`">
-            {{ content }}
-            <span class="tooltip-arrow" />
-        </span>
-    </div>
+
+        <Teleport to="body">
+            <Transition name="tt">
+                <span
+                    v-if="visible"
+                    class="tooltip-bubble"
+                    :class="`tooltip-bubble--${position}`"
+                    :style="{
+                        top: `${coords.top}px`,
+                        left: `${coords.left}px`,
+                    }"
+                >
+                    {{ content }}
+                    <span class="tooltip-arrow" />
+                </span>
+            </Transition>
+        </Teleport>
+    </span>
 </template>
 
 <style scoped>
@@ -29,7 +114,7 @@ withDefaults(
 }
 
 .tooltip-bubble {
-    position: absolute;
+    position: fixed;
     z-index: 9999;
     background: rgba(10, 15, 30, 0.95);
     border: 1px solid rgba(56, 189, 248, 0.18);
@@ -42,55 +127,23 @@ withDefaults(
     white-space: nowrap;
     pointer-events: none;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-
-    opacity: 0;
-    visibility: hidden;
-    transition:
-        opacity 0.15s ease,
-        transform 0.15s ease,
-        visibility 0.15s;
 }
 
-.tooltip-host:hover .tooltip-bubble {
-    opacity: 1;
-    visibility: visible;
-    transform: translate(var(--tt-x, 0), var(--tt-y, 0)) !important;
-}
-
-/* ── Top (default) ── */
+/* ── Anchor transforms (center the bubble around its fixed coordinate) ── */
 .tooltip-bubble--top {
-    bottom: calc(100% + 7px);
-    left: 50%;
-    --tt-x: -50%;
-    --tt-y: 0;
-    transform: translateX(-50%) translateY(4px);
+    transform: translate(-50%, -100%);
 }
 
-/* ── Bottom ── */
 .tooltip-bubble--bottom {
-    top: calc(100% + 7px);
-    left: 50%;
-    --tt-x: -50%;
-    --tt-y: 0;
-    transform: translateX(-50%) translateY(-4px);
+    transform: translate(-50%, 0);
 }
 
-/* ── Left ── */
 .tooltip-bubble--left {
-    top: 50%;
-    right: calc(100% + 7px);
-    --tt-x: 0;
-    --tt-y: -50%;
-    transform: translateY(-50%) translateX(4px);
+    transform: translate(-100%, -50%);
 }
 
-/* ── Right ── */
 .tooltip-bubble--right {
-    top: 50%;
-    left: calc(100% + 7px);
-    --tt-x: 0;
-    --tt-y: -50%;
-    transform: translateY(-50%) translateX(-4px);
+    transform: translate(0, -50%);
 }
 
 /* ── Arrow ── */
@@ -127,5 +180,16 @@ withDefaults(
     right: 100%;
     transform: translateY(-50%);
     border-right-color: rgba(56, 189, 248, 0.18);
+}
+
+/* ── Fade transition (opacity only — transform is reserved for anchoring) ── */
+.tt-enter-active,
+.tt-leave-active {
+    transition: opacity 0.15s ease;
+}
+
+.tt-enter-from,
+.tt-leave-to {
+    opacity: 0;
 }
 </style>

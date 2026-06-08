@@ -8,8 +8,10 @@ import InventoryMetaCard from "./Show/InventoryMetaCard.vue";
 import InventoryDeleteDialog from "./Show/InventoryDeleteDialog.vue";
 import { Link, useForm } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { useToast } from "@/composables/useToast";
+import { usePermissions } from "@/composables/Tenant/usePermissions";
+import { useFeatures } from "@/composables/Tenant/useFeatures";
 import {
     defaultInventoryForm,
     type FilterOption,
@@ -24,6 +26,17 @@ const props = defineProps<{
 }>();
 
 const toast = useToast();
+
+/* ── CRUD capabilities (feature + permission gated) ── */
+const { hasPermission } = usePermissions();
+const { hasFeature } = useFeatures();
+
+const canUpdate = computed(
+    () => hasFeature("inventory") && hasPermission("inventory-records-update"),
+);
+const canDelete = computed(
+    () => hasFeature("inventory") && hasPermission("inventory-records-delete"),
+);
 
 /* ── Edit modal ── */
 const showEditModal = ref(false);
@@ -98,6 +111,7 @@ function confirmDelete(): void {
                     Powrót do listy
                 </Link>
                 <button
+                    v-if="canUpdate"
                     type="button"
                     class="action-btn action-edit"
                     @click="openEdit"
@@ -106,6 +120,7 @@ function confirmDelete(): void {
                     Edytuj
                 </button>
                 <button
+                    v-if="canDelete"
                     type="button"
                     class="action-btn action-delete"
                     @click="showDeleteDialog = true"

@@ -4,12 +4,20 @@ import type { ColumnDef } from "@/types/datatable";
 
 defineOptions({ name: "DataTableRow" });
 
-const props = defineProps<{
-    row: Record<string, unknown>;
-    columns: ColumnDef[];
-    selected: boolean;
-    href?: string;
-}>();
+const props = withDefaults(
+    defineProps<{
+        row: Record<string, unknown>;
+        columns: ColumnDef[];
+        selected: boolean;
+        href?: string;
+        canEdit?: boolean;
+        canDelete?: boolean;
+    }>(),
+    {
+        canEdit: true,
+        canDelete: true,
+    },
+);
 
 const emit = defineEmits<{
     (e: "toggle", id: unknown): void;
@@ -52,6 +60,7 @@ function onRowClick(): void {
         <td class="dt-td dt-td-actions" @click.stop>
             <div class="dt-actions">
                 <button
+                    v-if="canEdit"
                     class="dt-action-btn dt-action-edit"
                     title="Edytuj"
                     @click="emit('edit', row)"
@@ -59,6 +68,7 @@ function onRowClick(): void {
                     <i class="pi pi-pencil" />
                 </button>
                 <button
+                    v-if="canDelete"
                     class="dt-action-btn dt-action-delete"
                     title="Usuń"
                     @click="emit('delete', row)"

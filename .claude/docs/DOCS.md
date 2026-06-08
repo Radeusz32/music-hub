@@ -21,6 +21,7 @@ Multi-tenant SaaS platform for music stores. Each tenant (store) runs on its own
 | stancl/tenancy              | ^3.9    |
 | spatie/laravel-permission   | ^7.0    |
 | spatie/laravel-medialibrary | ^11     |
+| spatie/laravel-ciphersweet  | ^1.7    |
 | maatwebsite/excel           | ^3.1    |
 | laravel/pint                | ^1      |
 | pestphp/pest                | ^4      |
@@ -234,6 +235,23 @@ Uses `spatie/laravel-permission`, seeded per module.
 `inventory-records-{read|create|update|delete}`, `inventory-movements-{read|create|delete}`.
 Read → `$all`, create/update → `$admins`, delete → `$owners`.
 
+**Users permissions (reference):**
+`users-{read|create|update|delete}`. Access is restricted to admin + owner:
+read/create/update → `$admins`, delete → `$owners`.
+
+### Frontend enforcement (defense in depth)
+
+Route middleware (`permission:` + `feature:`) is the real gate, but the UI also
+hides every CRUD action button the user can't use, mirroring the menu's
+`hasFeature(...) && hasPermission(...)` check. Each Index/Show page computes
+`canCreate` / `canUpdate` / `canDelete` flags from `usePermissions()` +
+`useFeatures()` and:
+
+- `v-if`s the toolbar buttons (`Dodaj`, `Importuj`, …) and the Show-page actions (`Edytuj`, `Usuń`);
+- passes `:can-edit` / `:can-delete` to `DataTable`, which hides the per-row edit/delete buttons and the bulk-delete action.
+
+This is documented step-by-step in **`CRUD_GENERATOR_AGENT_INSTRUCTIONS.md` §2.7**.
+
 ---
 
 ## Server-Side DataTable Stack
@@ -257,7 +275,7 @@ A module declares its query rules by extending `DataTableConfig`:
 
 ### 2. `BaseService::fetchForDataTable($configClass, $request)` — `app/Services/`
 
-Reads `search`, `sortBy`, `direction`, `perPage`, and filter params from the request, applies them to the config's `baseQuery()`, paginates, maps each row through the config's transformer, and returns the paginator array merged with an `active filters` key. Filter strategies: `select` (exact), `text` (LIKE), `number` (exact), `date-range` and `number-range` (inclusive `{key}_from`/`{key}_to`).
+Reads `search`, `sortBy`, `direction`, `perPage`, and filter params from the request, applies them to the config's `baseQuery()`, paginates, maps each row through the config's transformer, and returns the paginator array merged with an `active filters` key. Filter strategies: `select` (exact), `text` (LIKE), `number` (exact), `date-range` and `number-range` (inclusive `{key}_from`/`{key}_to`), `boolean` (true/false), `null-status` (nullable column presence), and `relation` (`whereHas` on a related model's column).
 
 ### 3. `Transformer` (abstract) — `app/Transformers/`
 
@@ -266,6 +284,8 @@ Reads `search`, `sortBy`, `direction`, `perPage`, and filter params from the req
 ### 4. `DataTable.vue` + `useTable.ts` (frontend)
 
 `DataTable.vue` renders the table, built-in search, per-column filters, row selection, bulk actions, and a synced top mirror scrollbar. `useTable.ts` holds table state and pushes Inertia visits (debounced search, filters, sort, pagination). A module wraps `useTable` in a `useXxxTable` composable that also builds the column definitions and display helpers.
+
+`DataTable` also accepts `canEdit` / `canDelete` props (both default `true`); when `false` they hide the per-row edit/delete buttons and the bulk-delete action. Pages pass their permission flags here (see **Permissions System → Frontend enforcement**).
 
 > Full how-to for adding filters: **`FILTERABLE_COLUMNS_GUIDE.md`**.
 
@@ -276,6 +296,92 @@ Reads `search`, `sortBy`, `direction`, `perPage`, and filter params from the req
 `spatie/laravel-medialibrary` with a tenant-aware URL generator (`App\MediaLibrary\TenantUrlGenerator`). The `ManagesFiles` trait (used by services) wraps `uploadFile()` / `uploadFiles()` / `destroyFile()` / `destroyFiles()` with `beforeUpload`/`afterUpload`/`beforeDestroy` hooks (reserved for quota tracking + image optimization).
 
 Models implement `HasMedia` + `InteractsWithMedia` and declare collections in `registerMediaCollections()` (e.g. `InventoryRecord` has a single-file `cover` collection limited to jpeg/png/webp). The transformer exposes the URL via `getFirstMediaUrl('cover') ?: null`.
+
+---
+
+## Encrypted Attributes (CipherSweet)
+
+Sensitive PII is **encrypted at rest** with `spatie/laravel-ciphersweet` (wraps `paragonie/ciphersweet`). The encryption key lives in `.env` as `CIPHERSWEET_KEY` (generate with `php artisan ciphersweet:generate-key`; placeholder in `.env.example`). Config: `config/ciphersweet.php` (defaults: `nacl` backend, `string` key provider).
+
+**How a model opts in:**
+
+1. `implements CipherSweetEncrypted` + `use UsesCipherSweet`.
+2. Declare fields + blind indexes in `configureCipherSweet(EncryptedRow $row)`:
+   - `addOptionalTextField('col')` — encrypts the column; **`Optional`** variant tolerates `null` (use it for nullable columns).
+   - `addBlindIndex('col', new BlindIndex('col'))` — registers a searchable index for that column.
+3. The encrypted columns must be **`text`** in the migration (ciphertext is long), and they **must not** have a `'string'`/`'encrypted'` cast — CipherSweet handles encrypt/decrypt via model events (`saving`/`retrieved`).
+
+**Blind indexes (searching):** stored in a separate polymorphic **`blind_indexes`** table (migration in `database/migrations/tenant/`, since the only encrypted model — `User` — is tenant-scoped). They enable **exact-value** lookups only:
+
+- `Model::whereBlind('col', 'indexName', $value)` / `->orWhereBlind(...)` scopes.
+- Uniqueness: `Spatie\LaravelCipherSweet\Rules\EncryptedUniqueRule` (or a closure using `whereBlind`).
+
+> **Limitation (by design):** you **cannot** do partial `LIKE '%frag%'`, sorting, or range filters on encrypted columns — only exact full-value matches via blind indexes. Keep encrypted columns out of `searchableColumns()`/`allowedSortColumns()`/`filterableColumns()` and search them separately (see `UserService::applySearch()`).
+
+**Re-encrypting existing rows:** `php artisan ciphersweet:encrypt "App\Models\Tenant\User"` (run per tenant). After a fresh `make reset` seeders write already-encrypted data, so this is only for retrofitting existing data.
+
+Currently used by: **`App\Models\Tenant\User`** — `phone, street, building_number, apartment_number, postal_code, city, pesel` (blind indexes on `phone, postal_code, city, pesel`).
+
+---
+
+## Users Module
+
+Tenant team management (the "Użytkownicy" feature). A full CRUD over the tenant
+`App\Models\Tenant\User` model, built on the same stack as Inventory. **Access is
+restricted to admin + owner.**
+
+**Model fields** (auth columns + profile, added in
+`migrations/tenant/..._add_profile_fields_to_users_table.php`):
+`first_name`, `last_name`, `email`, `phone`, `street`, `building_number`,
+`apartment_number`, `postal_code`, `city`, `pesel`, `is_active` (bool, default
+`true`), `email_verified_at`, plus the Spatie `roles` relation. `password` is
+`hashed` cast.
+
+**Encrypted PII:** `phone, street, building_number, apartment_number,
+postal_code, city, pesel` are encrypted at rest via CipherSweet (see **Encrypted
+Attributes** above). Blind indexes exist for `phone, postal_code, city, pesel`,
+so those (and `pesel` uniqueness in the FormRequests) are searched by **exact
+value** through `whereBlind`. PESEL is validated as `digits:11` + unique.
+
+**Backend pieces:**
+
+| Concern         | File                                                          |
+| --------------- | ------------------------------------------------------------- |
+| Controller      | `app/Http/Controllers/Tenant/Users/UserController.php`        |
+| Service         | `app/Services/Tenant/Users/UserService.php`                   |
+| DataTableConfig | `app/Http/Resources/Tenant/Users/UserDataTable.php`           |
+| Transformer     | `app/Transformers/Tenant/Users/UserTransformer.php`           |
+| FormRequests    | `app/Http/Requests/Tenant/Users/{Store,Update,BulkDestroyUsers}Request.php` |
+| Permissions     | `database/seeders/Tenant/UsersPermissionsSeeder.php`          |
+| Data seeder     | `database/seeders/Tenant/UsersSeeder.php`                     |
+
+**Permissions:** `users-{read|create|update|delete}`. read/create/update →
+`$admins`, delete → `$owners` (so the whole module is admin + owner only). The
+`useMenu` "Lista użytkowników" entry is gated by `users-read`.
+
+**Routes** (`tenant.users.*`, under `feature:users`): `index`, `store`,
+`bulk-destroy` (collection), then `show`, `update`, `destroy` (`{user}`
+model-bound). Each write action carries its `permission:` middleware.
+
+**Table & filters** (see `FILTERABLE_COLUMNS_GUIDE.md`): global search does `LIKE`
+over `first_name`/`last_name`/`email` and **exact** blind-index matches over the
+encrypted `phone`/`postal_code`/`city`/`pesel` (`UserService::applySearch()`
+overrides `BaseService` to add the `orWhereBlind` clauses); filters for `role` (`relation` →
+Spatie `roles.name`), `email_verified_at` (`null-status`, ✓/✗ toggle),
+`is_active` (`boolean`, ✓/✗ toggle) and `created_at` (date-range). The list shows
+only `phone` + `is_active` beyond the core columns; the rest live in the
+create/edit modal and the Show page.
+
+**Behaviour rules:**
+
+- **Password is set only on create** — `UpdateUserRequest` has no `password` rule and `UserService::update()` always strips it, so editing a user can never change their password (a separate reset flow would be needed for that).
+- **Self-delete is blocked** — `destroy()` refuses the current user; `bulkDelete()` excludes the current user's id.
+- New users are created with `email_verified_at = now()`.
+
+**Frontend:** `resources/js/Pages/Tenant/Users/` (`Index.vue`, `Show.vue`,
+`UserModal.vue`, `users.resource.ts`) + `composables/Tenant/useUserTable.ts`.
+CRUD buttons are feature/permission-gated per the §2.7 pattern in
+`CRUD_GENERATOR_AGENT_INSTRUCTIONS.md`.
 
 ---
 
@@ -305,6 +411,8 @@ Authenticated routes add `auth`. Feature groups add `feature:{name}`; write acti
 | `/settings`     | `feature:settings`     | Ustawienia  |
 
 **Inventory records routes (reference):** `index`, `store`, `import`, `export-template`, `bulk-destroy` (collection, literal paths) then `show`, `update`, `destroy`, `cover`, `cover.destroy` (`{inventoryRecord}` model-bound). Names: `tenant.inventory.records.*`.
+
+**Users routes:** `index`, `store`, `bulk-destroy` (collection) then `show`, `update`, `destroy` (`{user}` model-bound), under `feature:users`. Names: `tenant.users.*`. See **Users Module** above.
 
 ---
 

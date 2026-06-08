@@ -165,6 +165,7 @@ export function useMenu() {
                     name: "tenant.users.index",
                     url: route("tenant.users.index"),
                     icon: "pi-users",
+                    permission: "users-read",
                 },
                 {
                     label: "Zaproszenia",

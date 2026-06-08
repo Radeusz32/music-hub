@@ -110,6 +110,38 @@ final class {Entity} extends Model // implements HasMedia (only if it has files)
 
 Use `casts()` **method** (not `$casts`). Add a `@property-read` docblock like Inventory's.
 
+#### 1.3.1 Encrypting sensitive fields (optional — CipherSweet)
+
+If the entity stores **PII or other sensitive data** (national IDs, full address,
+phone, bank/tax numbers, etc.), encrypt those columns at rest with CipherSweet
+instead of storing plaintext. See **`DOCS.md` → Encrypted Attributes** for the
+full mechanism. Quick recipe:
+
+1. **Migration** — make every encrypted column `text` (ciphertext is long), e.g.
+   `$table->text('pesel')->nullable();`. Do **not** add per-column hash columns.
+2. **Model** — `implements CipherSweetEncrypted` + `use UsesCipherSweet`, and:
+   ```php
+   public static function configureCipherSweet(EncryptedRow $row): void
+   {
+       $row->addOptionalTextField('pesel')              // Optional = tolerates null
+           ->addBlindIndex('pesel', new BlindIndex('pesel')); // only if it must be searchable
+   }
+   ```
+   Do **not** give encrypted columns a `'string'`/`'encrypted'` cast (CipherSweet
+   handles it via model events). Keep them in `$fillable`.
+3. **Blind index table** — ensure the polymorphic `blind_indexes` migration exists
+   in `database/migrations/tenant/` (shipped already; only encrypted models need it).
+4. **Search / filters** — encrypted columns support **exact match only** (no `LIKE`,
+   sort, or range). Keep them **out** of `searchableColumns()` /
+   `allowedSortColumns()` / `filterableColumns()`, and search them by overriding
+   `applySearch()` in the service with `orWhereBlind('col', 'col', $search)` (copy
+   `UserService::applySearch()`).
+5. **Uniqueness** — validate with `EncryptedUniqueRule` or a closure using
+   `Model::whereBlind('col', 'col', $value)` (copy `Store/UpdateUserRequest`).
+
+> If a sensitive field never needs to be searched, skip the blind index entirely —
+> just `addOptionalTextField()` and it becomes write/read-only encrypted data.
+
 ### 1.4 Factory + Seeder
 
 ```bash
@@ -441,10 +473,11 @@ Handlers: `form.post/put` on submit, `deleteForm.delete(route('{routePrefix}.des
 
 **`DataTable` API quick reference:**
 
-- Props: `columns, rows, pagination, sortBy, direction, filterValues, searchable, search, searchPlaceholder, rowRoute, loading, emptyMessage`.
+- Props: `columns, rows, pagination, sortBy, direction, filterValues, searchable, search, searchPlaceholder, rowRoute, loading, emptyMessage, canEdit, canDelete`.
 - Emits: `search, update:search, sort, page, filter(key,value), clear-filters, edit(row), delete(row), bulk-delete(ids)`.
 - Slots: `cell-{key}`, `toolbar`, `delete-confirm-text`.
 - Built-in: search box, per-column filters, row selection, **bulk actions** (≥2 selected → "Akcje grupowe" with delete), **clear-filters**, top mirror scrollbar.
+- `canEdit` / `canDelete` (both default `true`) hide the per-row edit/delete buttons and the bulk-delete action when `false` — pass your permission flags here (see 2.7).
 
 ### 2.4 Create/Edit modal — `{Entity}Modal.vue`
 
@@ -488,6 +521,36 @@ Reuse `BaseDialog` with `align="center"`, `:mobile-fullscreen="false"`,
 `:show-close="false"` for compact confirmations (see `InventoryDeleteDialog.vue`).
 The table's own row-delete + bulk-delete already use `DataTableDeleteDialog`.
 
+### 2.7 Gate CRUD action buttons (feature + permission)
+
+The route middleware (`feature:` + `permission:`) is the real enforcement, but
+**every CRUD action button must also be hidden on the frontend** when the user
+lacks the matching feature/permission — a second, UX layer of the same rule used
+by `useMenu` (`hasFeature(...) && hasPermission(...)`).
+
+In the **Index** and **Show** pages, compute capability flags once and reuse them:
+
+```ts
+import { usePermissions } from "@/composables/Tenant/usePermissions";
+import { useFeatures } from "@/composables/Tenant/useFeatures";
+
+const { hasPermission } = usePermissions();
+const { hasFeature } = useFeatures();
+
+const canCreate = computed(() => hasFeature("{module}") && hasPermission("{module}-{plural}-create"));
+const canUpdate = computed(() => hasFeature("{module}") && hasPermission("{module}-{plural}-update"));
+const canDelete = computed(() => hasFeature("{module}") && hasPermission("{module}-{plural}-delete"));
+```
+
+Then:
+
+- **Toolbar buttons** (`Dodaj`, `Importuj`, …) → `v-if="canCreate"` (use `canRead` for read-only utilities like export).
+- **Row + bulk actions** → pass the flags to `DataTable`: `:can-edit="canUpdate" :can-delete="canDelete"`. The shared `DataTable`/`DataTableRow` hide the row edit/delete buttons and the "Akcje grupowe" bulk-delete accordingly (both props default `true`, so untouched tables are unaffected).
+- **Show page actions** (`Edytuj`, `Usuń`) → `v-if="canUpdate"` / `v-if="canDelete"` (combine with any extra guard, e.g. `canDelete && !isSelf`).
+
+Keep the permission strings in sync with the `{Module}PermissionsSeeder` and the
+route middleware. Read → everyone/admins, create/update → admins, delete → owners.
+
 ---
 
 ## 3. Verify
@@ -516,6 +579,7 @@ Backend:
 - [ ] Enum(s) with `label()/color()/options()` (if fixed option sets)
 - [ ] Tenant migration in `database/migrations/tenant/` (timestamps + softDeletes)
 - [ ] `App\Models\Tenant\{Entity}` — `casts()`, `$fillable`, relations, SoftDeletes (+ HasMedia if files)
+- [ ] (Sensitive PII?) CipherSweet: `text` columns + `configureCipherSweet()` + blind-index search/uniqueness (§1.3.1)
 - [ ] Factory (+ states) and `{Entities}Seeder`, registered in `TenantDatabaseSeeder`
 - [ ] `{Module}PermissionsSeeder` registered in `AllPermissionsSeeder`
 - [ ] `{Entity}Transformer` (+ `eagerLoads`, includes)
@@ -533,6 +597,7 @@ Frontend:
 - [ ] `Index.vue` (IndexLayout + DataTable + modals, all events wired)
 - [ ] `{Entity}Modal.vue` (BaseDialog + Base\* fields)
 - [ ] `Show.vue` (+ `Show/` section components) — if a detail page is needed
+- [ ] CRUD buttons gated by `hasFeature(...) && hasPermission(...)` — toolbar `v-if`, `DataTable :can-edit/:can-delete`, Show actions (see 2.7)
 - [ ] `useMenu.ts` nav entry (feature/permission keys)
 
 ---

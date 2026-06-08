@@ -20,11 +20,21 @@ input for each column.
 | `number`       | Number exact match      | `WHERE col = value`                         | `BaseInputNumber`          |
 | `date-range`   | Date from/to            | `WHERE col >= from AND col <= to` (`whereDate`) | `DatePicker` ×2        |
 | `number-range` | Numeric from/to (year, qty, price) | `WHERE col >= from AND col <= to` | `BaseInputNumber` ×2       |
+| `boolean`      | True/false toggle (e.g. `is_active`) | `WHERE col = true/false`           | `boolean` (clickable ✓/✗)  |
+| `null-status`  | Nullable column presence (e.g. `email_verified_at`) | `WHERE col IS [NOT] NULL` | `boolean` (clickable ✓/✗)  |
+| `relation`     | Exact match on a related model's column (e.g. Spatie `roles.name`) | `WHERE EXISTS (relation WHERE col = value)` (`whereHas`) | `select` |
 
 **Range convention:** range types read two request params named
 `{key}_from` and `{key}_to`, where `{key}` is the array key in
 `filterableColumns()`. So a config key `sale_price` of type `number-range`
 reads `?sale_price_from=...&sale_price_to=...`.
+
+**Backend type ≠ frontend type.** The backend `type` (in `filterableColumns()`)
+picks the SQL strategy; the frontend `filter.type` (in the `ColumnDef`) picks the
+input. They are usually the same, but don't have to be — e.g. `role` is
+`relation` on the backend but `select` on the frontend, and `email_verified_at`
+is `null-status` on the backend but `boolean` (✓/✗) on the frontend. Both
+`boolean` and `null-status` are driven by the same `1` / `0` request value.
 
 ---
 
@@ -61,6 +71,26 @@ public static function filterableColumns(): array
 
 That is all the backend needs — no controller changes, no manual `where`s.
 
+For the relation / nullable / boolean strategies (from the Users module):
+
+```php
+// app/Http/Resources/Tenant/Users/UserDataTable.php
+public static function filterableColumns(): array
+{
+    return [
+        // Spatie role lives on the `roles` relation, not a column:
+        'role'              => ['column' => 'name', 'type' => 'relation', 'relation' => 'roles'],
+        // Nullable timestamp → "verified / unverified":
+        'email_verified_at' => ['column' => 'email_verified_at', 'type' => 'null-status'],
+        // Real boolean column:
+        'is_active'         => ['column' => 'is_active', 'type' => 'boolean'],
+    ];
+}
+```
+
+- `relation` requires an extra `relation` key (the relationship method); `column` is the column on the **related** table.
+- `null-status` and `boolean` need no `options` — the frontend renders fixed ✓/✗ toggles.
+
 ---
 
 ## Resolution flow
@@ -86,6 +116,9 @@ That is all the backend needs — no controller changes, no manual `where`s.
      number       → where(col, value)
      date-range   → whereDate(col, '>=', from) / whereDate(col, '<=', to)
      number-range → where(col, '>=', from)     / where(col, '<=', to)
+     boolean      → where(col, value === '1')
+     null-status  → '1' → whereNotNull(col) / '0' → whereNull(col)
+     relation     → whereHas(relation, fn ($q) => $q->where(col, value))
    ↓
 6. Paginates, maps rows through the Transformer, returns
    paginator->toArray() merged with the active `filters` key.
@@ -111,7 +144,34 @@ export type ColumnFilter =
     | { type: "select"; options: FilterOption[] }
     | { type: "date-range"; fromKey: string; toKey: string }
     | { type: "number"; currency?: boolean; min?: number; max?: number; placeholder?: string }
-    | { type: "number-range"; fromKey: string; toKey: string; currency?: boolean; min?: number; max?: number };
+    | { type: "number-range"; fromKey: string; toKey: string; currency?: boolean; min?: number; max?: number }
+    | { type: "boolean"; trueLabel?: string; falseLabel?: string };
+```
+
+A `boolean` column filter renders two clickable icon toggles (✓ / ✗); pick it for
+real boolean columns **and** for `null-status` backend filters:
+
+```ts
+// resources/js/Pages/Tenant/Users/users.resource.ts
+{
+    key: "is_active",
+    label: "Status",
+    sortable: true,
+    width: "150px",
+    filter: { type: "boolean", trueLabel: "Aktywny", falseLabel: "Nieaktywny" },
+},
+{
+    key: "email_verified_at",     // backend type is `null-status`
+    label: "Weryfikacja",
+    width: "160px",
+    filter: { type: "boolean", trueLabel: "Zweryfikowany", falseLabel: "Niezweryfikowany" },
+},
+{
+    key: "role",                  // backend type is `relation`
+    label: "Rola",
+    width: "150px",
+    filter: { type: "select", options: options.roleOptions },
+},
 ```
 
 ```ts
@@ -156,6 +216,9 @@ export type ColumnFilter =
   `filter` event (~450 ms) so typing doesn't lag against the Inertia round-trip,
   and they re-sync from props (so the "Wyczyść filtry" clear-all works).
 - `currency: true` → `BaseInputNumber` gets `format="currency"` + `suffix="zł"`.
+- `boolean` renders two icon buttons (`pi-check` / `pi-times`) emitting `1` / `0`;
+  clicking the active one clears the filter (`''`). The same value feeds either
+  the backend `boolean` or `null-status` strategy.
 
 The page wires the events to the table composable:
 
@@ -197,7 +260,9 @@ one navigation.
 ## Summary
 
 - `filterableColumns()` is the single backend source of truth (no legacy fallbacks).
-- Types: `select`, `text`, `number`, `date-range`, `number-range`.
+- Types: `select`, `text`, `number`, `date-range`, `number-range`, `boolean`, `null-status`, `relation`.
 - Ranges use `{key}_from` / `{key}_to` on both sides.
+- `relation` adds a `relation` key; `boolean` / `null-status` are driven by `1` / `0` and need no `options`.
+- Backend `type` (SQL strategy) and frontend `filter.type` (input) are independent — e.g. `relation`→`select`, `null-status`→`boolean`.
 - `BaseService` resolves + applies automatically; add a new `type` by extending `applyFilters()`.
-- The frontend renders inputs from each column's `filter` descriptor via `DataTableColumnFilter.vue`; keep keys in sync with the backend.
+- The frontend renders inputs from each column's `filter` descriptor via `DataTableColumnFilter.vue`; keep the request **keys** in sync with the backend.

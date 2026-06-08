@@ -64,7 +64,7 @@ abstract class BaseService
      * Returns resolved filters and all filter keys for query string preservation.
      *
      * @param  class-string<DataTableConfig>  $resourceClass
-     * @return array{resolved: array<int, array{type: string, column: string, value?: mixed, from?: string|null, to?: string|null}>, keys: list<string>}
+     * @return array{resolved: array<int, array{type: string, column: string, value?: mixed, from?: string|null, to?: string|null, relation?: string|null}>, keys: list<string>}
      */
     protected function resolveFilters(string $resourceClass, Request $request): array
     {
@@ -102,6 +102,7 @@ abstract class BaseService
                     'type' => $type,
                     'column' => $column,
                     'value' => $value,
+                    'relation' => $config['relation'] ?? null,
                 ];
             }
 
@@ -118,7 +119,7 @@ abstract class BaseService
      * Apply filters to the query based on resolved filter configurations.
      *
      * @param  Builder<\Illuminate\Database\Eloquent\Model>  $query
-     * @param  array<int, array{type: string, column: string, value?: mixed, from?: string|null, to?: string|null}>  $filters
+     * @param  array<int, array{type: string, column: string, value?: mixed, from?: string|null, to?: string|null, relation?: string|null}>  $filters
      * @return Builder<\Illuminate\Database\Eloquent\Model>
      */
     protected function applyFilters(Builder $query, array $filters): Builder
@@ -130,6 +131,9 @@ abstract class BaseService
                 'number' => $this->applyNumberFilter($query, $filter['column'], $filter['value']),
                 'date-range' => $this->applyDateRangeFilter($query, $filter['column'], $filter['from'] ?? null, $filter['to'] ?? null),
                 'number-range' => $this->applyNumberRangeFilter($query, $filter['column'], $filter['from'] ?? null, $filter['to'] ?? null),
+                'relation' => $this->applyRelationFilter($query, $filter['relation'] ?? null, $filter['column'], $filter['value']),
+                'null-status' => $this->applyNullStatusFilter($query, $filter['column'], $filter['value']),
+                'boolean' => $this->applyBooleanFilter($query, $filter['column'], $filter['value']),
                 default => null,
             };
         }
@@ -146,6 +150,54 @@ abstract class BaseService
     protected function applySelectFilter(Builder $query, string $column, mixed $value): Builder
     {
         return $query->where($column, $value);
+    }
+
+    /**
+     * Apply RELATION filter (exact match on a column of a related model).
+     * Used for attributes that live on a relation rather than a column,
+     * e.g. a Spatie role: `['type' => 'relation', 'relation' => 'roles', 'column' => 'name']`.
+     *
+     * @param  Builder<\Illuminate\Database\Eloquent\Model>  $query
+     * @return Builder<\Illuminate\Database\Eloquent\Model>
+     */
+    protected function applyRelationFilter(Builder $query, ?string $relation, string $column, mixed $value): Builder
+    {
+        if ($relation === null) {
+            return $query;
+        }
+
+        return $query->whereHas($relation, function (Builder $relationQuery) use ($column, $value): void {
+            $relationQuery->where($column, $value);
+        });
+    }
+
+    /**
+     * Apply NULL-STATUS filter on a nullable column (e.g. `email_verified_at`):
+     * a truthy value → column IS NOT NULL, a falsy value → column IS NULL.
+     * Driven by the same `1`/`0` values as the `boolean` filter.
+     *
+     * @param  Builder<\Illuminate\Database\Eloquent\Model>  $query
+     * @return Builder<\Illuminate\Database\Eloquent\Model>
+     */
+    protected function applyNullStatusFilter(Builder $query, string $column, mixed $value): Builder
+    {
+        return match ((string) $value) {
+            '1', 'true' => $query->whereNotNull($column),
+            '0', 'false' => $query->whereNull($column),
+            default => $query,
+        };
+    }
+
+    /**
+     * Apply BOOLEAN filter on a real boolean column (e.g. `is_active`):
+     * `1`/`true` → column = true, `0`/`false` → column = false.
+     *
+     * @param  Builder<\Illuminate\Database\Eloquent\Model>  $query
+     * @return Builder<\Illuminate\Database\Eloquent\Model>
+     */
+    protected function applyBooleanFilter(Builder $query, string $column, mixed $value): Builder
+    {
+        return $query->where($column, in_array((string) $value, ['1', 'true'], true));
     }
 
     /**

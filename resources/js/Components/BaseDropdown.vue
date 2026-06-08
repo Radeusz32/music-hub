@@ -1,5 +1,13 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, onBeforeUnmount, nextTick } from "vue";
+import {
+    computed,
+    ref,
+    onMounted,
+    onBeforeUnmount,
+    nextTick,
+    watch,
+} from "vue";
+import Tooltip from "@/Components/Tooltip.vue";
 
 defineOptions({ name: "BaseDropdown" });
 
@@ -20,6 +28,8 @@ interface Props {
     id?: string;
     emptyLabel?: string;
     clearable?: boolean;
+    searchable?: boolean;
+    searchPlaceholder?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -30,6 +40,8 @@ const props = withDefaults(defineProps<Props>(), {
     error: false,
     emptyLabel: "Select option",
     clearable: false,
+    searchable: false,
+    searchPlaceholder: "Szukaj...",
 });
 
 const emit = defineEmits<{
@@ -46,9 +58,11 @@ const slots = defineSlots<{
 const isOpen = ref(false);
 const isFocused = ref(false);
 const focusedIndex = ref(-1);
+const searchQuery = ref("");
 const triggerRef = ref<HTMLDivElement | null>(null);
 const listRef = ref<HTMLUListElement | null>(null);
 const dropdownRef = ref<HTMLDivElement | null>(null);
+const searchRef = ref<HTMLDivElement | null>(null);
 
 const hasPrefix = computed(() => !!props.prefixIcon || !!slots.prefix);
 const hasSuffix = computed(() => !!props.suffixIcon || !!slots.suffix);
@@ -57,11 +71,38 @@ const selectedOption = computed(
     () => props.options.find((o) => o.value === props.modelValue) ?? null,
 );
 
+/** Options shown in the list — filtered by the search query when searchable. */
+const visibleOptions = computed(() => {
+    const query = searchQuery.value.trim().toLowerCase();
+
+    if (!props.searchable || query === "") {
+        return props.options;
+    }
+
+    return props.options.filter((o) => o.label.toLowerCase().includes(query));
+});
+
 const displayLabel = computed(
     () => selectedOption.value?.label ?? props.placeholder ?? props.emptyLabel,
 );
 
 const isPlaceholder = computed(() => !selectedOption.value);
+
+/**
+ * Every label the trigger can ever display (all options + the placeholder),
+ * rendered as hidden ghosts so the control is always as wide as its widest
+ * possible value — it never resizes when the selection changes.
+ */
+const sizingLabels = computed(() => {
+    const labels = props.options.map((o) => o.label);
+    const placeholder = props.placeholder || props.emptyLabel;
+
+    if (placeholder) {
+        labels.push(placeholder);
+    }
+
+    return labels;
+});
 
 const showClear = computed(
     () =>
@@ -82,16 +123,23 @@ function open() {
     if (props.disabled) return;
     isOpen.value = true;
     isFocused.value = true;
-    focusedIndex.value = props.options.findIndex(
+    searchQuery.value = "";
+    focusedIndex.value = visibleOptions.value.findIndex(
         (o) => o.value === props.modelValue,
     );
-    nextTick(() => scrollFocusedIntoView());
+    nextTick(() => {
+        scrollFocusedIntoView();
+        if (props.searchable) {
+            searchRef.value?.querySelector("input")?.focus();
+        }
+    });
 }
 
 function close() {
     isOpen.value = false;
     isFocused.value = false;
     focusedIndex.value = -1;
+    searchQuery.value = "";
 }
 
 function toggle() {
@@ -109,7 +157,7 @@ function select(option: DropdownOption) {
 function onKeydown(e: KeyboardEvent) {
     if (props.disabled) return;
 
-    const enabledIndices = props.options
+    const enabledIndices = visibleOptions.value
         .map((o, i) => (!o.disabled ? i : -1))
         .filter((i) => i !== -1);
 
@@ -167,7 +215,7 @@ function onKeydown(e: KeyboardEvent) {
         case " ": {
             e.preventDefault();
             if (focusedIndex.value >= 0) {
-                select(props.options[focusedIndex.value]);
+                select(visibleOptions.value[focusedIndex.value]);
             }
             break;
         }
@@ -176,6 +224,32 @@ function onKeydown(e: KeyboardEvent) {
             break;
     }
 }
+
+/**
+ * Keyboard handling while typing in the search field: forward only the
+ * navigation keys to {@link onKeydown} so regular typing (incl. space) works.
+ */
+function onSearchKeydown(e: KeyboardEvent): void {
+    if (
+        [
+            "ArrowDown",
+            "ArrowUp",
+            "Home",
+            "End",
+            "Enter",
+            "Escape",
+            "Tab",
+        ].includes(e.key)
+    ) {
+        onKeydown(e);
+    }
+}
+
+/* Reset the highlight to the first match whenever the query changes. */
+watch(searchQuery, () => {
+    const firstEnabled = visibleOptions.value.findIndex((o) => !o.disabled);
+    focusedIndex.value = firstEnabled;
+});
 
 function scrollFocusedIntoView() {
     nextTick(() => {
@@ -222,6 +296,27 @@ onBeforeUnmount(() =>
             @click="toggle"
             @keydown="onKeydown"
         >
+            <!-- Clear button (left, divided off by a border) -->
+            <Transition name="bd-clear">
+                <Tooltip
+                    v-if="showClear"
+                    content="Wyczyść"
+                    position="top"
+                    class="bd__clear-tip"
+                >
+                    <button
+                        type="button"
+                        class="bd__clear"
+                        tabindex="-1"
+                        aria-label="Wyczyść"
+                        @click="clear"
+                        @mousedown.stop
+                    >
+                        <i class="pi pi-times" />
+                    </button>
+                </Tooltip>
+            </Transition>
+
             <!-- Prefix -->
             <div v-if="hasPrefix" class="bd__prefix">
                 <slot name="prefix">
@@ -234,12 +329,19 @@ onBeforeUnmount(() =>
                 </slot>
             </div>
 
-            <!-- Value / Placeholder -->
+            <!-- Value / Placeholder (sized to the widest possible label) -->
             <span
                 class="bd__value"
                 :class="{ 'bd__value--placeholder': isPlaceholder }"
             >
-                {{ displayLabel }}
+                <span class="bd__current">{{ displayLabel }}</span>
+                <span
+                    v-for="(label, i) in sizingLabels"
+                    :key="i"
+                    class="bd__ghost"
+                    aria-hidden="true"
+                    >{{ label }}</span
+                >
             </span>
 
             <!-- Suffix -->
@@ -254,72 +356,94 @@ onBeforeUnmount(() =>
                 </slot>
             </div>
 
-            <!-- Clear button -->
-            <Transition name="bd-clear">
-                <button
-                    v-if="showClear"
-                    type="button"
-                    class="bd__clear"
-                    tabindex="-1"
-                    aria-label="Wyczyść"
-                    @click="clear"
-                    @mousedown.stop
-                >
-                    <i class="pi pi-times" />
-                </button>
-            </Transition>
-
-            <!-- Chevron -->
-            <span
-                class="bd__chevron"
-                :class="{ 'bd__chevron--hidden': showClear }"
-                aria-hidden="true"
-            >
+            <!-- Chevron (right, divided off by a border) -->
+            <span class="bd__chevron" aria-hidden="true">
                 <i class="pi pi-chevron-down" />
             </span>
         </div>
 
-        <!-- Dropdown list -->
+        <!-- Dropdown panel -->
         <Transition name="bd-list">
-            <ul
-                v-if="isOpen"
-                ref="listRef"
-                class="bd__list"
-                role="listbox"
-                :aria-activedescendant="
-                    focusedIndex >= 0 ? `bd-option-${focusedIndex}` : undefined
-                "
-            >
-                <li
-                    v-for="(option, index) in options"
-                    :id="`bd-option-${index}`"
-                    :key="String(option.value)"
-                    class="bd__option"
-                    role="option"
-                    :aria-selected="option.value === modelValue"
-                    :aria-disabled="option.disabled"
-                    :class="{
-                        'bd__option--selected': option.value === modelValue,
-                        'bd__option--disabled': option.disabled,
-                        'bd__option--focused': index === focusedIndex,
-                    }"
-                    @mousedown.prevent="select(option)"
-                    @mouseenter="!option.disabled && (focusedIndex = index)"
+            <div v-if="isOpen" class="bd__panel">
+                <!-- Search -->
+                <div
+                    v-if="searchable"
+                    ref="searchRef"
+                    class="bd__search"
+                    @click.stop
                 >
-                    <slot name="option" :option="option">
-                        <span class="bd__option-label">{{ option.label }}</span>
-                    </slot>
-                    <i
-                        v-if="option.value === modelValue"
-                        class="pi pi-check bd__option-check"
-                        aria-hidden="true"
-                    />
-                </li>
+                    <BaseInput
+                        v-model="searchQuery"
+                        class="bd__search-input"
+                        :placeholder="searchPlaceholder"
+                        prefix-icon="pi pi-search"
+                        @keydown="onSearchKeydown"
+                    >
+                        <template v-if="searchQuery" #suffix>
+                            <Tooltip content="Wyczyść" position="top">
+                                <button
+                                    type="button"
+                                    class="bd__search-clear"
+                                    tabindex="-1"
+                                    aria-label="Wyczyść"
+                                    @click="searchQuery = ''"
+                                    @mousedown.prevent
+                                >
+                                    <i class="pi pi-times" />
+                                </button>
+                            </Tooltip>
+                        </template>
+                    </BaseInput>
+                </div>
 
-                <li v-if="options.length === 0" class="bd__empty">
-                    Brak opcji
-                </li>
-            </ul>
+                <!-- Options -->
+                <ul
+                    ref="listRef"
+                    class="bd__list"
+                    role="listbox"
+                    :aria-activedescendant="
+                        focusedIndex >= 0
+                            ? `bd-option-${focusedIndex}`
+                            : undefined
+                    "
+                >
+                    <li
+                        v-for="(option, index) in visibleOptions"
+                        :id="`bd-option-${index}`"
+                        :key="String(option.value)"
+                        class="bd__option"
+                        role="option"
+                        :aria-selected="option.value === modelValue"
+                        :aria-disabled="option.disabled"
+                        :class="{
+                            'bd__option--selected': option.value === modelValue,
+                            'bd__option--disabled': option.disabled,
+                            'bd__option--focused': index === focusedIndex,
+                        }"
+                        @mousedown.prevent="select(option)"
+                        @mouseenter="!option.disabled && (focusedIndex = index)"
+                    >
+                        <slot name="option" :option="option">
+                            <span class="bd__option-label">{{
+                                option.label
+                            }}</span>
+                        </slot>
+                        <i
+                            v-if="option.value === modelValue"
+                            class="pi pi-check bd__option-check"
+                            aria-hidden="true"
+                        />
+                    </li>
+
+                    <li v-if="visibleOptions.length === 0" class="bd__empty">
+                        {{
+                            searchable && searchQuery
+                                ? "Brak wyników"
+                                : "Brak opcji"
+                        }}
+                    </li>
+                </ul>
+            </div>
         </Transition>
     </div>
 </template>
@@ -330,6 +454,9 @@ onBeforeUnmount(() =>
     position: relative;
     display: flex;
     flex-direction: column;
+    /* Always as wide as the longest option label, capped at the parent width. */
+    width: max-content;
+    max-width: 100%;
 }
 
 /* ── Trigger ── */
@@ -409,6 +536,10 @@ onBeforeUnmount(() =>
 
 /* ── Value ── */
 .bd__value {
+    /* Grid stacks the current label + all hidden ghosts in one cell, so the
+       cell (and trigger) width is dictated by the widest possible label. */
+    display: grid;
+    align-items: center;
     flex: 1;
     min-width: 0;
     padding: 0.5rem 0.4rem 0.5rem 0.8rem;
@@ -416,10 +547,23 @@ onBeforeUnmount(() =>
     font-size: 0.8125rem;
     font-weight: 400;
     letter-spacing: 0.01em;
+    overflow: hidden;
+    transition: color 0.15s ease;
+}
+
+.bd__value > * {
+    grid-area: 1 / 1;
     white-space: nowrap;
+}
+
+.bd__current {
     overflow: hidden;
     text-overflow: ellipsis;
-    transition: color 0.15s ease;
+}
+
+.bd__ghost {
+    visibility: hidden;
+    pointer-events: none;
 }
 
 .bd__value--placeholder {
@@ -453,56 +597,52 @@ onBeforeUnmount(() =>
     font-size: 0.8rem;
 }
 
-/* ── Clear button ── */
+/* ── Clear button (left, full-height divider) ── */
 .bd__clear {
     display: flex;
     align-items: center;
     justify-content: center;
+    align-self: stretch;
     flex-shrink: 0;
-    width: 20px;
-    height: 20px;
-    margin-right: 0.15rem;
-    padding: 0;
+    padding: 0 0.55rem;
     border: none;
-    border-radius: 50%;
-    background: rgba(148, 163, 184, 0.12);
+    border-right: 1px solid rgba(56, 189, 248, 0.14);
+    background: transparent;
     color: rgba(148, 163, 184, 0.6);
-    font-size: 0.6rem;
+    font-size: 0.62rem;
     cursor: pointer;
-    transition:
-        background 0.15s ease,
-        color 0.15s ease;
+    transition: color 0.15s ease;
 }
 
 .bd__clear:hover {
-    background: rgba(248, 113, 113, 0.18);
     color: rgba(248, 113, 113, 0.9);
 }
 
-/* ── Chevron ── */
+/* ── Chevron (right, full-height divider) ── */
 .bd__chevron {
     display: flex;
     align-items: center;
     justify-content: center;
+    align-self: stretch;
     flex-shrink: 0;
-    padding: 0 0.7rem 0 0.3rem;
+    padding: 0 0.6rem;
+    border-left: 1px solid rgba(56, 189, 248, 0.14);
     color: rgba(56, 189, 248, 0.45);
     font-size: 0.7rem;
-    transition:
-        transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-        color 0.2s ease,
-        opacity 0.15s ease;
+    transition: color 0.2s ease;
+}
+
+.bd__chevron i {
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     will-change: transform;
 }
 
 .bd--open .bd__chevron {
-    transform: rotate(180deg);
     color: #38bdf8;
 }
 
-/* Shrink chevron slightly when clear is showing so it doesn't crowd */
-.bd__chevron--hidden {
-    opacity: 0.3;
+.bd--open .bd__chevron i {
+    transform: rotate(180deg);
 }
 
 /* ── Clear transition ── */
@@ -519,8 +659,8 @@ onBeforeUnmount(() =>
     transform: scale(0.6);
 }
 
-/* ── Dropdown list ── */
-.bd__list {
+/* ── Dropdown panel ── */
+.bd__panel {
     position: absolute;
     top: calc(100% - 1px);
     left: 0;
@@ -537,6 +677,61 @@ onBeforeUnmount(() =>
 
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
 
+    overflow: hidden;
+}
+
+.bd--error .bd__panel {
+    border-color: rgba(248, 113, 113, 0.45);
+    border-top-color: rgba(248, 113, 113, 0.1);
+}
+
+/* ── Search row ── */
+.bd__search {
+    display: flex;
+    padding: 4px;
+    border-bottom: 1px solid rgba(56, 189, 248, 0.1);
+}
+
+.bd__search-input {
+    flex: 1;
+    min-width: 0;
+}
+
+.bd__search-input :deep(.base-input__field) {
+    padding: 0.32rem 0.5rem;
+    font-size: 0.8125rem;
+}
+
+.bd__search-input :deep(.base-input__prefix) {
+    padding: 0 0.5rem;
+}
+
+/* Clear button lives inside the input's suffix, divided off by a thin border */
+.bd__search-input :deep(.base-input__suffix) {
+    padding: 0;
+    border-left: 1px solid rgba(56, 189, 248, 0.14);
+}
+
+.bd__search-clear {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 0 0.45rem;
+    border: none;
+    background: transparent;
+    color: rgba(148, 163, 184, 0.55);
+    font-size: 0.6rem;
+    cursor: pointer;
+    transition: color 0.15s ease;
+}
+
+.bd__search-clear:hover {
+    color: #f87171;
+}
+
+/* ── Dropdown list ── */
+.bd__list {
     margin: 0;
     padding: 3px;
     list-style: none;
@@ -547,11 +742,6 @@ onBeforeUnmount(() =>
 
     scrollbar-width: thin;
     scrollbar-color: rgba(56, 189, 248, 0.2) transparent;
-}
-
-.bd--error .bd__list {
-    border-color: rgba(248, 113, 113, 0.45);
-    border-top-color: rgba(248, 113, 113, 0.1);
 }
 
 .bd__list::-webkit-scrollbar {
