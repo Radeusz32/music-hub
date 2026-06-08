@@ -15,9 +15,15 @@ export interface Auth {
     features: string[];
 }
 
+export interface Flash {
+    success?: string | null;
+    error?: string | null;
+}
+
 declare module "@inertiajs/core" {
     interface PageProps extends InertiaPageProps {
         auth: Auth | null;
         tenant: { company_name: string | null } | null;
+        flash: Flash;
     }
 }

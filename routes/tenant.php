@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Tenant\Auth\AuthController;
+use App\Http\Controllers\Tenant\Inventory\InventoryRecordController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -51,52 +52,52 @@ Route::middleware([
             ->group(function (): void {
                 Route::prefix('records')
                     ->group(function (): void {
-                        Route::get('/', [InventoryController::class, 'index'])
+                        Route::get('/', [InventoryRecordController::class, 'index'])
                             ->name('tenant.inventory.records.index')
                             ->middleware('permission:inventory-records-read');
 
-                        Route::get('/create', [InventoryController::class, 'create'])
-                            ->name('tenant.inventory.records.create')
-                            ->middleware('permission:inventory-records-create');
-
-                        Route::post('/', [InventoryController::class, 'store'])
+                        Route::post('/', [InventoryRecordController::class, 'store'])
                             ->name('tenant.inventory.records.store')
                             ->middleware('permission:inventory-records-create');
 
-                        Route::get('/{inventoryRecord}', [InventoryController::class, 'show'])
+                        Route::post('/import', [InventoryRecordController::class, 'importExcel'])
+                            ->name('tenant.inventory.records.import')
+                            ->middleware('permission:inventory-records-create');
+
+                        Route::get('/export-template', [InventoryRecordController::class, 'exportExcelTemplate'])
+                            ->name('tenant.inventory.records.export-template')
+                            ->middleware('permission:inventory-records-read');
+
+                        Route::post('/bulk-destroy', [InventoryRecordController::class, 'bulkDestroy'])
+                            ->name('tenant.inventory.records.bulk-destroy')
+                            ->middleware('permission:inventory-records-delete');
+
+                        Route::get('/{inventoryRecord}', [InventoryRecordController::class, 'show'])
                             ->name('tenant.inventory.records.show')
                             ->middleware('permission:inventory-records-read');
 
-                        Route::get('/{inventoryRecord}/edit', [InventoryRecordController::class, 'edit'])
-                            ->name('tenant.inventory.records.edit')
-                            ->middleware('permission:inventory-records-update');
-
-                        Route::put('/{inventoryRecord}', [InventoryController::class, 'update'])
+                        Route::put('/{inventoryRecord}', [InventoryRecordController::class, 'update'])
                             ->name('tenant.inventory.records.update')
                             ->middleware('permission:inventory-records-update');
 
-                        Route::delete('/{inventoryRecord}', [InventoryController::class, 'destroy'])
+                        Route::delete('/{inventoryRecord}', [InventoryRecordController::class, 'destroy'])
                             ->name('tenant.inventory.records.destroy')
                             ->middleware('permission:inventory-records-delete');
+
+                        Route::post('/{inventoryRecord}/cover', [InventoryRecordController::class, 'uploadCover'])
+                            ->name('tenant.inventory.records.cover')
+                            ->middleware('permission:inventory-records-update');
+
+                        Route::delete('/{inventoryRecord}/cover', [InventoryRecordController::class, 'destroyCover'])
+                            ->name('tenant.inventory.records.cover.destroy')
+                            ->middleware('permission:inventory-records-update');
                     });
 
                 Route::prefix('movements')
                     ->group(function (): void {
-                        Route::get('/', [InventoryMovementController::class, 'index'])
+                        Route::get('/', fn () => Inertia::render('Tenant/Inventory/Movements'))
                             ->name('tenant.inventory.movements.index')
                             ->middleware('permission:inventory-movements-read');
-
-                        Route::post('/', [InventoryMovementController::class, 'store'])
-                            ->name('tenant.inventory.movements.store')
-                            ->middleware('permission:inventory-movements-create');
-
-                        Route::get('/{inventoryMovement}', [InventoryMovementController::class, 'show'])
-                            ->name('tenant.inventory.movements.show')
-                            ->middleware('permission:inventory-movements-read');
-
-                        Route::delete('/{inventoryMovement}', [InventoryMovementController::class, 'destroy'])
-                            ->name('tenant.inventory.movements.destroy')
-                            ->middleware('permission:inventory-movements-delete');
                     });
             });
 

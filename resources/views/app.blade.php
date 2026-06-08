@@ -9,7 +9,7 @@
     @vite('resources/js/app.ts')
     @inertiaHead
 </head>
-<body class="font-sans antialiased overflow-x-hidden">
+<body class="font-sans antialiased overflow-x-hidden app-dark">
     @inertia
 </body>
 </html>

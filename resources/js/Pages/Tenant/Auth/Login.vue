@@ -29,8 +29,6 @@ const submit = (): void => {
     });
 };
 
-const showPassword = ref(false);
-
 const hasGlobalError = computed<boolean>(() => {
     return (
         Object.keys(form.errors).length > 0 &&
@@ -201,13 +199,13 @@ const labelClass = "mb-2 block text-xs font-semibold uppercase tracking-wider";
                                 >
                                     Adres e-mail
                                 </label>
-                                <InputText
+                                <BaseInput
                                     id="email"
                                     v-model="form.email"
                                     type="email"
-                                    autocomplete="username"
+                                    prefix-icon="pi pi-envelope"
                                     placeholder="twoj@email.pl"
-                                    class="sb-field"
+                                    :error="!!form.errors.email"
                                 />
                                 <p
                                     v-if="form.errors.email"
@@ -226,33 +224,13 @@ const labelClass = "mb-2 block text-xs font-semibold uppercase tracking-wider";
                                 >
                                     Hasło
                                 </label>
-                                <div class="relative">
-                                    <input
-                                        id="password"
-                                        v-model="form.password"
-                                        :type="
-                                            showPassword ? 'text' : 'password'
-                                        "
-                                        autocomplete="current-password"
-                                        placeholder="••••••••"
-                                        class="sb-field pr-10"
-                                    />
-                                    <button
-                                        type="button"
-                                        tabindex="-1"
-                                        class="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer border-none bg-transparent p-0 text-slate-400/55 transition-colors duration-150 hover:text-sky-400"
-                                        @click="showPassword = !showPassword"
-                                    >
-                                        <i
-                                            :class="[
-                                                'pi text-sm',
-                                                showPassword
-                                                    ? 'pi-eye-slash'
-                                                    : 'pi-eye',
-                                            ]"
-                                        />
-                                    </button>
-                                </div>
+                                <BasePassword
+                                    id="password"
+                                    v-model="form.password"
+                                    placeholder="••••••••"
+                                    prefix-icon="pi pi-lock"
+                                    :error="!!form.errors.password"
+                                />
                                 <p
                                     v-if="form.errors.password"
                                     class="mt-1.5 text-xs text-red-400"
@@ -262,34 +240,10 @@ const labelClass = "mb-2 block text-xs font-semibold uppercase tracking-wider";
                             </div>
 
                             <!-- Remember me -->
-                            <label
-                                class="flex cursor-pointer select-none items-center gap-3"
-                            >
-                                <span
-                                    class="p-checkbox"
-                                    :class="{
-                                        'p-checkbox-checked': form.remember,
-                                    }"
-                                >
-                                    <input
-                                        v-model="form.remember"
-                                        type="checkbox"
-                                        class="p-checkbox-input"
-                                    />
-                                    <span class="p-checkbox-box">
-                                        <i
-                                            v-if="form.remember"
-                                            class="pi pi-check p-checkbox-icon"
-                                        />
-                                    </span>
-                                </span>
-                                <span
-                                    class="text-sm"
-                                    style="color: var(--text-color-secondary)"
-                                >
-                                    Zapamiętaj mnie
-                                </span>
-                            </label>
+                            <BaseCheckbox
+                                v-model="form.remember"
+                                label="Zapamiętaj mnie"
+                            />
 
                             <!-- Submit -->
                             <button

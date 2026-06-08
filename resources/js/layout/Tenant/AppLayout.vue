@@ -3,6 +3,7 @@ import { ref } from "vue";
 import AppFooter from "./AppFooter.vue";
 import AppSidebar from "./AppSidebar.vue";
 import AppTopbar from "./AppTopbar.vue";
+import AppToast from "@/Components/AppToast.vue";
 
 const sidebarOpen = ref(true);
 
@@ -36,5 +37,6 @@ function toggleSidebar(): void {
 
         <Toast position="top-right" />
         <ConfirmDialog />
+        <AppToast />
     </div>
 </template>

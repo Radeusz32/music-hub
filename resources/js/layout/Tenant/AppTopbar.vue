@@ -74,48 +74,16 @@ const searchFocused = ref(false);
             <!-- Search -->
             <form @submit.prevent="submitSearch">
                 <div
-                    class="relative flex items-center transition-all duration-200"
+                    class="transition-all duration-200"
                     :style="searchFocused ? 'width: 280px;' : 'width: 220px;'"
                 >
-                    <i
-                        class="pi pi-search absolute left-3 text-xs pointer-events-none"
-                        style="color: rgba(148, 163, 184, 0.5)"
-                    />
-                    <input
+                    <BaseInput
                         v-model="searchForm.q"
-                        type="text"
+                        class="w-full"
                         placeholder="Wyszukaj..."
-                        class="w-full rounded-lg py-2 pl-8 pr-4 text-sm outline-none transition-all duration-200"
-                        style="
-                            background: rgba(255, 255, 255, 0.04);
-                            border: 1px solid rgba(56, 189, 248, 0.1);
-                            color: var(--text-color);
-                        "
-                        @focus="
-                            searchFocused = true;
-                            (
-                                $event.target as HTMLInputElement
-                            ).style.borderColor = 'rgba(56,189,248,0.4)';
-                            (
-                                $event.target as HTMLInputElement
-                            ).style.background = 'rgba(56,189,248,0.05)';
-                            (
-                                $event.target as HTMLInputElement
-                            ).style.boxShadow =
-                                '0 0 0 3px rgba(56,189,248,0.07)';
-                        "
-                        @blur="
-                            searchFocused = false;
-                            (
-                                $event.target as HTMLInputElement
-                            ).style.borderColor = 'rgba(56,189,248,0.1)';
-                            (
-                                $event.target as HTMLInputElement
-                            ).style.background = 'rgba(255,255,255,0.04)';
-                            (
-                                $event.target as HTMLInputElement
-                            ).style.boxShadow = 'none';
-                        "
+                        prefix-icon="pi pi-search"
+                        @focus="searchFocused = true"
+                        @blur="searchFocused = false"
                     />
                 </div>
             </form>

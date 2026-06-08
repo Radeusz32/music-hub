@@ -9,24 +9,27 @@
     "prepare": "husky"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.2.1",
-    "@vitejs/plugin-vue": "^6.0.4",
-    "concurrently": "^9.2.1",
+    "@tailwindcss/vite": "^4.3.0",
+    "@vitejs/plugin-vue": "^6.0.7",
+    "concurrently": "^10.0.3",
     "husky": "^9.1.7",
-    "laravel-vite-plugin": "^2.1.0",
-    "npm-check-updates": "^19.6.3",
-    "playwright": "^1.58.2",
-    "prettier": "^3.8.1",
+    "laravel-vite-plugin": "^3.1.0",
+    "npm-check-updates": "^22.2.2",
+    "playwright": "^1.60.0",
+    "prettier": "^3.8.3",
     "prettier-plugin-organize-imports": "^4.3.0",
-    "prettier-plugin-tailwindcss": "^0.7.2",
-    "tailwindcss": "^4.2.1",
-    "vite": "^7.3.1"
+    "prettier-plugin-tailwindcss": "^0.8.0",
+    "tailwindcss": "^4.3.0",
+    "tailwindcss-primeui": "^0.6.1",
+    "vite": "^8.0.16"
   },
   "dependencies": {
-    "@inertiajs/vue3": "^2.3.17",
+    "@inertiajs/vue3": "^2.3.25",
+    "@primevue/themes": "^4.5.4",
+    "axios": "^1.17.0",
     "primeicons": "^7.0.0",
     "primevue": "^4.5.5",
-    "vue": "^3.5.29",
-    "ziggy-js": "^2.6.1"
+    "vue": "^3.5.35",
+    "ziggy-js": "^2.6.2"
   }
 }

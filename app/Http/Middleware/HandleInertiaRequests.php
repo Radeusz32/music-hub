@@ -44,6 +44,11 @@ final class HandleInertiaRequests extends Middleware
             'auth' => fn () => $this->resolveAuth($request),
 
             'tenant' => fn () => $this->resolveTenantData(),
+
+            'flash' => fn () => [
+                'success' => session()->get('success'),
+                'error' => session()->get('error'),
+            ],
         ];
     }
 
@@ -64,6 +69,8 @@ final class HandleInertiaRequests extends Middleware
             ->values()
             ->all();
 
+        $features = $this->resolveFeatures();
+
         return [
             'user' => [
                 'id' => $user->id,
@@ -77,7 +84,7 @@ final class HandleInertiaRequests extends Middleware
 
             'roles' => $roles,
 
-            'features' => $this->resolveFeatures(),
+            'features' => $features,
         ];
     }
 

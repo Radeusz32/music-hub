@@ -8,6 +8,7 @@ import { ZiggyVue } from "ziggy-js";
 
 import { registerPrimeVue } from "./plugins/primevue";
 import { registerPrimeComponents } from "./plugins/prime-components";
+import { registerBaseComponents } from "./plugins/base-components";
 
 const appName = import.meta.env.VITE_APP_NAME || "SoundBase";
 
@@ -30,6 +31,7 @@ createInertiaApp({
 
         registerPrimeVue(vueApp);
         registerPrimeComponents(vueApp);
+        registerBaseComponents(vueApp);
 
         vueApp.mount(el);
     },

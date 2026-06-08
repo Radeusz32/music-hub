@@ -1,0 +1,203 @@
+# Filterable Columns Guide
+
+How server-side table filtering works end-to-end: a `DataTableConfig` declares
+**which** columns are filterable and **how**, `BaseService` resolves the request
+params into query constraints, and the frontend `DataTable` renders the matching
+input for each column.
+
+> There is **no** legacy `filterMapping()` / `dateRangeColumns()` anymore.
+> `filterableColumns()` is the single source of truth (it is `abstract` on
+> `DataTableConfig`, so every config must implement it — return `[]` for none).
+
+---
+
+## Filter Types
+
+| Type           | Use case                | SQL                                         | Frontend input             |
+| -------------- | ----------------------- | ------------------------------------------- | -------------------------- |
+| `select`       | Dropdown, exact match   | `WHERE col = value`                         | `BaseDropdown`             |
+| `text`         | Partial text match      | `WHERE col LIKE '%value%'`                   | `BaseInput`                |
+| `number`       | Number exact match      | `WHERE col = value`                         | `BaseInputNumber`          |
+| `date-range`   | Date from/to            | `WHERE col >= from AND col <= to` (`whereDate`) | `DatePicker` ×2        |
+| `number-range` | Numeric from/to (year, qty, price) | `WHERE col >= from AND col <= to` | `BaseInputNumber` ×2       |
+
+**Range convention:** range types read two request params named
+`{key}_from` and `{key}_to`, where `{key}` is the array key in
+`filterableColumns()`. So a config key `sale_price` of type `number-range`
+reads `?sale_price_from=...&sale_price_to=...`.
+
+---
+
+## Backend: declare the filters
+
+`filterableColumns()` returns a map of **request key → config**. Each config has
+a `column` (the DB column) and a `type`. `select` may also carry `options`
+(only used to ship choices to the frontend — the backend ignores them).
+
+```php
+// app/Http/Resources/Tenant/Inventory/InventoryRecordDataTable.php
+public static function filterableColumns(): array
+{
+    return [
+        'format' => [
+            'column' => 'format',
+            'type' => 'select',
+            'options' => DiscFormatEnum::options(),     // value/label/color
+        ],
+        'condition' => [
+            'column' => 'condition',
+            'type' => 'select',
+            'options' => DiscConditionEnum::options(),
+        ],
+        'genre'      => ['column' => 'genre',      'type' => 'select'],
+        'year'       => ['column' => 'year',       'type' => 'number-range'],
+        'quantity'   => ['column' => 'quantity',   'type' => 'number-range'],
+        'sale_price' => ['column' => 'sale_price', 'type' => 'number-range'],
+        'created_at' => ['column' => 'created_at', 'type' => 'date-range'],
+        'updated_at' => ['column' => 'updated_at', 'type' => 'date-range'],
+    ];
+}
+```
+
+That is all the backend needs — no controller changes, no manual `where`s.
+
+---
+
+## Resolution flow
+
+```
+1. User edits a filter input in the table header
+   ↓
+2. useTable pushes an Inertia GET, e.g.
+   ?format=LP&year_from=1970&year_to=1985&sale_price_from=100
+   ↓
+3. Service::index() → BaseService::fetchForDataTable(ConfigClass, $request)
+   ↓
+4. BaseService::resolveFilters()
+   - iterates filterableColumns()
+   - range types read {key}_from / {key}_to
+   - other types read {key}
+   - builds resolved filters (skips empty values) + records all keys
+     so they are preserved in the paginator's query string
+   ↓
+5. BaseService::applyFilters() — match on type:
+     select       → where(col, value)
+     text         → where(col, 'like', "%value%")
+     number       → where(col, value)
+     date-range   → whereDate(col, '>=', from) / whereDate(col, '<=', to)
+     number-range → where(col, '>=', from)     / where(col, '<=', to)
+   ↓
+6. Paginates, maps rows through the Transformer, returns
+   paginator->toArray() merged with the active `filters` key.
+```
+
+To add a brand-new filter strategy, add a `case` in
+`BaseService::applyFilters()` and a small `applyXxxFilter()` method — every
+config that uses that `type` then works automatically.
+
+---
+
+## Frontend: render the inputs
+
+The frontend does **not** read `filterableColumns()` directly. Instead each
+column in the page's `ColumnDef[]` (built in `inventory.resource.ts`) carries a
+`filter` descriptor, and `DataTableColumnFilter.vue` renders the right Base
+component per type. **The two must stay in sync** (same keys, same range
+`fromKey`/`toKey` names as the backend's `{key}_from`/`{key}_to`).
+
+```ts
+// resources/js/types/datatable.ts
+export type ColumnFilter =
+    | { type: "select"; options: FilterOption[] }
+    | { type: "date-range"; fromKey: string; toKey: string }
+    | { type: "number"; currency?: boolean; min?: number; max?: number; placeholder?: string }
+    | { type: "number-range"; fromKey: string; toKey: string; currency?: boolean; min?: number; max?: number };
+```
+
+```ts
+// resources/js/Pages/Tenant/Inventory/inventory.resource.ts
+{
+    key: "format",
+    label: "Format",
+    sortable: true,
+    width: "110px",
+    filter: { type: "select", options: options.formatOptions },
+},
+{
+    key: "year",
+    label: "Rok",
+    sortable: true,
+    width: "120px",
+    align: "right",
+    filter: { type: "number-range", fromKey: "year_from", toKey: "year_to", min: 1900 },
+},
+{
+    key: "sale_price",
+    label: "Cena",
+    sortable: true,
+    width: "150px",
+    align: "right",
+    // `currency` → BaseInputNumber renders with currency format + "zł" suffix
+    filter: { type: "number-range", fromKey: "sale_price_from", toKey: "sale_price_to", currency: true, min: 0 },
+},
+{
+    key: "created_at",
+    label: "Dodano",
+    sortable: true,
+    width: "180px",
+    filter: { type: "date-range", fromKey: "created_at_from", toKey: "created_at_to" },
+},
+```
+
+`DataTableColumnFilter.vue` notes:
+
+- `select` / `date-range` commit immediately on change.
+- `number` / `number-range` keep **local state** and emit a **debounced**
+  `filter` event (~450 ms) so typing doesn't lag against the Inertia round-trip,
+  and they re-sync from props (so the "Wyczyść filtry" clear-all works).
+- `currency: true` → `BaseInputNumber` gets `format="currency"` + `suffix="zł"`.
+
+The page wires the events to the table composable:
+
+```vue
+<DataTable
+    :columns="table.columns"
+    :rows="records.data"
+    :pagination="records"
+    :sort-by="table.sortBy.value"
+    :direction="table.direction.value"
+    :filter-values="table.extraFilters.value"
+    searchable
+    @search="table.onSearchInput"
+    @sort="table.toggleSort"
+    @page="table.goToPage"
+    @filter="table.setFilter"
+    @clear-filters="table.clearFilters"
+/>
+```
+
+`useTable` keeps active filters in `extraFilters` (a `Record<string,string>`),
+includes them in every Inertia visit, and `clearFilters()` resets them all in
+one navigation.
+
+---
+
+## Checklist for adding a filter to a column
+
+1. **Backend** — add an entry to `filterableColumns()` with the right `column` + `type`.
+2. **Frontend** — add a `filter` descriptor to that column in `buildXxxColumns()`.
+   For ranges, use `fromKey: "{key}_from"`, `toKey: "{key}_to"` matching the backend key.
+3. Give numeric/price columns enough `width` so the stacked inputs fit; use
+   `currency: true` for money columns.
+4. Searchable free-text columns usually belong in `searchableColumns()` (global
+   search) rather than a per-column `text` filter — pick whichever the UX needs.
+
+---
+
+## Summary
+
+- `filterableColumns()` is the single backend source of truth (no legacy fallbacks).
+- Types: `select`, `text`, `number`, `date-range`, `number-range`.
+- Ranges use `{key}_from` / `{key}_to` on both sides.
+- `BaseService` resolves + applies automatically; add a new `type` by extending `applyFilters()`.
+- The frontend renders inputs from each column's `filter` descriptor via `DataTableColumnFilter.vue`; keep keys in sync with the backend.
