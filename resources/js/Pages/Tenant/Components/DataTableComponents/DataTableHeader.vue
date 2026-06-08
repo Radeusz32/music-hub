@@ -124,7 +124,6 @@ const hasColumnFilters = computed(() => props.columns.some((c) => c.filter));
     color: rgba(148, 163, 184, 0.55);
     font-size: 0.72rem;
     font-weight: 600;
-    text-transform: uppercase;
     letter-spacing: 0.07em;
     white-space: nowrap;
     user-select: none;

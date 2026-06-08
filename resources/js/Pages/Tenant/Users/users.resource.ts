@@ -85,7 +85,7 @@ export function buildUserColumns(options: BuildColumnsOptions): ColumnDef[] {
     return [
         { key: "name", label: "Użytkownik", sortable: false },
         { key: "email", label: "E-mail", sortable: true },
-        { key: "phone", label: "Telefon", width: "150px" },
+        { key: "phone", label: "Telefon", width: "170px" },
         {
             key: "role",
             label: "Rola",

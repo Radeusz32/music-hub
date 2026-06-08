@@ -149,7 +149,7 @@ const labelClass = "mb-2 block text-xs font-semibold uppercase tracking-wider";
                             <div
                                 v-for="feat in [
                                     'Zarządzanie magazynem',
-                                    'Integracja z Allegro & Discogs',
+                                    'Integracje API',
                                     'Analityka sprzedaży',
                                 ]"
                                 :key="feat"
