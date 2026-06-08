@@ -13,7 +13,7 @@ const props = withDefaults(
     },
 );
 
-const GAP = 7;
+const GAP = 9;
 
 const hostRef = ref<HTMLElement | null>(null);
 const visible = ref(false);

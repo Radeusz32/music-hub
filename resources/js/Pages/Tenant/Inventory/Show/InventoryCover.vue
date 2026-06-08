@@ -92,7 +92,7 @@ function openLightbox(): void {
             <Tooltip
                 v-if="coverPreview"
                 content="Pełny ekran"
-                position="left"
+                position="top"
                 class="cover-zoom-wrap"
             >
                 <button class="cover-zoom-btn" @click.stop="openLightbox">
