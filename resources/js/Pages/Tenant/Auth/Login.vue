@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useForm, usePage } from "@inertiajs/vue3";
+import { useForm, usePage, Link } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
 import { computed, ref } from "vue";
 
@@ -239,11 +239,20 @@ const labelClass = "mb-2 block text-xs font-semibold uppercase tracking-wider";
                                 </p>
                             </div>
 
-                            <!-- Remember me -->
-                            <BaseCheckbox
-                                v-model="form.remember"
-                                label="Zapamiętaj mnie"
-                            />
+                            <!-- Remember me + forgot password -->
+                            <div class="flex items-center justify-between">
+                                <BaseCheckbox
+                                    v-model="form.remember"
+                                    label="Zapamiętaj mnie"
+                                />
+                                <Link
+                                    :href="route('password.request')"
+                                    class="text-sm transition-colors"
+                                    style="color: #38bdf8"
+                                >
+                                    Nie pamiętasz hasła?
+                                </Link>
+                            </div>
 
                             <!-- Submit -->
                             <button

@@ -239,6 +239,10 @@ Read → `$all`, create/update → `$admins`, delete → `$owners`.
 `users-{read|create|update|delete}`. Access is restricted to admin + owner:
 read/create/update → `$admins`, delete → `$owners`.
 
+**Settings permissions (reference):**
+`setting-profile` → `$all` (every role can manage their own profile/password).
+Seeded by `SettingsPermissionsSeeder`; gates `tenant.settings.profile[.update]`.
+
 ### Frontend enforcement (defense in depth)
 
 Route middleware (`permission:` + `feature:`) is the real gate, but the UI also
@@ -374,14 +378,45 @@ create/edit modal and the Show page.
 
 **Behaviour rules:**
 
-- **Password is set only on create** — `UpdateUserRequest` has no `password` rule and `UserService::update()` always strips it, so editing a user can never change their password (a separate reset flow would be needed for that).
+- **Password is set only on create** — `UpdateUserRequest` has no `password` rule and `UserService::update()` always strips it, so editing a user can never change their password. Users change their own password on the Profile page; password reset is a separate guest flow (see **Auth: E-mail Verification, Password Reset & Change**).
 - **Self-delete is blocked** — `destroy()` refuses the current user; `bulkDelete()` excludes the current user's id.
-- New users are created with `email_verified_at = now()`.
+- **New users start unverified** — `UserService::create()` fires `event(new Registered($user))`, which sends the e-mail-verification link. Admins can re-send it from the Show page (`resend-verification`, shown only while `email_verified_at` is null).
 
 **Frontend:** `resources/js/Pages/Tenant/Users/` (`Index.vue`, `Show.vue`,
 `UserModal.vue`, `users.resource.ts`) + `composables/Tenant/useUserTable.ts`.
 CRUD buttons are feature/permission-gated per the §2.7 pattern in
 `CRUD_GENERATOR_AGENT_INSTRUCTIONS.md`.
+
+---
+
+## Auth: E-mail Verification, Password Reset & Change
+
+Built on Laravel's native mechanisms (the `Password` broker, `MustVerifyEmail`,
+the `Registered` event, signed URLs). All routes are tenant-scoped, so links/
+e-mails point at the current subdomain; mail uses global SMTP and sends
+synchronously.
+
+- **Password reset (guest):** `password.request` / `password.email` /
+  `password.reset` / `password.store` → `Password::sendResetLink()` +
+  `Password::reset()`. Broker status strings localized in `lang/en/passwords.php`.
+- **Password change (auth):** `PUT /settings/password` on the Profile page;
+  `UpdatePasswordRequest` uses the `current_password` rule + `Password::defaults()`.
+- **E-mail verification:** `User implements MustVerifyEmail`; the whole
+  authenticated app is wrapped in a `verified` middleware group. New/admin-created
+  users are **unverified** — `UserService::create()` fires `event(new Registered($user))`
+  and Laravel's `SendEmailVerificationNotification` listener mails the link
+  (the `UserFactory` still seeds verified accounts). The verify route
+  (`verification.verify`) is **outside `auth`** — protected by the signed URL +
+  `sha1(email)` check — so it works for not-logged-in / admin-created accounts,
+  then **logs the user in**. Resend: self (`verification.send`) or admin
+  (`tenant.users.resend-verification`, button on Users → Show when unverified).
+- **Profile page:** `/settings/profile` is gated by `permission:setting-profile`
+  (seeded for all roles in `SettingsPermissionsSeeder`) and lives **outside**
+  `feature:settings` (account self-management isn't a paid feature). Thin
+  `SettingController` → `SettingService` → `UserService`.
+
+> **Full flows, route table, and the session-independent-verify rationale:**
+> **`AUTH_VERIFICATION_AND_PASSWORDS.md`**.
 
 ---
 
@@ -408,11 +443,18 @@ Authenticated routes add `auth`. Feature groups add `feature:{name}`; write acti
 | `/analytics`    | `feature:analytics`    | Analityka   |
 | `/integrations` | `feature:integrations` | Integracje  |
 | `/users`        | `feature:users`        | Użytkownicy |
-| `/settings`     | `feature:settings`     | Ustawienia  |
+| `/settings`     | `feature:settings`     | Ustawienia (organization, billing) |
 
 **Inventory records routes (reference):** `index`, `store`, `import`, `export-template`, `bulk-destroy` (collection, literal paths) then `show`, `update`, `destroy`, `cover`, `cover.destroy` (`{inventoryRecord}` model-bound). Names: `tenant.inventory.records.*`.
 
-**Users routes:** `index`, `store`, `bulk-destroy` (collection) then `show`, `update`, `destroy` (`{user}` model-bound), under `feature:users`. Names: `tenant.users.*`. See **Users Module** above.
+**Users routes:** `index`, `store`, `bulk-destroy` (collection) then `show`, `update`, `destroy` (`{user}` model-bound) and `resend-verification` (POST `{user}`, `permission:users-update`), under `feature:users`. Names: `tenant.users.*`. See **Users Module** above.
+
+**Account routes (not feature-gated):** password reset is a `guest` flow
+(`password.request|email|reset|store`); while authenticated, `verification.notice`
+/ `verification.send`, `tenant.settings.password.update`, and
+`tenant.settings.profile` (gated by `permission:setting-profile`, **not**
+`feature:settings`) are reachable. `verification.verify` is `signed`-only and
+sits outside the `auth` group. See **`AUTH_VERIFICATION_AND_PASSWORDS.md`**.
 
 ---
 

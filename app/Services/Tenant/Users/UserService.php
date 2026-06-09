@@ -8,6 +8,7 @@ use App\Http\Resources\Tenant\Users\UserDataTable;
 use App\Models\Tenant\User;
 use App\Services\BaseService;
 use App\Transformers\Tenant\Users\UserTransformer;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
@@ -47,10 +48,10 @@ final class UserService extends BaseService
         $role = $data['role'];
         unset($data['role']);
 
-        $data['email_verified_at'] ??= now();
-
         $user = User::query()->create($data);
         $user->syncRoles([$role]);
+
+        event(new Registered($user));
 
         return $user;
     }

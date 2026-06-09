@@ -75,4 +75,15 @@ final class UserController extends Controller
             ->route('tenant.users.index')
             ->with('success', "Usunięto zaznaczonych użytkowników ({$deleted}).");
     }
+
+    public function resendVerification(User $user): RedirectResponse
+    {
+        if ($user->hasVerifiedEmail()) {
+            return back()->with('error', 'Adres e-mail tego użytkownika jest już zweryfikowany.');
+        }
+
+        $user->sendEmailVerificationNotification();
+
+        return back()->with('success', 'Link weryfikacyjny został wysłany ponownie.');
+    }
 }

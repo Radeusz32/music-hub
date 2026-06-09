@@ -34,7 +34,7 @@ final class UserFactory extends Factory
             'apartment_number' => fake()->boolean(60) ? (string) fake()->numberBetween(1, 80) : null,
             'postal_code' => fake()->numerify('##-###'),
             'city' => fake()->city(),
-            'pesel' => fake()->unique()->numerify('###########'),
+            'pesel' => $this->generatePesel(),
             'is_active' => fake()->boolean(80),
             'email_verified_at' => now(),
             'password' => self::$password ??= Hash::make('password'),
@@ -81,5 +81,25 @@ final class UserFactory extends Factory
         return $this->state(fn (array $attributes): array => [
             'email_verified_at' => null,
         ]);
+    }
+
+    /**
+     * Generate a PESEL that passes {@see \App\Rules\Tenant\PeselRule}:
+     * 11 digits with a valid control digit. The base 10 digits are drawn from
+     * Faker's unique pool so seeded users don't clash.
+     */
+    private function generatePesel(): string
+    {
+        $weights = [1, 3, 7, 9, 1, 3, 7, 9, 1, 3];
+        $base = fake()->unique()->numerify('##########');
+
+        $sum = 0;
+        for ($i = 0; $i < 10; $i++) {
+            $sum += (int) $base[$i] * $weights[$i];
+        }
+
+        $control = (10 - ($sum % 10)) % 10;
+
+        return $base.$control;
     }
 }

@@ -126,6 +126,20 @@ function confirmDelete(): void {
         onSuccess: () => toast.success("Użytkownik został usunięty"),
     });
 }
+
+/* ── Resend e-mail verification ── */
+const resendForm = useForm({});
+
+function resendVerification(): void {
+    resendForm.post(
+        route("tenant.users.resend-verification", { user: props.user.id }),
+        {
+            preserveScroll: true,
+            onSuccess: () =>
+                toast.success("Link weryfikacyjny został wysłany ponownie"),
+        },
+    );
+}
 </script>
 
 <template>
@@ -139,6 +153,22 @@ function confirmDelete(): void {
                     <i class="pi pi-arrow-left" />
                     Powrót do listy
                 </Link>
+                <button
+                    v-if="canUpdate && !user.email_verified_at"
+                    type="button"
+                    class="action-btn action-verify"
+                    :disabled="resendForm.processing"
+                    @click="resendVerification"
+                >
+                    <i
+                        :class="
+                            resendForm.processing
+                                ? 'pi pi-spin pi-spinner'
+                                : 'pi pi-envelope'
+                        "
+                    />
+                    Wyślij ponownie link
+                </button>
                 <button
                     v-if="canUpdate"
                     type="button"
@@ -452,6 +482,20 @@ function confirmDelete(): void {
 .action-edit:hover {
     background: rgba(56, 189, 248, 0.18);
     box-shadow: 0 0 14px rgba(56, 189, 248, 0.18);
+}
+
+.action-verify {
+    background: rgba(251, 146, 60, 0.1);
+    border-color: rgba(251, 146, 60, 0.28);
+    color: #fb923c;
+}
+.action-verify:hover:not(:disabled) {
+    background: rgba(251, 146, 60, 0.18);
+    box-shadow: 0 0 14px rgba(251, 146, 60, 0.18);
+}
+.action-verify:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
 .action-delete {
