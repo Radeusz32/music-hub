@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Enums\FilterTypeEnum;
 use App\Transformers\Transformer;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -24,9 +25,9 @@ abstract class DataTableConfig extends JsonResource
 
     /**
      * Filterable columns configuration keyed by request param.
-     * Format: ['key' => ['column' => 'db_column', 'type' => 'select|text|number|date-range', 'options' => [...]]]
+     * Format: ['key' => ['column' => 'db_column', 'type' => FilterTypeEnum, 'options' => [...]]]
      *
-     * @return array<string, array{column: string, type: string, options?: array<int, array{value: string, label: string}>}>
+     * @return array<string, array{column: string, type: FilterTypeEnum, options?: array<int, array{value: string, label: string}>}>
      */
     abstract public static function filterableColumns(): array;
 

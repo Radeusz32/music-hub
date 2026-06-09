@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\FilterTypeEnum;
 use App\Http\Resources\DataTableConfig;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -64,7 +65,7 @@ abstract class BaseService
      * Returns resolved filters and all filter keys for query string preservation.
      *
      * @param  class-string<DataTableConfig>  $resourceClass
-     * @return array{resolved: array<int, array{type: string, column: string, value?: mixed, from?: string|null, to?: string|null, relation?: string|null}>, keys: list<string>}
+     * @return array{resolved: array<int, array{type: FilterTypeEnum, column: string, value?: mixed, from?: string|null, to?: string|null, relation?: string|null}>, keys: list<string>}
      */
     protected function resolveFilters(string $resourceClass, Request $request): array
     {
@@ -75,7 +76,7 @@ abstract class BaseService
             $type = $config['type'];
             $column = $config['column'];
 
-            if ($type === 'date-range' || $type === 'number-range') {
+            if ($type->isRange()) {
                 [$fromKey, $toKey] = ["{$key}_from", "{$key}_to"];
                 $from = $request->query($fromKey);
                 $to = $request->query($toKey);
@@ -119,22 +120,21 @@ abstract class BaseService
      * Apply filters to the query based on resolved filter configurations.
      *
      * @param  Builder<\Illuminate\Database\Eloquent\Model>  $query
-     * @param  array<int, array{type: string, column: string, value?: mixed, from?: string|null, to?: string|null, relation?: string|null}>  $filters
+     * @param  array<int, array{type: FilterTypeEnum, column: string, value?: mixed, from?: string|null, to?: string|null, relation?: string|null}>  $filters
      * @return Builder<\Illuminate\Database\Eloquent\Model>
      */
     protected function applyFilters(Builder $query, array $filters): Builder
     {
         foreach ($filters as $filter) {
             match ($filter['type']) {
-                'select' => $this->applySelectFilter($query, $filter['column'], $filter['value']),
-                'text' => $this->applyTextFilter($query, $filter['column'], $filter['value']),
-                'number' => $this->applyNumberFilter($query, $filter['column'], $filter['value']),
-                'date-range' => $this->applyDateRangeFilter($query, $filter['column'], $filter['from'] ?? null, $filter['to'] ?? null),
-                'number-range' => $this->applyNumberRangeFilter($query, $filter['column'], $filter['from'] ?? null, $filter['to'] ?? null),
-                'relation' => $this->applyRelationFilter($query, $filter['relation'] ?? null, $filter['column'], $filter['value']),
-                'null-status' => $this->applyNullStatusFilter($query, $filter['column'], $filter['value']),
-                'boolean' => $this->applyBooleanFilter($query, $filter['column'], $filter['value']),
-                default => null,
+                FilterTypeEnum::Select => $this->applySelectFilter($query, $filter['column'], $filter['value']),
+                FilterTypeEnum::Text => $this->applyTextFilter($query, $filter['column'], $filter['value']),
+                FilterTypeEnum::Number => $this->applyNumberFilter($query, $filter['column'], $filter['value']),
+                FilterTypeEnum::DateRange => $this->applyDateRangeFilter($query, $filter['column'], $filter['from'] ?? null, $filter['to'] ?? null),
+                FilterTypeEnum::NumberRange => $this->applyNumberRangeFilter($query, $filter['column'], $filter['from'] ?? null, $filter['to'] ?? null),
+                FilterTypeEnum::Relation => $this->applyRelationFilter($query, $filter['relation'] ?? null, $filter['column'], $filter['value']),
+                FilterTypeEnum::NullStatus => $this->applyNullStatusFilter($query, $filter['column'], $filter['value']),
+                FilterTypeEnum::Boolean => $this->applyBooleanFilter($query, $filter['column'], $filter['value']),
             };
         }
 

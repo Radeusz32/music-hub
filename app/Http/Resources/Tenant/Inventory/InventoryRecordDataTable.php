@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Resources\Tenant\Inventory;
 
+use App\Enums\FilterTypeEnum;
 use App\Enums\Tenant\DiscConditionEnum;
 use App\Enums\Tenant\DiscFormatEnum;
 use App\Http\Resources\DataTableConfig;
@@ -35,44 +36,44 @@ final class InventoryRecordDataTable extends DataTableConfig
     }
 
     /**
-     * @return array<string, array{column: string, type: string, options?: array<int, array{value: string, label: string}>}>
+     * @return array<string, array{column: string, type: FilterTypeEnum, options?: array<int, array{value: string, label: string}>}>
      */
     public static function filterableColumns(): array
     {
         return [
             'format' => [
                 'column' => 'format',
-                'type' => 'select',
+                'type' => FilterTypeEnum::Select,
                 'options' => DiscFormatEnum::options(),
             ],
             'condition' => [
                 'column' => 'condition',
-                'type' => 'select',
+                'type' => FilterTypeEnum::Select,
                 'options' => DiscConditionEnum::options(),
             ],
             'genre' => [
                 'column' => 'genre',
-                'type' => 'select',
+                'type' => FilterTypeEnum::Select,
             ],
             'year' => [
                 'column' => 'year',
-                'type' => 'number-range',
+                'type' => FilterTypeEnum::NumberRange,
             ],
             'quantity' => [
                 'column' => 'quantity',
-                'type' => 'number-range',
+                'type' => FilterTypeEnum::NumberRange,
             ],
             'sale_price' => [
                 'column' => 'sale_price',
-                'type' => 'number-range',
+                'type' => FilterTypeEnum::NumberRange,
             ],
             'created_at' => [
                 'column' => 'created_at',
-                'type' => 'date-range',
+                'type' => FilterTypeEnum::DateRange,
             ],
             'updated_at' => [
                 'column' => 'updated_at',
-                'type' => 'date-range',
+                'type' => FilterTypeEnum::DateRange,
             ],
         ];
     }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Resources\Tenant\Users;
 
+use App\Enums\FilterTypeEnum;
 use App\Enums\Tenant\RoleEnum;
 use App\Http\Resources\DataTableConfig;
 use App\Models\Tenant\User;
@@ -41,32 +42,32 @@ final class UserDataTable extends DataTableConfig
      * uses a null-status strategy (verified / unverified) — both are resolved by
      * BaseService. `is_active` is a plain boolean column.
      *
-     * @return array<string, array{column: string, type: string, relation?: string, options?: array<int, array{value: string, label: string}>}>
+     * @return array<string, array{column: string, type: FilterTypeEnum, relation?: string, options?: array<int, array{value: string, label: string}>}>
      */
     public static function filterableColumns(): array
     {
         return [
             'role' => [
                 'column' => 'name',
-                'type' => 'relation',
+                'type' => FilterTypeEnum::Relation,
                 'relation' => 'roles',
                 'options' => RoleEnum::options(),
             ],
             'email_verified_at' => [
                 'column' => 'email_verified_at',
-                'type' => 'null-status',
+                'type' => FilterTypeEnum::NullStatus,
             ],
             'is_active' => [
                 'column' => 'is_active',
-                'type' => 'boolean',
+                'type' => FilterTypeEnum::Boolean,
             ],
             'created_at' => [
                 'column' => 'created_at',
-                'type' => 'date-range',
+                'type' => FilterTypeEnum::DateRange,
             ],
             'updated_at' => [
                 'column' => 'updated_at',
-                'type' => 'date-range',
+                'type' => FilterTypeEnum::DateRange,
             ],
         ];
     }
