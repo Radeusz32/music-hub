@@ -23,8 +23,7 @@ export interface InventoryRecord {
     country: string | null;
     year: number | null;
     quantity: number;
-    purchase_price: string | null;
-    sale_price: string | null;
+    purchase_price_per_unit: string | null;
     cover_image: string | null;
     notes: string | null;
     user: InventoryRecordUser | null;
@@ -45,8 +44,7 @@ export interface InventoryFormData {
     country: string;
     year: number | string;
     quantity: number;
-    purchase_price: number | string;
-    sale_price: number | string;
+    purchase_price_per_unit: number | string;
     notes: string;
 }
 
@@ -62,8 +60,7 @@ export const defaultInventoryForm: InventoryFormData = {
     country: "",
     year: "",
     quantity: 1,
-    purchase_price: "",
-    sale_price: "",
+    purchase_price_per_unit: "",
     notes: "",
 };
 
@@ -136,20 +133,6 @@ export function buildInventoryColumns(
                 type: "number-range",
                 fromKey: "quantity_from",
                 toKey: "quantity_to",
-                min: 0,
-            },
-        },
-        {
-            key: "sale_price",
-            label: "Cena",
-            sortable: true,
-            width: "150px",
-            align: "right",
-            filter: {
-                type: "number-range",
-                fromKey: "sale_price_from",
-                toKey: "sale_price_to",
-                currency: true,
                 min: 0,
             },
         },

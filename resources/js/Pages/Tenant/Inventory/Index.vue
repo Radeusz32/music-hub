@@ -257,11 +257,6 @@ function submitImport(): void {
                     </span>
                 </template>
 
-                <!-- price formatted -->
-                <template #cell-sale_price="{ value }">
-                    {{ table.formatPrice(value as string | null) }}
-                </template>
-
                 <!-- user -->
                 <template #cell-user="{ row }">
                     <span

@@ -13,7 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
-final class InventoryRecordMovements extends BaseService
+final class InventoryRecordMovementsService extends BaseService
 {
     /**
      * @return array<string, mixed>
@@ -69,6 +69,44 @@ final class InventoryRecordMovements extends BaseService
             $record->update(['quantity' => $after]);
 
             return $this->writeEntry($record, $type, $quantity, $before, $after, $note, $userId);
+        });
+    }
+
+    /**
+     * Record a sale: decrease the record's stock and persist a `Sale` ledger
+     * entry. Throws when the sale would drive the stock below zero.
+     */
+    public function recordSale(
+        InventoryRecord $record,
+        int $quantity = 1,
+        ?string $salePrice = null,
+        ?string $note = null,
+        ?int $userId = null,
+    ): InventoryMovement {
+        return DB::transaction(function () use ($record, $quantity, $salePrice, $note, $userId): InventoryMovement {
+            $record->refresh();
+
+            $before = $record->quantity;
+            $after = $before - $quantity;
+
+            if ($after < 0) {
+                throw ValidationException::withMessages([
+                    'quantity' => "Nie można sprzedać {$quantity} szt. — dostępny stan magazynowy to {$before} szt.",
+                ]);
+            }
+
+            $record->update(['quantity' => $after]);
+
+            return $this->writeEntry(
+                $record,
+                InventoryMovementTypeEnum::Sale,
+                $quantity,
+                $before,
+                $after,
+                $note,
+                $userId,
+                $salePrice,
+            );
         });
     }
 
@@ -157,6 +195,7 @@ final class InventoryRecordMovements extends BaseService
         int $after,
         ?string $note,
         ?int $userId,
+        ?string $salePrice = null,
     ): InventoryMovement {
         return InventoryMovement::query()->create([
             'inventory_record_id' => $record->id,
@@ -164,6 +203,7 @@ final class InventoryRecordMovements extends BaseService
             'quantity' => $quantity,
             'quantity_before' => $before,
             'quantity_after' => $after,
+            'sale_price' => $salePrice,
             'note' => $note,
             'user_id' => $userId,
         ]);

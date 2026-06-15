@@ -39,6 +39,10 @@ final class InventoryMovementTransformer extends Transformer
             'quantity_before' => $model->quantity_before,
             'quantity_after' => $model->quantity_after,
             'delta' => $model->quantity_after - $model->quantity_before,
+            'sale_price' => $model->sale_price,
+            'sale_total' => $model->sale_price !== null
+                ? number_format((float) $model->sale_price * $model->quantity, 2, '.', '')
+                : null,
             'note' => $model->note,
             'created_at' => $model->created_at,
         ];

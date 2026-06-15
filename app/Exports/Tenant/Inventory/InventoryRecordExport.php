@@ -43,8 +43,7 @@ final class InventoryRecordImportSheet implements ShouldAutoSize, WithEvents, Wi
             'Kraj',
             'Rok',
             'Ilość *',
-            'Cena zakupu',
-            'Cena sprzedaży',
+            'Cena zakupu za szt.',
             'Notatki',
         ];
     }
@@ -78,7 +77,7 @@ final class InventoryRecordImportSheet implements ShouldAutoSize, WithEvents, Wi
                     $sheet->getStyle("{$col}1")->applyFromArray($requiredStyle);
                 }
 
-                foreach (['F', 'G', 'H', 'I', 'J', 'L', 'M', 'N'] as $col) {
+                foreach (['F', 'G', 'H', 'I', 'J', 'L', 'M'] as $col) {
                     $sheet->getStyle("{$col}1")->applyFromArray($optionalStyle);
                 }
 

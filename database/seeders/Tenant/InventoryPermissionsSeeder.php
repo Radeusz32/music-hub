@@ -13,6 +13,7 @@ final class InventoryPermissionsSeeder extends PermissionsBaseSeeder
     {
         $this->seedRecordsPermissions();
         $this->seedMovementsPermissions();
+        $this->seedSalesPermissions();
     }
 
     private function seedRecordsPermissions(): void
@@ -40,5 +41,14 @@ final class InventoryPermissionsSeeder extends PermissionsBaseSeeder
 
         $delete = Permission::findOrCreate('inventory-movements-delete', GuardEnum::Web->value);
         $this->setPermissions($this->all, $delete);
+    }
+
+    private function seedSalesPermissions(): void
+    {
+        $read = Permission::findOrCreate('inventory-sales-read', GuardEnum::Web->value);
+        $this->setPermissions($this->all, $read);
+
+        $create = Permission::findOrCreate('inventory-sales-create', GuardEnum::Web->value);
+        $this->setPermissions($this->all, $create);
     }
 }

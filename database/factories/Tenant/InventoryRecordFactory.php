@@ -52,8 +52,7 @@ final class InventoryRecordFactory extends Factory
             'country' => fake()->optional(weight: 0.8)->randomElement(self::COUNTRIES),
             'year' => fake()->optional(weight: 0.8)->numberBetween(1950, 2025),
             'quantity' => fake()->numberBetween(0, 20),
-            'purchase_price' => fake()->optional(weight: 0.8)->randomFloat(2, 10, 600),
-            'sale_price' => fake()->optional(weight: 0.8)->randomFloat(2, 20, 900),
+            'purchase_price_per_unit' => fake()->optional(weight: 0.8)->randomFloat(2, 10, 600),
             'cover_image' => null,
             'notes' => fake()->optional(weight: 0.3)->randomElement([
                 'Oryginalne pierwsze wydanie',

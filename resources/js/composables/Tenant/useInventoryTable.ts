@@ -86,8 +86,7 @@ export function useInventoryTable(options: UseInventoryTableOptions) {
             country: record.country ?? "",
             year: record.year ?? "",
             quantity: record.quantity,
-            purchase_price: record.purchase_price ?? "",
-            sale_price: record.sale_price ?? "",
+            purchase_price_per_unit: record.purchase_price_per_unit ?? "",
             notes: record.notes ?? "",
         };
     }

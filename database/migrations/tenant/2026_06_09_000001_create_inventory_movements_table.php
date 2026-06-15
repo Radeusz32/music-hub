@@ -22,6 +22,8 @@ return new class extends Migration
             $table->unsignedInteger('quantity_before');
             $table->unsignedInteger('quantity_after');
 
+            $table->decimal('sale_price', 10, 2)->nullable();
+
             $table->string('note')->nullable();
 
             $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();

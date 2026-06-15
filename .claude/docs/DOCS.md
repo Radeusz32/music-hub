@@ -82,7 +82,8 @@ app/
 │   │   ├── Auth/AuthController.php
 │   │   └── Inventory/
 │   │       ├── InventoryRecordController.php
-│   │       └── InventoryMovementController.php   # index/store/destroy/bulk-destroy
+│   │       ├── InventoryMovementController.php   # index/store/destroy/bulk-destroy
+│   │       └── InventorySaleController.php       # index (POS panel) / store (sell)
 │   ├── Middleware/
 │   │   ├── CheckFeature.php             # Blocks routes by tenant feature
 │   │   └── HandleInertiaRequests.php
@@ -93,7 +94,8 @@ app/
 │   │   ├── UploadCoverRequest.php
 │   │   ├── ImportInventoryRecordsRequest.php
 │   │   ├── StoreInventoryMovementRequest.php
-│   │   └── BulkDestroyInventoryMovementsRequest.php
+│   │   ├── BulkDestroyInventoryMovementsRequest.php
+│   │   └── StoreInventorySaleRequest.php
 │   └── Resources/
 │       ├── DataTableConfig.php          # Abstract base for server-side table queries
 │       └── Tenant/Inventory/
@@ -103,15 +105,16 @@ app/
 │   ├── Central/{Domain,Feature,Tenant}.php
 │   └── Tenant/
 │       ├── User.php                     # HasRoles (Spatie), HasFactory
-│       ├── InventoryRecord.php          # SoftDeletes, HasMedia, casts(), relations (hasMany movements)
-│       └── InventoryMovement.php        # SoftDeletes, casts(), belongsTo record + user
+│       ├── InventoryRecord.php          # SoftDeletes, HasMedia, casts(), relations (hasMany movements); purchase_price_per_unit (no sale_price)
+│       └── InventoryMovement.php        # SoftDeletes, casts(), belongsTo record + user; sale_price (set only for Sale)
 ├── Providers/{AppServiceProvider,TenancyServiceProvider}.php
 ├── Services/
 │   ├── BaseService.php                  # fetchForDataTable() + filter strategies
 │   ├── Tenant/Auth/LoginService.php
 │   └── Tenant/Inventory/
-│       ├── InventoryRecordService.php   # delegates stock logging to InventoryRecordMovements
-│       └── InventoryRecordMovements.php # ledger writes + stock mutation (record/delete/bulkDelete)
+│       ├── InventoryRecordService.php          # delegates stock logging to InventoryRecordMovementsService
+│       ├── InventoryRecordMovementsService.php # ledger writes + stock mutation (record/recordSale/delete/bulkDelete)
+│       └── InventorySaleService.php            # POS: sellableRecords/recentSales/todayStats, sell() → recordSale()
 ├── Transformers/
 │   ├── Transformer.php                  # Abstract: transform() + eagerLoads() + includes
 │   ├── Tenant/Users/UserTransformer.php
@@ -204,7 +207,7 @@ resources/js/
 
 - `DiscFormatEnum` — `LP, EP, Single, Double LP, CD, CD Single, DVD, Blu-Ray, Cassette, VHS, Digital, Box Set`
 - `DiscConditionEnum` — `M, NM, VG+, VG, G+, G, F, P`
-- `InventoryMovementTypeEnum` — `Initial, In, Return, Correction` (`sign() = +1`) and `Out, Loss` (`sign() = -1`). `manualOptions()` exposes only the four user-selectable types (`In, Out, Return, Loss`); `Initial`/`Correction` are produced automatically by the system.
+- `InventoryMovementTypeEnum` — `Initial, In, Return, Correction` (`sign() = +1`) and `Out, Sale, Loss` (`sign() = -1`). `manualOptions()` exposes only the four user-selectable types (`In, Out, Return, Loss`); `Initial`/`Correction` are produced automatically by the system, and `Sale` is produced by the Sales panel (see **Inventory Sales**).
 
 `options()` returns `list<array{value,label,color}>` and is passed to the frontend for dropdowns/badges.
 
@@ -416,16 +419,19 @@ reproducible.
 **Model fields** (`inventory_movements`, tenant DB; SoftDeletes):
 `inventory_record_id` (cascade-delete FK), `type` (enum), `quantity` (the
 movement size, always positive), `quantity_before`, `quantity_after` (stock
-snapshot around the movement), `note` (nullable), `user_id` (nullable FK, null
-on user delete). `type` casts to `InventoryMovementTypeEnum`.
+snapshot around the movement), `sale_price` (nullable `decimal:2`, the unit price
+**set only on `Sale` movements** — see **Inventory Sales**), `note` (nullable),
+`user_id` (nullable FK, null on user delete). `type` casts to
+`InventoryMovementTypeEnum`.
 
-**The service is the single source of truth** — `InventoryRecordMovements`
+**The service is the single source of truth** — `InventoryRecordMovementsService`
 (extends `BaseService`) owns both the stock mutation and the ledger write inside
 one `DB::transaction`, so stock and history never drift:
 
 | Method                                              | When                                                        | Effect on stock                                                                 |
 | --------------------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------- |
 | `record($record, $type, $qty, $note, $userId)`      | Manual movement from the form (`In/Out/Return/Loss`)        | Applies `type->sign() * qty`; **throws `ValidationException`** if it would go below 0 |
+| `recordSale($record, $qty, $salePrice, $note, $userId)` | A sale from the Sales panel                             | Decreases stock by `qty`; logs a `Sale` entry storing `sale_price`; **throws** if it would go below 0 |
 | `recordInitial($record, $userId)`                   | A new record is created with `quantity > 0`                 | None (record already carries the qty) — logs an `Initial` entry                 |
 | `recordQuantityChange($record, $old, $new, $userId)`| A record's `quantity` is edited                             | None (record already updated) — logs a `Correction` entry (no-op if unchanged)  |
 | `delete($movement)` / `bulkDelete($ids)`            | A movement is removed                                       | **Reverses** the entry's delta (`quantity_after - quantity_before`), clamped at 0 |
@@ -440,7 +446,7 @@ detail page's history card.
 | Concern         | File                                                                          |
 | --------------- | ----------------------------------------------------------------------------- |
 | Controller      | `app/Http/Controllers/Tenant/Inventory/InventoryMovementController.php`        |
-| Service         | `app/Services/Tenant/Inventory/InventoryRecordMovements.php`                   |
+| Service         | `app/Services/Tenant/Inventory/InventoryRecordMovementsService.php`            |
 | DataTableConfig | `app/Http/Resources/Tenant/Inventory/InventoryMovementDataTable.php`           |
 | Transformer     | `app/Transformers/Tenant/Inventory/InventoryMovementTransformer.php`           |
 | FormRequests    | `app/Http/Requests/Tenant/Inventory/{StoreInventoryMovement,BulkDestroyInventoryMovements}Request.php` |
@@ -464,7 +470,8 @@ lives in the service and surfaces as a `quantity` validation error.
 sortable `type`/`quantity`/`quantity_after`/`created_at` (default `created_at desc`,
 20/page); filters for `type` (`select`), `inventory_record_id` (`number`) and
 `created_at` (`date-range`). The transformer exposes a computed `delta`
-(`quantity_after - quantity_before`) plus the related record and user.
+(`quantity_after - quantity_before`), `sale_price` + a computed `sale_total`
+(`sale_price × quantity`, null for non-sales), plus the related record and user.
 
 **Frontend:** `resources/js/Pages/Tenant/Inventory/Movements/Index.vue` (list +
 create modal `InventoryMovementModal.vue`, types in `movements.resource.ts`,
@@ -472,6 +479,60 @@ table wrapper `composables/Tenant/useMovementsTable.ts`). The Inventory **Show**
 page renders the per-record history via `Show/InventoryHistoryCard.vue` inside a
 `BaseTab`. CRUD buttons are feature/permission-gated per the §2.7 pattern in
 `CRUD_GENERATOR_AGENT_INSTRUCTIONS.md`.
+
+---
+
+## Inventory Sales (point-of-sale)
+
+A point-of-sale panel for the Inventory module ("Sprzedaż"). Selling a disc
+decrements its stock by one (or more) and records a dedicated **`Sale`**
+`InventoryMovement`, so every sale lives in the same auditable stock ledger as
+the other movements.
+
+**Sale price lives on the movement, not the record.** `InventoryRecord` no longer
+has a `sale_price` column — the price is decided **at the point of sale** and
+stored on the `Sale` movement's `sale_price`. (`InventoryRecord` keeps
+`purchase_price_per_unit` — the per-unit buy price.)
+
+**The service** — `InventorySaleService` constructor-injects
+`InventoryRecordMovementsService` and delegates the stock+ledger write to it; it
+is **not** a full CRUD/`BaseService`:
+
+| Method                                            | Purpose                                                                 |
+| ------------------------------------------------- | ----------------------------------------------------------------------- |
+| `sellableRecords()`                               | In-stock records (`quantity > 0`) shaped for the POS grid (id, name, artist, format, condition, quantity, cover) |
+| `recentSales($limit = 8)`                         | Latest `Sale` movements (newest first) for the side feed, via `InventoryMovementTransformer` |
+| `todayStats()`                                    | `{ transactions, units }` aggregated over today's `Sale` movements      |
+| `sell($record, $qty, $salePrice, $note, $userId)` | Delegates to `InventoryRecordMovementsService::recordSale()`            |
+
+**Backend pieces:**
+
+| Concern      | File                                                                   |
+| ------------ | ---------------------------------------------------------------------- |
+| Controller   | `app/Http/Controllers/Tenant/Inventory/InventorySaleController.php`    |
+| Service      | `app/Services/Tenant/Inventory/InventorySaleService.php`               |
+| FormRequest  | `app/Http/Requests/Tenant/Inventory/StoreInventorySaleRequest.php`     |
+
+**Permissions:** `inventory-sales-{read|create}` (both → `$all`), seeded by
+`InventoryPermissionsSeeder`. The `useMenu` "Sprzedaż" entry is gated by
+`inventory-sales-read`.
+
+**Routes** (`tenant.inventory.sales.*`, under `feature:inventory`): `index` (GET,
+`inventory-sales-read`) renders the panel; `store` (POST, `inventory-sales-create`)
+records a sale. The panel is **not** a DataTable — `index` just returns
+`records`, `recentSales` and `todayStats` props.
+
+**Validation:** `StoreInventorySaleRequest` requires `inventory_record_id`
+(`exists:inventory_records`), `quantity` (`1..999999`) and `sale_price`
+(`required numeric 0..999999.99`); the below-zero stock guard lives in
+`recordSale()` and surfaces as a `quantity` validation error.
+
+**Frontend:** `resources/js/Pages/Tenant/Inventory/Sales/Index.vue` — a card grid
+of sellable discs with client-side search, a "Dziś" stats card and a recent-sales
+feed; selling opens `Sales/SaleDialog.vue` (quantity capped at stock via
+`BaseInputNumber`'s `:max`, unit-price input, live total). Types in
+`sales.resource.ts`. The "Sprzedaj" buttons are feature/permission-gated
+(`inventory-sales-create`) per the §2.7 pattern.
 
 ---
 
@@ -534,6 +595,8 @@ Authenticated routes add `auth`. Feature groups add `feature:{name}`; write acti
 **Inventory records routes (reference):** `index`, `store`, `import`, `export-template`, `bulk-destroy` (collection, literal paths) then `show`, `update`, `destroy`, `cover`, `cover.destroy` (`{inventoryRecord}` model-bound). Names: `tenant.inventory.records.*`.
 
 **Inventory movements routes (reference):** under `/inventory/movements`, `index` (GET, `inventory-movements-read`), `store` (POST, `inventory-movements-create`), `bulk-destroy` (POST, `inventory-movements-delete`), `destroy` (DELETE `{inventoryMovement}`, `inventory-movements-delete`). Names: `tenant.inventory.movements.*`. See **Inventory Movements** above.
+
+**Inventory sales routes (reference):** under `/inventory/sales`, `index` (GET, `inventory-sales-read`) and `store` (POST, `inventory-sales-create`). Names: `tenant.inventory.sales.*`. See **Inventory Sales** above.
 
 **Users routes:** `index`, `store`, `bulk-destroy` (collection) then `show`, `update`, `destroy` (`{user}` model-bound) and `resend-verification` (POST `{user}`, `permission:users-update`), under `feature:users`. Names: `tenant.users.*`. See **Users Module** above.
 
@@ -646,4 +709,4 @@ See **`CRUD_GENERATOR_AGENT_INSTRUCTIONS.md`** for the complete, step-by-step re
 
 # Roadmap / Upcoming Tasks
 
-- Inventory: sales module (`tenant.inventory.sales.*` — menu entry stubbed out in `useMenu`)
+- _(done)_ Inventory: sales module (`tenant.inventory.sales.*`) — see **Inventory Sales**.

@@ -38,9 +38,8 @@ final class InventoryRecordImport implements SkipsEmptyRows, ToModel, WithBatchI
             'country' => $row[8] ?? null,
             'year' => $row[9] ?? null,
             'quantity' => $row[10] ?? null,
-            'purchase_price' => $row[11] ?? null,
-            'sale_price' => $row[12] ?? null,
-            'notes' => $row[13] ?? null,
+            'purchase_price_per_unit' => $row[11] ?? null,
+            'notes' => $row[12] ?? null,
         ];
     }
 
@@ -59,8 +58,7 @@ final class InventoryRecordImport implements SkipsEmptyRows, ToModel, WithBatchI
             'country' => $row['country'] ?: null,
             'year' => isset($row['year']) && $row['year'] !== '' ? (int) $row['year'] : null,
             'quantity' => (int) $row['quantity'],
-            'purchase_price' => isset($row['purchase_price']) && $row['purchase_price'] !== '' ? (float) $row['purchase_price'] : null,
-            'sale_price' => isset($row['sale_price']) && $row['sale_price'] !== '' ? (float) $row['sale_price'] : null,
+            'purchase_price_per_unit' => isset($row['purchase_price_per_unit']) && $row['purchase_price_per_unit'] !== '' ? (float) $row['purchase_price_per_unit'] : null,
             'notes' => $row['notes'] ?: null,
             'user_id' => Auth::id(),
         ]);
@@ -89,8 +87,7 @@ final class InventoryRecordImport implements SkipsEmptyRows, ToModel, WithBatchI
             'country' => ['nullable', 'string', 'max:100'],
             'year' => ['nullable', 'integer', 'min:1900', 'max:'.now()->year],
             'quantity' => ['required', 'integer', 'min:0'],
-            'purchase_price' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
-            'sale_price' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
+            'purchase_price_per_unit' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
             'notes' => ['nullable', 'string', 'max:5000'],
         ];
     }
@@ -110,8 +107,7 @@ final class InventoryRecordImport implements SkipsEmptyRows, ToModel, WithBatchI
             'country' => 'Kraj',
             'year' => 'Rok',
             'quantity' => 'Ilość',
-            'purchase_price' => 'Cena zakupu',
-            'sale_price' => 'Cena sprzedaży',
+            'purchase_price_per_unit' => 'Cena zakupu za szt.',
             'notes' => 'Notatki',
         ];
     }

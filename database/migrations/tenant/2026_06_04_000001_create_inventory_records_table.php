@@ -30,8 +30,7 @@ return new class extends Migration
             $table->unsignedSmallInteger('year')->nullable();
 
             $table->unsignedInteger('quantity')->default(1);
-            $table->decimal('purchase_price', 10, 2)->nullable();
-            $table->decimal('sale_price', 10, 2)->nullable();
+            $table->decimal('purchase_price_per_unit', 10, 2)->nullable();
 
             $table->string('cover_image')->nullable();
             $table->text('notes')->nullable();

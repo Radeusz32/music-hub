@@ -23,7 +23,7 @@ final class InventoryRecordService extends BaseService
 {
     use ManagesFiles;
 
-    public function __construct(private readonly InventoryRecordMovements $movements) {}
+    public function __construct(private readonly InventoryRecordMovementsService $movements) {}
 
     /**
      * @return array<string, mixed>

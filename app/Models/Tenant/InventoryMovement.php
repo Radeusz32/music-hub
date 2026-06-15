@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read int $quantity
  * @property-read int $quantity_before
  * @property-read int $quantity_after
+ * @property-read string|null $sale_price
  * @property-read string|null $note
  * @property-read int|null $user_id
  * @property-read CarbonInterface $created_at
@@ -38,6 +39,7 @@ final class InventoryMovement extends Model
         'quantity',
         'quantity_before',
         'quantity_after',
+        'sale_price',
         'note',
         'user_id',
     ];
@@ -54,6 +56,7 @@ final class InventoryMovement extends Model
             'quantity' => 'integer',
             'quantity_before' => 'integer',
             'quantity_after' => 'integer',
+            'sale_price' => 'decimal:2',
             'note' => 'string',
             'user_id' => 'integer',
             'created_at' => 'datetime',

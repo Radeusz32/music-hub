@@ -29,8 +29,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @property-read string|null $country
  * @property-read int|null $year
  * @property-read int $quantity
- * @property-read string|null $purchase_price
- * @property-read string|null $sale_price
+ * @property-read string|null $purchase_price_per_unit
  * @property-read string|null $notes
  * @property-read int|null $user_id
  * @property-read CarbonInterface $created_at
@@ -54,8 +53,7 @@ final class InventoryRecord extends Model implements HasMedia
         'country',
         'year',
         'quantity',
-        'purchase_price',
-        'sale_price',
+        'purchase_price_per_unit',
         'notes',
         'user_id',
     ];
@@ -78,8 +76,7 @@ final class InventoryRecord extends Model implements HasMedia
             'country' => 'string',
             'year' => 'integer',
             'quantity' => 'integer',
-            'purchase_price' => 'decimal:2',
-            'sale_price' => 'decimal:2',
+            'purchase_price_per_unit' => 'decimal:2',
             'notes' => 'string',
             'user_id' => 'integer',
             'created_at' => 'datetime',

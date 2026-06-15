@@ -119,7 +119,8 @@ const displayValue = computed(() => {
 });
 
 function onInput(event: Event): void {
-    const value = (event.target as HTMLInputElement).value;
+    const target = event.target as HTMLInputElement;
+    const value = target.value;
 
     if (isFormatted.value) {
         editingText.value = value;
@@ -130,7 +131,15 @@ function onInput(event: Event): void {
         }
         const num = parseFloat(normalized);
         if (!isNaN(num)) {
-            emit("update:modelValue", clamp(num));
+            const clamped = clamp(num);
+            emit("update:modelValue", clamped);
+            if (clamped !== num) {
+                editingText.value = String(clamped).replace(
+                    ".",
+                    decimalSep.value,
+                );
+                target.value = editingText.value;
+            }
         }
         return;
     }
@@ -141,7 +150,11 @@ function onInput(event: Event): void {
     }
     const num = parseFloat(value);
     if (!isNaN(num)) {
-        emit("update:modelValue", clamp(num));
+        const clamped = clamp(num);
+        emit("update:modelValue", clamped);
+        if (clamped !== num) {
+            target.value = String(clamped);
+        }
     }
 }
 

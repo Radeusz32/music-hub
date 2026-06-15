@@ -239,52 +239,27 @@ function onVisibility(visible: boolean): void {
                     </small>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3.5">
-                    <div class="flex flex-col gap-1.5">
-                        <label
-                            class="text-xs font-medium tracking-wide text-slate-400 uppercase"
-                        >
-                            Cena zakupu (PLN)
-                        </label>
-                        <BaseInputNumber
-                            v-model="form.purchase_price"
-                            :min="0"
-                            :step="0.01"
-                            format="currency"
-                            suffix="zł"
-                            placeholder="0,00"
-                            :error="!!form.errors.purchase_price"
-                        />
-                        <small
-                            v-if="form.errors.purchase_price"
-                            class="text-xs text-red-400"
-                        >
-                            {{ form.errors.purchase_price }}
-                        </small>
-                    </div>
-
-                    <div class="flex flex-col gap-1.5">
-                        <label
-                            class="text-xs font-medium tracking-wide text-slate-400 uppercase"
-                        >
-                            Cena sprzedaży (PLN)
-                        </label>
-                        <BaseInputNumber
-                            v-model="form.sale_price"
-                            :min="0"
-                            :step="0.01"
-                            format="currency"
-                            suffix="zł"
-                            placeholder="0,00"
-                            :error="!!form.errors.sale_price"
-                        />
-                        <small
-                            v-if="form.errors.sale_price"
-                            class="text-xs text-red-400"
-                        >
-                            {{ form.errors.sale_price }}
-                        </small>
-                    </div>
+                <div class="flex flex-col gap-1.5">
+                    <label
+                        class="text-xs font-medium tracking-wide text-slate-400 uppercase"
+                    >
+                        Cena zakupu za szt. (PLN)
+                    </label>
+                    <BaseInputNumber
+                        v-model="form.purchase_price_per_unit"
+                        :min="0"
+                        :step="0.01"
+                        format="currency"
+                        suffix="zł"
+                        placeholder="0,00"
+                        :error="!!form.errors.purchase_price_per_unit"
+                    />
+                    <small
+                        v-if="form.errors.purchase_price_per_unit"
+                        class="text-xs text-red-400"
+                    >
+                        {{ form.errors.purchase_price_per_unit }}
+                    </small>
                 </div>
 
                 <div class="flex flex-col gap-1.5">

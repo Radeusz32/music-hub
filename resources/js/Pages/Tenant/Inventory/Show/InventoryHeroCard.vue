@@ -32,13 +32,6 @@ const conditionColor = computed(() =>
     resolveOptionColor(props.conditionOptions, props.record.condition),
 );
 
-const margin = computed<number | null>(() => {
-    const buy = parseFloat(props.record.purchase_price ?? "0");
-    const sell = parseFloat(props.record.sale_price ?? "0");
-    if (!buy || !sell) return null;
-    return Math.round(((sell - buy) / buy) * 100);
-});
-
 const quantityColor = computed<string>(() => {
     if (props.record.quantity === 0) return "#f87171";
     if (props.record.quantity <= 3) return "#fb923c";
@@ -111,26 +104,9 @@ const quantityColor = computed<string>(() => {
                     </span>
                 </div>
                 <div class="stat-block">
-                    <span class="stat-label">Cena sprzedaży</span>
-                    <span class="stat-value stat-price">
-                        {{ formatPrice(record.sale_price) }}
-                    </span>
-                </div>
-                <div class="stat-block">
-                    <span class="stat-label">Cena zakupu</span>
+                    <span class="stat-label">Cena zakupu / szt.</span>
                     <span class="stat-value stat-cost">
-                        {{ formatPrice(record.purchase_price) }}
-                    </span>
-                </div>
-                <div v-if="margin !== null" class="stat-block">
-                    <span class="stat-label">Marża</span>
-                    <span
-                        class="stat-value"
-                        :style="{
-                            color: margin >= 0 ? '#4ade80' : '#f87171',
-                        }"
-                    >
-                        {{ margin >= 0 ? "+" : "" }}{{ margin }}%
+                        {{ formatPrice(record.purchase_price_per_unit) }}
                     </span>
                 </div>
             </div>

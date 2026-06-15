@@ -69,8 +69,7 @@ function openEdit(): void {
         country: r.country ?? "",
         year: r.year ?? "",
         quantity: r.quantity,
-        purchase_price: r.purchase_price ?? "",
-        sale_price: r.sale_price ?? "",
+        purchase_price_per_unit: r.purchase_price_per_unit ?? "",
         notes: r.notes ?? "",
     });
     showEditModal.value = true;

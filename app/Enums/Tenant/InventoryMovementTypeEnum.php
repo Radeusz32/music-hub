@@ -9,6 +9,7 @@ enum InventoryMovementTypeEnum: string
     case Initial = 'initial';
     case In = 'in';
     case Out = 'out';
+    case Sale = 'sale';
     case Return = 'return';
     case Loss = 'loss';
     case Correction = 'correction';
@@ -50,6 +51,7 @@ enum InventoryMovementTypeEnum: string
             self::Initial => 'Stan początkowy',
             self::In => 'Przyjęcie',
             self::Out => 'Wydanie',
+            self::Sale => 'Sprzedaż',
             self::Return => 'Zwrot',
             self::Loss => 'Ubytek',
             self::Correction => 'Korekta',
@@ -62,6 +64,7 @@ enum InventoryMovementTypeEnum: string
             self::Initial => '#94a3b8',
             self::In => '#4ade80',
             self::Out => '#f87171',
+            self::Sale => '#10b981',
             self::Return => '#38bdf8',
             self::Loss => '#fb923c',
             self::Correction => '#facc15',
@@ -76,7 +79,7 @@ enum InventoryMovementTypeEnum: string
     {
         return match ($this) {
             self::Initial, self::In, self::Return, self::Correction => 1,
-            self::Out, self::Loss => -1,
+            self::Out, self::Sale, self::Loss => -1,
         };
     }
 }

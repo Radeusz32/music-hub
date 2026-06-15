@@ -10,6 +10,7 @@ use App\Http\Controllers\Tenant\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Tenant\Auth\VerifyEmailController;
 use App\Http\Controllers\Tenant\Inventory\InventoryMovementController;
 use App\Http\Controllers\Tenant\Inventory\InventoryRecordController;
+use App\Http\Controllers\Tenant\Inventory\InventorySaleController;
 use App\Http\Controllers\Tenant\Settings\PasswordController;
 use App\Http\Controllers\Tenant\Settings\SettingController;
 use App\Http\Controllers\Tenant\Users\UserController;
@@ -170,6 +171,17 @@ Route::middleware([
                             Route::delete('/{inventoryMovement}', [InventoryMovementController::class, 'destroy'])
                                 ->name('tenant.inventory.movements.destroy')
                                 ->middleware('permission:inventory-movements-delete');
+                        });
+
+                    Route::prefix('sales')
+                        ->group(function (): void {
+                            Route::get('/', [InventorySaleController::class, 'index'])
+                                ->name('tenant.inventory.sales.index')
+                                ->middleware('permission:inventory-sales-read');
+
+                            Route::post('/', [InventorySaleController::class, 'store'])
+                                ->name('tenant.inventory.sales.store')
+                                ->middleware('permission:inventory-sales-create');
                         });
                 });
 

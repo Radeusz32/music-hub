@@ -10,7 +10,7 @@ use App\Http\Requests\Tenant\Inventory\BulkDestroyInventoryMovementsRequest;
 use App\Http\Requests\Tenant\Inventory\StoreInventoryMovementRequest;
 use App\Models\Tenant\InventoryMovement;
 use App\Models\Tenant\InventoryRecord;
-use App\Services\Tenant\Inventory\InventoryRecordMovements;
+use App\Services\Tenant\Inventory\InventoryRecordMovementsService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -18,7 +18,7 @@ use Inertia\Response;
 
 final class InventoryMovementController extends Controller
 {
-    public function __construct(private readonly InventoryRecordMovements $movements) {}
+    public function __construct(private readonly InventoryRecordMovementsService $movements) {}
 
     public function index(Request $request): Response
     {

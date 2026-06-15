@@ -26,8 +26,7 @@ final class InventoryRecordsSeeder extends Seeder
                 'year' => 1967,
                 'country' => 'Polska',
                 'quantity' => 2,
-                'purchase_price' => '280.00',
-                'sale_price' => '520.00',
+                'purchase_price_per_unit' => '280.00',
                 'notes' => 'Pierwsza edycja, okładka w bardzo dobrym stanie',
             ],
             [
@@ -41,8 +40,7 @@ final class InventoryRecordsSeeder extends Seeder
                 'year' => 1969,
                 'country' => 'Polska',
                 'quantity' => 1,
-                'purchase_price' => '350.00',
-                'sale_price' => '650.00',
+                'purchase_price_per_unit' => '350.00',
             ],
             [
                 'name' => 'Cegła',
@@ -55,8 +53,7 @@ final class InventoryRecordsSeeder extends Seeder
                 'year' => 1982,
                 'country' => 'Polska',
                 'quantity' => 3,
-                'purchase_price' => '120.00',
-                'sale_price' => '230.00',
+                'purchase_price_per_unit' => '120.00',
             ],
             [
                 'name' => 'Nowe Sytuacje',
@@ -69,8 +66,7 @@ final class InventoryRecordsSeeder extends Seeder
                 'year' => 1983,
                 'country' => 'Polska',
                 'quantity' => 2,
-                'purchase_price' => '90.00',
-                'sale_price' => '175.00',
+                'purchase_price_per_unit' => '90.00',
             ],
             [
                 'name' => 'Nocny Patrol',
@@ -83,8 +79,7 @@ final class InventoryRecordsSeeder extends Seeder
                 'year' => 1983,
                 'country' => 'Polska',
                 'quantity' => 1,
-                'purchase_price' => '100.00',
-                'sale_price' => '195.00',
+                'purchase_price_per_unit' => '100.00',
             ],
             [
                 'name' => 'Lady Pank',
@@ -97,8 +92,7 @@ final class InventoryRecordsSeeder extends Seeder
                 'year' => 1983,
                 'country' => 'Polska',
                 'quantity' => 4,
-                'purchase_price' => '70.00',
-                'sale_price' => '140.00',
+                'purchase_price_per_unit' => '70.00',
             ],
             [
                 'name' => 'Autobiografia',
@@ -111,8 +105,7 @@ final class InventoryRecordsSeeder extends Seeder
                 'year' => 1985,
                 'country' => 'Polska',
                 'quantity' => 2,
-                'purchase_price' => '80.00',
-                'sale_price' => '155.00',
+                'purchase_price_per_unit' => '80.00',
             ],
             [
                 'name' => 'Heavy Metal World',
@@ -125,8 +118,7 @@ final class InventoryRecordsSeeder extends Seeder
                 'year' => 1984,
                 'country' => 'Polska',
                 'quantity' => 1,
-                'purchase_price' => '140.00',
-                'sale_price' => '270.00',
+                'purchase_price_per_unit' => '140.00',
             ],
             [
                 'name' => 'Śmierć Dyskotece',
@@ -139,8 +131,7 @@ final class InventoryRecordsSeeder extends Seeder
                 'year' => 1982,
                 'country' => 'Polska',
                 'quantity' => 1,
-                'purchase_price' => '60.00',
-                'sale_price' => '110.00',
+                'purchase_price_per_unit' => '60.00',
                 'notes' => 'Okładka lekko przetarta na rogach',
             ],
             [
@@ -154,8 +145,7 @@ final class InventoryRecordsSeeder extends Seeder
                 'year' => 1975,
                 'country' => 'Polska',
                 'quantity' => 2,
-                'purchase_price' => '180.00',
-                'sale_price' => '340.00',
+                'purchase_price_per_unit' => '180.00',
             ],
             [
                 'name' => 'Cień Wielkiej Góry',
@@ -168,8 +158,7 @@ final class InventoryRecordsSeeder extends Seeder
                 'year' => 1983,
                 'country' => 'Polska',
                 'quantity' => 3,
-                'purchase_price' => '75.00',
-                'sale_price' => '145.00',
+                'purchase_price_per_unit' => '75.00',
             ],
             [
                 'name' => 'Cała Jesteś w Skowronkach',
@@ -182,8 +171,7 @@ final class InventoryRecordsSeeder extends Seeder
                 'year' => 1970,
                 'country' => 'Polska',
                 'quantity' => 1,
-                'purchase_price' => '130.00',
-                'sale_price' => '240.00',
+                'purchase_price_per_unit' => '130.00',
             ],
             [
                 'name' => 'De Mono',
@@ -196,8 +184,7 @@ final class InventoryRecordsSeeder extends Seeder
                 'year' => 1987,
                 'country' => 'Polska',
                 'quantity' => 2,
-                'purchase_price' => '55.00',
-                'sale_price' => '105.00',
+                'purchase_price_per_unit' => '55.00',
             ],
             [
                 'name' => 'King',
@@ -210,8 +197,7 @@ final class InventoryRecordsSeeder extends Seeder
                 'year' => 1990,
                 'country' => 'Polska',
                 'quantity' => 2,
-                'purchase_price' => '65.00',
-                'sale_price' => '125.00',
+                'purchase_price_per_unit' => '65.00',
             ],
             [
                 'name' => 'To Właśnie My',
@@ -224,8 +210,7 @@ final class InventoryRecordsSeeder extends Seeder
                 'year' => 1967,
                 'country' => 'Polska',
                 'quantity' => 0,
-                'purchase_price' => '200.00',
-                'sale_price' => '380.00',
+                'purchase_price_per_unit' => '200.00',
                 'notes' => 'Egzemplarz kolekcjonerski, okładka wymaga konserwacji',
             ],
         ];

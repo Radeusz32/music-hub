@@ -32,7 +32,7 @@ final class InventoryRecordDataTable extends DataTableConfig
     /** @return list<string> */
     public static function allowedSortColumns(): array
     {
-        return ['name', 'artist', 'genre', 'format', 'condition', 'year', 'quantity', 'sale_price', 'created_at', 'updated_at'];
+        return ['name', 'artist', 'genre', 'format', 'condition', 'year', 'quantity', 'created_at', 'updated_at'];
     }
 
     /**
@@ -61,10 +61,6 @@ final class InventoryRecordDataTable extends DataTableConfig
             ],
             'quantity' => [
                 'column' => 'quantity',
-                'type' => FilterTypeEnum::NumberRange,
-            ],
-            'sale_price' => [
-                'column' => 'sale_price',
                 'type' => FilterTypeEnum::NumberRange,
             ],
             'created_at' => [
