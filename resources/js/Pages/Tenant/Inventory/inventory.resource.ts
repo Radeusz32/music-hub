@@ -1,4 +1,5 @@
 import type { ColumnDef, FilterOption } from "@/types/datatable";
+import type { InventoryMovement } from "./movements.resource";
 
 export type { ColumnDef, FilterOption };
 
@@ -27,6 +28,7 @@ export interface InventoryRecord {
     cover_image: string | null;
     notes: string | null;
     user: InventoryRecordUser | null;
+    movements?: InventoryMovement[];
     created_at: string;
     updated_at: string;
 }

@@ -23,6 +23,8 @@ final class InventoryRecordService extends BaseService
 {
     use ManagesFiles;
 
+    public function __construct(private readonly InventoryRecordMovements $movements) {}
+
     /**
      * @return array<string, mixed>
      */
@@ -37,6 +39,11 @@ final class InventoryRecordService extends BaseService
     public function show(InventoryRecord $inventoryRecord): array
     {
         $inventoryRecord->loadMissing(InventoryRecordTransformer::eagerLoads());
+        $inventoryRecord->load([
+            'movements' => fn ($query) => $query
+                ->latest()
+                ->with(['user', 'user.roles:id,name']),
+        ]);
 
         return (new InventoryRecordTransformer())->toArray($inventoryRecord, request());
     }
@@ -46,7 +53,11 @@ final class InventoryRecordService extends BaseService
      */
     public function create(array $data): InventoryRecord
     {
-        return InventoryRecord::query()->create($data);
+        $record = InventoryRecord::query()->create($data);
+
+        $this->movements->recordInitial($record, $data['user_id'] ?? auth()->id());
+
+        return $record;
     }
 
     /**
@@ -54,7 +65,18 @@ final class InventoryRecordService extends BaseService
      */
     public function update(InventoryRecord $inventoryRecord, array $data): InventoryRecord
     {
+        $oldQuantity = $inventoryRecord->quantity;
+
         $inventoryRecord->update($data);
+
+        if (array_key_exists('quantity', $data)) {
+            $this->movements->recordQuantityChange(
+                $inventoryRecord,
+                $oldQuantity,
+                (int) $inventoryRecord->quantity,
+                auth()->id(),
+            );
+        }
 
         return $inventoryRecord->fresh();
     }

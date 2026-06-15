@@ -8,6 +8,7 @@ import BaseDropdown from "@/Components/BaseDropdown.vue";
 import BaseTextArea from "@/Components/BaseTextArea.vue";
 import BaseMaskedInput from "@/Components/BaseMaskedInput.vue";
 import BaseDialog from "@/Components/BaseDialog.vue";
+import BaseTab from "@/Components/BaseTab.vue";
 import Tooltip from "@/Components/Tooltip.vue";
 
 export function registerBaseComponents(app: App): void {
@@ -19,5 +20,6 @@ export function registerBaseComponents(app: App): void {
     app.component("BaseTextArea", BaseTextArea);
     app.component("BaseMaskedInput", BaseMaskedInput);
     app.component("BaseDialog", BaseDialog);
+    app.component("BaseTab", BaseTab);
     app.component("Tooltip", Tooltip);
 }

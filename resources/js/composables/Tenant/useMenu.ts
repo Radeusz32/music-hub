@@ -52,6 +52,12 @@ export function useMenu() {
                     url: route("tenant.inventory.movements.index"),
                     icon: "pi-sort-alt",
                 },
+                // {
+                //     label: "Sprzedaż",
+                //     name: "tenant.inventory.sales.index",
+                //     url: route("tenant.inventory.sales.index"),
+                //     icon: "pi-sort-alt",
+                // },
             ],
         },
         {

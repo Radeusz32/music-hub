@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Database\Seeders;
 
 use Database\Seeders\Tenant\AllPermissionsSeeder;
+use Database\Seeders\Tenant\InventoryMovementsSeeder;
 use Database\Seeders\Tenant\InventoryRecordsSeeder;
 use Database\Seeders\Tenant\OwnerSeeder;
 use Database\Seeders\Tenant\RolesSeeder;
@@ -21,6 +22,7 @@ final class TenantDatabaseSeeder extends Seeder
             OwnerSeeder::class,
             UsersSeeder::class,
             InventoryRecordsSeeder::class,
+            InventoryMovementsSeeder::class,
         ]);
     }
 }

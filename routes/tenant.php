@@ -8,6 +8,7 @@ use App\Http\Controllers\Tenant\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Tenant\Auth\NewPasswordController;
 use App\Http\Controllers\Tenant\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Tenant\Auth\VerifyEmailController;
+use App\Http\Controllers\Tenant\Inventory\InventoryMovementController;
 use App\Http\Controllers\Tenant\Inventory\InventoryRecordController;
 use App\Http\Controllers\Tenant\Settings\PasswordController;
 use App\Http\Controllers\Tenant\Settings\SettingController;
@@ -154,9 +155,21 @@ Route::middleware([
 
                     Route::prefix('movements')
                         ->group(function (): void {
-                            Route::get('/', fn () => Inertia::render('Tenant/Inventory/Movements'))
+                            Route::get('/', [InventoryMovementController::class, 'index'])
                                 ->name('tenant.inventory.movements.index')
                                 ->middleware('permission:inventory-movements-read');
+
+                            Route::post('/', [InventoryMovementController::class, 'store'])
+                                ->name('tenant.inventory.movements.store')
+                                ->middleware('permission:inventory-movements-create');
+
+                            Route::post('/bulk-destroy', [InventoryMovementController::class, 'bulkDestroy'])
+                                ->name('tenant.inventory.movements.bulk-destroy')
+                                ->middleware('permission:inventory-movements-delete');
+
+                            Route::delete('/{inventoryMovement}', [InventoryMovementController::class, 'destroy'])
+                                ->name('tenant.inventory.movements.destroy')
+                                ->middleware('permission:inventory-movements-delete');
                         });
                 });
 

@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Tenant\Inventory;
 
 use App\Enums\Tenant\DiscConditionEnum;
 use App\Enums\Tenant\DiscFormatEnum;
+use App\Enums\Tenant\InventoryMovementTypeEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\Inventory\BulkDestroyInventoryRecordsRequest;
 use App\Http\Requests\Tenant\Inventory\ImportInventoryRecordsRequest;
@@ -50,6 +51,7 @@ final class InventoryRecordController extends Controller
             'record' => $this->inventoryRecordService->show($inventoryRecord),
             'formatOptions' => DiscFormatEnum::options(),
             'conditionOptions' => DiscConditionEnum::options(),
+            'movementTypeOptions' => InventoryMovementTypeEnum::options(),
         ]);
     }
 

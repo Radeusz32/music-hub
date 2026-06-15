@@ -5,6 +5,7 @@ import InventoryRecordModal from "./InventoryRecordModal.vue";
 import InventoryHeroCard from "./Show/InventoryHeroCard.vue";
 import InventoryDetailsCard from "./Show/InventoryDetailsCard.vue";
 import InventoryMetaCard from "./Show/InventoryMetaCard.vue";
+import InventoryHistoryCard from "./Show/InventoryHistoryCard.vue";
 import InventoryDeleteDialog from "./Show/InventoryDeleteDialog.vue";
 import { Link, useForm } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
@@ -23,6 +24,7 @@ const props = defineProps<{
     record: InventoryRecord;
     formatOptions: FilterOption[];
     conditionOptions: FilterOption[];
+    movementTypeOptions: FilterOption[];
 }>();
 
 const toast = useToast();
@@ -37,6 +39,17 @@ const canUpdate = computed(
 const canDelete = computed(
     () => hasFeature("inventory") && hasPermission("inventory-records-delete"),
 );
+
+/* ── Tabs ── */
+const tabs = computed(() => [
+    { value: "details", label: "Szczegóły", icon: "pi pi-info-circle" },
+    {
+        value: "history",
+        label: "Historia ruchów",
+        icon: "pi pi-history",
+        badge: props.record.movements?.length ?? 0,
+    },
+]);
 
 /* ── Edit modal ── */
 const showEditModal = ref(false);
@@ -130,15 +143,26 @@ function confirmDelete(): void {
                 </button>
             </template>
 
-            <InventoryHeroCard
-                :record="record"
-                :format-options="formatOptions"
-                :condition-options="conditionOptions"
-            />
+            <BaseTab :tabs="tabs">
+                <template #details>
+                    <InventoryHeroCard
+                        :record="record"
+                        :format-options="formatOptions"
+                        :condition-options="conditionOptions"
+                    />
 
-            <InventoryDetailsCard :record="record" />
+                    <InventoryDetailsCard :record="record" />
 
-            <InventoryMetaCard :record="record" />
+                    <InventoryMetaCard :record="record" />
+                </template>
+
+                <template #history>
+                    <InventoryHistoryCard
+                        :movements="record.movements ?? []"
+                        :type-options="movementTypeOptions"
+                    />
+                </template>
+            </BaseTab>
         </ShowLayout>
 
         <!-- ── Edit modal ── -->

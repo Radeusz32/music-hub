@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace App\Transformers\Tenant\Inventory;
 
+use App\Models\Tenant\InventoryMovement;
 use App\Models\Tenant\InventoryRecord;
-use App\Transformers\Tenant\UserTransformer;
+use App\Transformers\Tenant\Users\UserTransformer;
 use App\Transformers\Transformer;
 
 final class InventoryRecordTransformer extends Transformer
 {
     protected array $defaultIncludes = [
         'user',
+        'movements',
     ];
 
     protected array $availableIncludes = [
@@ -21,7 +23,7 @@ final class InventoryRecordTransformer extends Transformer
     /** @return list<string> */
     public static function eagerLoads(): array
     {
-        return ['user:id,first_name,last_name,email', 'media'];
+        return ['user', 'user.roles:id,name', 'media'];
     }
 
     /**
@@ -61,5 +63,25 @@ final class InventoryRecordTransformer extends Transformer
         }
 
         return (new UserTransformer())->transform($model->user);
+    }
+
+    /**
+     * Stock-movement history. Only loaded on the detail page, so the list
+     * view (where the relation is absent) returns an empty array.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function includeMovements(mixed $model, mixed $_request = null): array
+    {
+        /** @var InventoryRecord $model */
+        if (! $model->relationLoaded('movements')) {
+            return [];
+        }
+
+        $transformer = new InventoryMovementTransformer();
+
+        return $model->movements
+            ->map(fn (InventoryMovement $movement): array => $transformer->toArray($movement, request()))
+            ->all();
     }
 }

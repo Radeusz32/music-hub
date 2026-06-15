@@ -75,11 +75,14 @@ app/
 │   └── Tenant/
 │       ├── RoleEnum.php                 # owner | admin | user
 │       ├── DiscFormatEnum.php           # Inventory: LP, CD, ... (+ label()/color()/options())
-│       └── DiscConditionEnum.php        # Inventory: M, NM, VG+, ... (+ label()/color()/options())
+│       ├── DiscConditionEnum.php        # Inventory: M, NM, VG+, ... (+ label()/color()/options())
+│       └── InventoryMovementTypeEnum.php # Stock movement types (+ label()/color()/sign()/options()/manualOptions())
 ├── Http/
 │   ├── Controllers/Tenant/
 │   │   ├── Auth/AuthController.php
-│   │   └── Inventory/InventoryRecordController.php
+│   │   └── Inventory/
+│   │       ├── InventoryRecordController.php
+│   │       └── InventoryMovementController.php   # index/store/destroy/bulk-destroy
 │   ├── Middleware/
 │   │   ├── CheckFeature.php             # Blocks routes by tenant feature
 │   │   └── HandleInertiaRequests.php
@@ -88,24 +91,33 @@ app/
 │   │   ├── UpdateInventoryRecordRequest.php
 │   │   ├── BulkDestroyInventoryRecordsRequest.php
 │   │   ├── UploadCoverRequest.php
-│   │   └── ImportInventoryRecordsRequest.php
+│   │   ├── ImportInventoryRecordsRequest.php
+│   │   ├── StoreInventoryMovementRequest.php
+│   │   └── BulkDestroyInventoryMovementsRequest.php
 │   └── Resources/
 │       ├── DataTableConfig.php          # Abstract base for server-side table queries
-│       └── Tenant/Inventory/InventoryRecordDataTable.php
+│       └── Tenant/Inventory/
+│           ├── InventoryRecordDataTable.php
+│           └── InventoryMovementDataTable.php
 ├── Models/
 │   ├── Central/{Domain,Feature,Tenant}.php
 │   └── Tenant/
 │       ├── User.php                     # HasRoles (Spatie), HasFactory
-│       └── InventoryRecord.php          # SoftDeletes, HasMedia, casts(), relations
+│       ├── InventoryRecord.php          # SoftDeletes, HasMedia, casts(), relations (hasMany movements)
+│       └── InventoryMovement.php        # SoftDeletes, casts(), belongsTo record + user
 ├── Providers/{AppServiceProvider,TenancyServiceProvider}.php
 ├── Services/
 │   ├── BaseService.php                  # fetchForDataTable() + filter strategies
 │   ├── Tenant/Auth/LoginService.php
-│   └── Tenant/Inventory/InventoryRecordService.php
+│   └── Tenant/Inventory/
+│       ├── InventoryRecordService.php   # delegates stock logging to InventoryRecordMovements
+│       └── InventoryRecordMovements.php # ledger writes + stock mutation (record/delete/bulkDelete)
 ├── Transformers/
 │   ├── Transformer.php                  # Abstract: transform() + eagerLoads() + includes
-│   ├── Tenant/UserTransformer.php
-│   └── Tenant/Inventory/InventoryRecordTransformer.php
+│   ├── Tenant/Users/UserTransformer.php
+│   └── Tenant/Inventory/
+│       ├── InventoryRecordTransformer.php   # includes movements[] on the detail page
+│       └── InventoryMovementTransformer.php
 ├── Traits/ManagesFiles.php              # Media upload/destroy + hooks
 ├── Imports/Tenant/Inventory/InventoryRecordImport.php   # maatwebsite/excel
 ├── Exports/Tenant/Inventory/InventoryRecordExport.php   # template export
@@ -114,33 +126,36 @@ app/
 
 database/
 ├── migrations/                          # Central migrations
-├── migrations/tenant/                   # Per-tenant (users, permissions, inventory_records, media)
-├── factories/Tenant/{UserFactory,InventoryRecordFactory}.php
+├── migrations/tenant/                   # Per-tenant (users, permissions, inventory_records, inventory_movements, media)
+├── factories/Tenant/{UserFactory,InventoryRecordFactory,InventoryMovementFactory}.php
 └── seeders/
     ├── DatabaseSeeder.php               # FeaturesSeeder → CentralTenantSeeder
     ├── FeaturesSeeder.php
     ├── CentralTenantSeeder.php
-    ├── TenantDatabaseSeeder.php         # Roles → AllPermissions → Owner → InventoryRecords
+    ├── TenantDatabaseSeeder.php         # Roles → AllPermissions → Owner → Users → InventoryRecords → InventoryMovements
     └── Tenant/
         ├── RolesSeeder.php
         ├── AllPermissionsSeeder.php             # Calls every *PermissionsSeeder
         ├── PermissionsBaseSeeder.php            # Abstract: role groups + setPermissions()
         ├── InventoryPermissionsSeeder.php       # extends PermissionsBaseSeeder
         ├── OwnerSeeder.php
-        └── InventoryRecordsSeeder.php
+        ├── InventoryRecordsSeeder.php
+        └── InventoryMovementsSeeder.php         # Seeds an Initial entry per record
 
 resources/js/
 ├── Components/                          # Globally-registered UI primitives
 │   ├── BaseInput.vue  BaseInputNumber.vue  BaseTextArea.vue  BaseDropdown.vue
 │   ├── BaseCheckbox.vue  BasePassword.vue  BaseMaskedInput.vue
 │   ├── BaseDialog.vue                   # Modal shell (size + columns via Tailwind)
+│   ├── BaseTab.vue                      # Tabbed panel (used on Inventory Show)
 │   ├── FileUpload.vue  DatePicker.vue  Tooltip.vue  AppToast.vue
 ├── composables/
 │   ├── useToast.ts  useMoney.ts  useDate.ts
 │   └── Tenant/
 │       ├── useFeatures.ts  usePermissions.ts  useMenu.ts
 │       ├── useTable.ts                  # Generic server-side table state
-│       └── useInventoryTable.ts         # Module wrapper (columns + display helpers)
+│       ├── useInventoryTable.ts         # Module wrapper (columns + display helpers)
+│       └── useMovementsTable.ts         # Stock-movements table wrapper
 ├── layout/Tenant/
 │   ├── AppLayout.vue  AppSidebar.vue  AppTopbar.vue  AppFooter.vue
 │   ├── IndexLayout.vue                  # Title/toolbar wrapper for list pages
@@ -152,9 +167,10 @@ resources/js/
 │   │   ├── DataTable.vue                # Reusable server-side table
 │   │   └── DataTableComponents/*        # Header, Row, Pagination, ColumnFilter, DeleteDialog
 │   └── Inventory/
-│       ├── Index.vue   Show.vue   inventory.resource.ts
-│       ├── InventoryRecordModal.vue   InventoryImportModal.vue
-│       └── Show/*                       # HeroCard, Cover, DetailsCard, MetaCard, Lightbox, VinylDisc
+│       ├── Index.vue   Show.vue   inventory.resource.ts   movements.resource.ts
+│       ├── InventoryRecordModal.vue   InventoryImportModal.vue   InventoryMovementModal.vue
+│       ├── Movements/Index.vue          # Stock-movements list page
+│       └── Show/*                       # HeroCard, Cover, DetailsCard, MetaCard, Lightbox, VinylDisc, HistoryCard
 ├── plugins/
 │   ├── primevue.ts                      # PrimeVue + Aura dark preset
 │   └── base-components.ts               # Registers all Base* globally
@@ -188,6 +204,7 @@ resources/js/
 
 - `DiscFormatEnum` — `LP, EP, Single, Double LP, CD, CD Single, DVD, Blu-Ray, Cassette, VHS, Digital, Box Set`
 - `DiscConditionEnum` — `M, NM, VG+, VG, G+, G, F, P`
+- `InventoryMovementTypeEnum` — `Initial, In, Return, Correction` (`sign() = +1`) and `Out, Loss` (`sign() = -1`). `manualOptions()` exposes only the four user-selectable types (`In, Out, Return, Loss`); `Initial`/`Correction` are produced automatically by the system.
 
 `options()` returns `list<array{value,label,color}>` and is passed to the frontend for dropdowns/badges.
 
@@ -389,6 +406,75 @@ CRUD buttons are feature/permission-gated per the §2.7 pattern in
 
 ---
 
+## Inventory Movements (stock ledger)
+
+An append-only stock ledger for the Inventory module ("Ruchy magazynowe"). Every
+change to an `InventoryRecord`'s `quantity` is mirrored as an `InventoryMovement`
+row, so the warehouse history is auditable and each record's running stock is
+reproducible.
+
+**Model fields** (`inventory_movements`, tenant DB; SoftDeletes):
+`inventory_record_id` (cascade-delete FK), `type` (enum), `quantity` (the
+movement size, always positive), `quantity_before`, `quantity_after` (stock
+snapshot around the movement), `note` (nullable), `user_id` (nullable FK, null
+on user delete). `type` casts to `InventoryMovementTypeEnum`.
+
+**The service is the single source of truth** — `InventoryRecordMovements`
+(extends `BaseService`) owns both the stock mutation and the ledger write inside
+one `DB::transaction`, so stock and history never drift:
+
+| Method                                              | When                                                        | Effect on stock                                                                 |
+| --------------------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `record($record, $type, $qty, $note, $userId)`      | Manual movement from the form (`In/Out/Return/Loss`)        | Applies `type->sign() * qty`; **throws `ValidationException`** if it would go below 0 |
+| `recordInitial($record, $userId)`                   | A new record is created with `quantity > 0`                 | None (record already carries the qty) — logs an `Initial` entry                 |
+| `recordQuantityChange($record, $old, $new, $userId)`| A record's `quantity` is edited                             | None (record already updated) — logs a `Correction` entry (no-op if unchanged)  |
+| `delete($movement)` / `bulkDelete($ids)`            | A movement is removed                                       | **Reverses** the entry's delta (`quantity_after - quantity_before`), clamped at 0 |
+
+`InventoryRecordService` depends on it: `create()` calls `recordInitial()`,
+`update()` calls `recordQuantityChange()` when `quantity` is in the payload, and
+`show()` eager-loads `movements` (latest first, with `user.roles`) for the
+detail page's history card.
+
+**Backend pieces:**
+
+| Concern         | File                                                                          |
+| --------------- | ----------------------------------------------------------------------------- |
+| Controller      | `app/Http/Controllers/Tenant/Inventory/InventoryMovementController.php`        |
+| Service         | `app/Services/Tenant/Inventory/InventoryRecordMovements.php`                   |
+| DataTableConfig | `app/Http/Resources/Tenant/Inventory/InventoryMovementDataTable.php`           |
+| Transformer     | `app/Transformers/Tenant/Inventory/InventoryMovementTransformer.php`           |
+| FormRequests    | `app/Http/Requests/Tenant/Inventory/{StoreInventoryMovement,BulkDestroyInventoryMovements}Request.php` |
+| Data seeder     | `database/seeders/Tenant/InventoryMovementsSeeder.php` (one `Initial` per record) |
+
+**Permissions:** reuses the already-seeded `inventory-movements-{read|create|delete}`
+(read → `$all`, create → `$admins`, delete → `$owners`). There is **no update** —
+the ledger is append-only; corrections happen by editing the record (auto
+`Correction` entry) or deleting a movement (auto stock reversal).
+
+**Routes** (`tenant.inventory.movements.*`, under `feature:inventory`): `index`
+(GET), `store` (POST), `bulk-destroy` (POST, literal path), `destroy` (DELETE
+`{inventoryMovement}`). Each write action carries its `permission:` middleware.
+
+**Validation:** `StoreInventoryMovementRequest` restricts `type` to the four
+manual cases (`In/Out/Return/Loss`), requires `inventory_record_id`
+(`exists:inventory_records`) and `quantity` (`1..999999`); the below-zero guard
+lives in the service and surfaces as a `quantity` validation error.
+
+**Table & filters** (see `FILTERABLE_COLUMNS_GUIDE.md`): search over `note`;
+sortable `type`/`quantity`/`quantity_after`/`created_at` (default `created_at desc`,
+20/page); filters for `type` (`select`), `inventory_record_id` (`number`) and
+`created_at` (`date-range`). The transformer exposes a computed `delta`
+(`quantity_after - quantity_before`) plus the related record and user.
+
+**Frontend:** `resources/js/Pages/Tenant/Inventory/Movements/Index.vue` (list +
+create modal `InventoryMovementModal.vue`, types in `movements.resource.ts`,
+table wrapper `composables/Tenant/useMovementsTable.ts`). The Inventory **Show**
+page renders the per-record history via `Show/InventoryHistoryCard.vue` inside a
+`BaseTab`. CRUD buttons are feature/permission-gated per the §2.7 pattern in
+`CRUD_GENERATOR_AGENT_INSTRUCTIONS.md`.
+
+---
+
 ## Auth: E-mail Verification, Password Reset & Change
 
 Built on Laravel's native mechanisms (the `Password` broker, `MustVerifyEmail`,
@@ -446,6 +532,8 @@ Authenticated routes add `auth`. Feature groups add `feature:{name}`; write acti
 | `/settings`     | `feature:settings`     | Ustawienia (organization, billing) |
 
 **Inventory records routes (reference):** `index`, `store`, `import`, `export-template`, `bulk-destroy` (collection, literal paths) then `show`, `update`, `destroy`, `cover`, `cover.destroy` (`{inventoryRecord}` model-bound). Names: `tenant.inventory.records.*`.
+
+**Inventory movements routes (reference):** under `/inventory/movements`, `index` (GET, `inventory-movements-read`), `store` (POST, `inventory-movements-create`), `bulk-destroy` (POST, `inventory-movements-delete`), `destroy` (DELETE `{inventoryMovement}`, `inventory-movements-delete`). Names: `tenant.inventory.movements.*`. See **Inventory Movements** above.
 
 **Users routes:** `index`, `store`, `bulk-destroy` (collection) then `show`, `update`, `destroy` (`{user}` model-bound) and `resend-verification` (POST `{user}`, `permission:users-update`), under `feature:users`. Names: `tenant.users.*`. See **Users Module** above.
 
@@ -544,6 +632,7 @@ const { formatDate } = useDate(); // "04.06.2026" (pl-PL, null-safe)
 
 - **Base inputs** (globally registered in `plugins/base-components.ts`): `BaseInput`, `BaseInputNumber`, `BaseTextArea`, `BaseDropdown`, `BaseCheckbox`, `BasePassword`, `BaseMaskedInput`, `BaseDialog`. See **`README-BASE-COMPONENTS.md`**.
 - **`BaseDialog`** — the modal shell for every dialog; width/columns are managed with Tailwind at the call site (`panel-class`, `align`, `mobile-fullscreen`).
+- **`BaseTab`** — tabbed-panel wrapper (used on the Inventory Show page to split details from the stock-movement history).
 - **Layouts** — `IndexLayout` (list pages: title + `#toolbar` slot), `ShowLayout` (detail pages: title + `#actions` slot), both built on `PageToolbar`.
 - **PrimeVue** — Aura **dark** preset, `darkModeSelector: ".app-dark"` (the `<body>` carries `app-dark`), with a `cssLayer` so Tailwind utilities win over PrimeVue base styles.
 
@@ -557,4 +646,4 @@ See **`CRUD_GENERATOR_AGENT_INSTRUCTIONS.md`** for the complete, step-by-step re
 
 # Roadmap / Upcoming Tasks
 
-- Inventory: stock movements (`inventory-movements-*` permissions already seeded; UI pending)
+- Inventory: sales module (`tenant.inventory.sales.*` — menu entry stubbed out in `useMenu`)
