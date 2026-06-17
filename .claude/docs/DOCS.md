@@ -34,6 +34,7 @@ Multi-tenant SaaS platform for music stores. Each tenant (store) runs on its own
 | Inertia.js   | ^2.3    |
 | PrimeVue     | ^4.5    |
 | Tailwind CSS | ^4      |
+| chart.js     | ^4.5    |
 | TypeScript   | —       |
 | Vite         | —       |
 
@@ -141,6 +142,7 @@ database/
         ├── AllPermissionsSeeder.php             # Calls every *PermissionsSeeder
         ├── PermissionsBaseSeeder.php            # Abstract: role groups + setPermissions()
         ├── InventoryPermissionsSeeder.php       # extends PermissionsBaseSeeder
+        ├── AnalyticsPermissionsSeeder.php       # analytics-read → admins
         ├── OwnerSeeder.php
         ├── InventoryRecordsSeeder.php
         └── InventoryMovementsSeeder.php         # Seeds an Initial entry per record
@@ -270,6 +272,11 @@ Read → `$all`, create/update → `$admins`, delete → `$owners`.
 **Users permissions (reference):**
 `users-{read|create|update|delete}`. Access is restricted to admin + owner:
 read/create/update → `$admins`, delete → `$owners`.
+
+**Analytics permissions (reference):**
+`analytics-read` → `$admins` (owner + admin only). Seeded by
+`AnalyticsPermissionsSeeder`; gates all `tenant.analytics.*` routes and the
+"Analityka" menu group. See **Analytics Module**.
 
 **Settings permissions (reference):**
 `setting-profile` → `$all` (every role can manage their own profile/password).
@@ -593,6 +600,97 @@ feed; selling opens `Sales/SaleDialog.vue` (quantity capped at stock via
 
 ---
 
+## Dashboard
+
+The tenant landing page (`tenant.dashboard`, **not** feature-gated) — headline
+stat tiles, an active-modules grid, and a paginated recent-movements table.
+
+**Backend pieces:**
+
+| Concern    | File                                                       |
+| ---------- | ---------------------------------------------------------- |
+| Controller | `app/Http/Controllers/Tenant/DashboardController.php` (`__invoke`) |
+| Service    | `app/Services/Tenant/Dashboard/DashboardService.php` (extends `BaseService`) |
+
+`DashboardService::stats()` returns headline counters (revenue, today's sold
+units, records, stock units, stock value, users, low-stock count ≤3).
+`recentMovements($request)` **reuses the `InventoryMovementDataTable` config** via
+`fetchForDataTable`, forcing a small default page size (`perPage = 5`) — so the
+dashboard table is the same server-side search/sort/filter/pagination pipeline as
+the Inventory movements page, no extra config class. The controller passes
+`stats`, `movements`, and `InventoryMovementTypeEnum::options()` to the page.
+
+**Frontend:** `resources/js/Pages/Tenant/Dashboard.vue`:
+
+- **Stat tiles** — grid of cards (icon + color + value; money via `useMoney`).
+- **Active modules** — grid of cards built from `auth.features` (the tenant's
+  enabled features, shared by `HandleInertiaRequests`) mapped to label/icon/color
+  + the module's landing route; each is an Inertia `<Link>` to that module.
+- **Recent movements** — the shared `DataTable` driven by `useTable`
+  (`routeName: "tenant.dashboard"`, `defaultPerPage: 5`), reusing
+  `buildMovementColumns` from `movements.resource.ts`; read-only (`:can-edit` /
+  `:can-delete` = `false`). Table state pushes Inertia visits back to
+  `tenant.dashboard`, which `recentMovements()` reads — no separate endpoint.
+
+---
+
+## Analytics Module
+
+Read-only analytics dashboards (the "Analityka" feature) that aggregate the
+existing Inventory + sales data — **no own model or table**. Four pages:
+**Podsumowanie** (overview), **Sprzedaż** (sales), **Top artyści** (artists),
+**Raporty** (reports).
+
+**Data sources:** `InventoryMovement` rows of type `Sale` (revenue =
+`SUM(sale_price * quantity)`, units, transactions) and `InventoryRecord` (stock
+units/value, titles, format/condition/genre breakdowns).
+
+**Backend pieces:**
+
+| Concern    | File                                                        |
+| ---------- | ----------------------------------------------------------- |
+| Controller | `app/Http/Controllers/Tenant/Analytics/AnalyticsController.php` (`overview`/`sales`/`artists`/`reports`) |
+| Service    | `app/Services/Tenant/Analytics/AnalyticsService.php`        |
+| Permission | `database/seeders/Tenant/AnalyticsPermissionsSeeder.php`    |
+
+`AnalyticsService` is **not** a `BaseService` (no CRUD) — it exposes one method
+per page returning a ready-to-render array. Aggregations use `selectRaw` +
+`groupBy` (and a `join` to `inventory_records` for per-format/artist rollups).
+**Gotchas baked in:** `condition` is backticked (MySQL reserved word) and the
+grouped rollups use `->toBase()` so `format`/`condition` come back as raw strings
+(the `InventoryRecord` enum casts would otherwise break `keyBy()`). Daily (30d)
+and monthly (12m) series are gap-filled with zeros; month labels are Polish
+(`MONTHS_SHORT_PL` const → `Sty 2026`), not Carbon-locale dependent.
+
+**Permission:** single `analytics-read`, granted to **`$admins`** (owner + admin)
+by `AnalyticsPermissionsSeeder` (registered in `AllPermissionsSeeder`). The whole
+feature is admin+owner only.
+
+**Routes** (`tenant.analytics.*`, under `['feature:analytics', 'permission:analytics-read']`):
+`overview`, `sales`, `artists`, `reports` (all GET). The `analytics` feature is
+assigned to the dev tenant in `CentralTenantSeeder` and to invited tenants by
+`ProvisionTenantJob`.
+
+**Frontend:** `resources/js/Pages/Tenant/Analytics/` — `Overview.vue`,
+`Sales.vue`, `Artists.vue`, `Reports.vue` (each `AppLayout` + `IndexLayout`),
+types in `analytics.resource.ts`. Charts are **chart.js used directly** (a
+`<canvas>` + `new Chart()` from `chart.js/auto`, rendered in `onMounted` and
+re-rendered on prop change, destroyed on unmount — **not** PrimeVue's Chart
+wrapper). Reusable chart components under `Analytics/Components/`:
+
+| Component       | Purpose                                                       |
+| --------------- | ------------------------------------------------------------- |
+| `StatCard.vue`  | KPI card (value, icon, optional ± delta, caption) — pure CSS  |
+| `BarChart.vue`  | chart.js vertical bars; `formatValue` drives tooltip + Y-axis |
+| `DonutChart.vue`| chart.js doughnut; right legend + custom center-text plugin   |
+| `RankBars.vue`  | horizontal ranking bars (artists) — pure CSS                  |
+
+> `chart.js` is registered in `vite.config.js` `optimizeDeps.include` so the dev
+> server pre-bundles it. The menu "Analityka" group is gated by
+> `feature:analytics` + `permission:analytics-read` in `useMenu.ts`.
+
+---
+
 ## Auth: E-mail Verification, Password Reset & Change
 
 Built on Laravel's native mechanisms (the `Password` broker, `MustVerifyEmail`,
@@ -655,6 +753,8 @@ Authenticated routes add `auth`. Feature groups add `feature:{name}`; write acti
 **Inventory movements routes (reference):** under `/inventory/movements`, `index` (GET, `inventory-movements-read`), `store` (POST, `inventory-movements-create`), `bulk-destroy` (POST, `inventory-movements-delete`), `destroy` (DELETE `{inventoryMovement}`, `inventory-movements-delete`). Names: `tenant.inventory.movements.*`. See **Inventory Movements** above.
 
 **Inventory sales routes (reference):** under `/inventory/sales`, `index` (GET, `inventory-sales-read`) and `store` (POST, `inventory-sales-create`). Names: `tenant.inventory.sales.*`. See **Inventory Sales** above.
+
+**Analytics routes (reference):** under `/analytics`, `overview`, `sales`, `artists`, `reports` (all GET), gated by `['feature:analytics', 'permission:analytics-read']`. Names: `tenant.analytics.*`. See **Analytics Module** above.
 
 **Users routes:** `index`, `store`, `bulk-destroy` (collection) then `show`, `update`, `destroy` (`{user}` model-bound), `resend-verification` (POST, `permission:users-update`), and `toggle-active` (POST `{user}/toggle-active`, `permission:users-update`), under `feature:users`. Names: `tenant.users.*`. See **Users Module** above.
 
@@ -951,3 +1051,5 @@ The invitation form is a multi-step wizard built on the reusable **`StepByStep` 
 # Roadmap / Upcoming Tasks
 
 - _(done)_ Inventory: sales module (`tenant.inventory.sales.*`) — see **Inventory Sales**.
+- _(done)_ Analytics module (`tenant.analytics.*`, chart.js dashboards) — see **Analytics Module**.
+- _(done)_ Dashboard (`tenant.dashboard` — stat tiles, active modules, recent-movements table) — see **Dashboard**.

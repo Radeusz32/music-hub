@@ -12,6 +12,7 @@ final class AllPermissionsSeeder extends Seeder
     {
         $this->call([
             InventoryPermissionsSeeder::class,
+            AnalyticsPermissionsSeeder::class,
             UsersPermissionsSeeder::class,
             SettingsPermissionsSeeder::class,
         ]);

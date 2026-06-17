@@ -38,6 +38,7 @@ final class CentralTenantSeeder extends Seeder
 
         $features = Feature::whereIn('name', [
             FeatureEnum::Inventory->value,
+            FeatureEnum::Analytics->value,
             FeatureEnum::Users->value,
             FeatureEnum::Settings->value,
         ])->get();

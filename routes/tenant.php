@@ -2,12 +2,14 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Tenant\Analytics\AnalyticsController;
 use App\Http\Controllers\Tenant\Auth\AuthController;
 use App\Http\Controllers\Tenant\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Tenant\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Tenant\Auth\NewPasswordController;
 use App\Http\Controllers\Tenant\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Tenant\Auth\VerifyEmailController;
+use App\Http\Controllers\Tenant\DashboardController;
 use App\Http\Controllers\Tenant\InactiveController;
 use App\Http\Controllers\Tenant\Inventory\InventoryMovementController;
 use App\Http\Controllers\Tenant\Inventory\InventoryRecordController;
@@ -120,7 +122,7 @@ Route::middleware([
         Route::middleware('verified')->group(function (): void {
             Route::redirect('/', '/dashboard');
 
-            Route::get('/dashboard', fn () => Inertia::render('Tenant/Dashboard'))
+            Route::get('/dashboard', DashboardController::class)
                 ->name('tenant.dashboard');
 
             /*
@@ -252,18 +254,18 @@ Route::middleware([
 
             Route::prefix('analytics')
                 ->name('tenant.analytics.')
-                ->middleware('feature:analytics')
+                ->middleware(['feature:analytics', 'permission:analytics-read'])
                 ->group(function (): void {
-                    Route::get('/overview', fn () => Inertia::render('Tenant/Analytics/Overview'))
+                    Route::get('/overview', [AnalyticsController::class, 'overview'])
                         ->name('overview');
 
-                    Route::get('/sales', fn () => Inertia::render('Tenant/Analytics/Sales'))
+                    Route::get('/sales', [AnalyticsController::class, 'sales'])
                         ->name('sales');
 
-                    Route::get('/artists', fn () => Inertia::render('Tenant/Analytics/Artists'))
+                    Route::get('/artists', [AnalyticsController::class, 'artists'])
                         ->name('artists');
 
-                    Route::get('/reports', fn () => Inertia::render('Tenant/Analytics/Reports'))
+                    Route::get('/reports', [AnalyticsController::class, 'reports'])
                         ->name('reports');
                 });
 
@@ -280,8 +282,8 @@ Route::middleware([
                     Route::get('/allegro', fn () => Inertia::render('Tenant/Integrations/Allegro'))
                         ->name('allegro');
 
-                    Route::get('/discogs', fn () => Inertia::render('Tenant/Integrations/Discogs'))
-                        ->name('discogs');
+                    Route::get('/ksef', fn () => Inertia::render('Tenant/Integrations/Ksef'))
+                        ->name('ksef');
 
                     Route::get('/api', fn () => Inertia::render('Tenant/Integrations/Api'))
                         ->name('api');

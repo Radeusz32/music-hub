@@ -104,6 +104,7 @@ export function useMenu() {
         {
             label: "Analityka",
             feature: "analytics",
+            permission: "analytics-read",
             icon: "pi-chart-bar",
             color: "#a78bfa",
             children: [
@@ -130,7 +131,7 @@ export function useMenu() {
                     name: "tenant.analytics.reports",
                     url: route("tenant.analytics.reports"),
                     icon: "pi-file",
-                    feature: "analytics.advanced",
+                    feature: "analytics",
                 },
             ],
         },
@@ -147,10 +148,10 @@ export function useMenu() {
                     icon: "pi-shopping-bag",
                 },
                 {
-                    label: "Discogs",
-                    name: "tenant.integrations.discogs",
-                    url: route("tenant.integrations.discogs"),
-                    icon: "pi-music",
+                    label: "KSeF",
+                    name: "tenant.integrations.ksef",
+                    url: route("tenant.integrations.ksef"),
+                    icon: "pi-receipt",
                 },
                 {
                     label: "API",

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
-use App\Enums\FeatureEnum;
 use App\Enums\Tenant\RoleEnum;
 use App\Enums\TenantInvitationStatusEnum;
 use App\Models\Central\Domain;
@@ -66,13 +65,7 @@ final class ProvisionTenantJob implements ShouldQueue
             'domain' => "{$slug}.{$baseDomain}",
         ]);
 
-        $defaultFeatures = Feature::whereIn('name', [
-            FeatureEnum::Inventory,
-            FeatureEnum::Users,
-            FeatureEnum::Settings,
-        ])->get();
-
-        $tenant->features()->sync($defaultFeatures);
+        $tenant->features()->sync(Feature::query()->get());
 
         // Create owner user inside the tenant database
         tenancy()->initialize($tenant);

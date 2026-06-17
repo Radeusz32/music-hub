@@ -19,4 +19,7 @@ export default defineConfig({
         },
     },
 
+    optimizeDeps: {
+        include: ["chart.js", "chart.js/auto"],
+    },
 });
