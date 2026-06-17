@@ -76,6 +76,20 @@ final class UserController extends Controller
             ->with('success', "Usunięto zaznaczonych użytkowników ({$deleted}).");
     }
 
+    public function toggleActive(User $user): RedirectResponse
+    {
+        if ($user->id === (int) auth()->id()) {
+            return back()->with('error', 'Nie możesz dezaktywować własnego konta.');
+        }
+
+        $updated = $this->userService->toggleActive($user);
+        $message = $updated->is_active
+            ? 'Użytkownik został aktywowany.'
+            : 'Użytkownik został dezaktywowany.';
+
+        return back()->with('success', $message);
+    }
+
     public function resendVerification(User $user): RedirectResponse
     {
         if ($user->hasVerifiedEmail()) {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Models\Central\Admin;
 use App\Models\Central\Tenant;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -54,6 +55,24 @@ final class HandleInertiaRequests extends Middleware
 
     private function resolveAuth(Request $request): ?array
     {
+        $admin = auth('superadmin')->user();
+
+        if ($admin instanceof Admin) {
+            return [
+                'user' => [
+                    'id' => $admin->id,
+                    'name' => $admin->name,
+                    'email' => $admin->email,
+                ],
+
+                'permissions' => [],
+
+                'roles' => ['superadmin'],
+
+                'features' => [],
+            ];
+        }
+
         $user = $request->user();
 
         if (! $user) {

@@ -13,5 +13,8 @@ final class SettingsPermissionsSeeder extends PermissionsBaseSeeder
     {
         $profile = Permission::findOrCreate('setting-profile', GuardEnum::Web->value);
         $this->setPermissions($this->all, $profile);
+
+        $organization = Permission::findOrCreate('setting-organization', GuardEnum::Web->value);
+        $this->setPermissions($this->admins, $organization);
     }
 }

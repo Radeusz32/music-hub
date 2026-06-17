@@ -8,18 +8,39 @@ use App\Http\Controllers\Tenant\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Tenant\Auth\NewPasswordController;
 use App\Http\Controllers\Tenant\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Tenant\Auth\VerifyEmailController;
+use App\Http\Controllers\Tenant\InactiveController;
 use App\Http\Controllers\Tenant\Inventory\InventoryMovementController;
 use App\Http\Controllers\Tenant\Inventory\InventoryRecordController;
 use App\Http\Controllers\Tenant\Inventory\InventorySaleController;
 use App\Http\Controllers\Tenant\Settings\PasswordController;
 use App\Http\Controllers\Tenant\Settings\SettingController;
+use App\Http\Controllers\Tenant\UserInactiveController;
 use App\Http\Controllers\Tenant\Users\UserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
+/*
+|--------------------------------------------------------------------------
+| Deactivated tenant notice (NOT gated by `tenant-active` — otherwise the
+| redirect from the middleware would loop)
+|--------------------------------------------------------------------------
+*/
 Route::middleware([
     'web',
     'tenant',
+    'prevent-central',
+])->group(function (): void {
+    Route::get('/inactive', InactiveController::class)
+        ->name('tenant.inactive');
+
+    Route::get('/user-inactive', UserInactiveController::class)
+        ->name('tenant.user.inactive');
+});
+
+Route::middleware([
+    'web',
+    'tenant',
+    'tenant-active',
     'prevent-central',
 ])->group(function (): void {
     /*
@@ -64,7 +85,7 @@ Route::middleware([
     |----------------------------------------------------------------------
     */
 
-    Route::middleware('auth')->group(function (): void {
+    Route::middleware(['auth', 'user-active'])->group(function (): void {
         Route::post('/logout', [AuthController::class, 'logout'])
             ->name('logout');
 
@@ -306,6 +327,10 @@ Route::middleware([
                         ->name('destroy')
                         ->middleware('permission:users-delete');
 
+                    Route::post('/{user}/toggle-active', [UserController::class, 'toggleActive'])
+                        ->name('toggle-active')
+                        ->middleware('permission:users-update');
+
                     Route::post('/{user}/resend-verification', [UserController::class, 'resendVerification'])
                         ->name('resend-verification')
                         ->middleware('permission:users-update');
@@ -329,8 +354,13 @@ Route::middleware([
                         ->middleware('permission:setting-profile');
 
                     Route::middleware('feature:settings')->group(function (): void {
-                        Route::get('/organization', fn () => Inertia::render('Tenant/Settings/Organization'))
-                            ->name('organization');
+                        Route::get('/organization', [SettingController::class, 'organization'])
+                            ->name('organization')
+                            ->middleware('permission:setting-organization');
+
+                        Route::put('/organization', [SettingController::class, 'updateOrganization'])
+                            ->name('organization.update')
+                            ->middleware('permission:setting-organization');
 
                         Route::get('/billing', fn () => Inertia::render('Tenant/Settings/Billing'))
                             ->name('billing');

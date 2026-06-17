@@ -59,6 +59,7 @@ function onRowClick(): void {
 
         <td class="dt-td dt-td-actions" @click.stop>
             <div class="dt-actions">
+                <slot name="row-actions" :row="row" />
                 <button
                     v-if="canEdit"
                     class="dt-action-btn dt-action-edit"

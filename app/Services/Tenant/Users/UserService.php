@@ -73,6 +73,13 @@ final class UserService extends BaseService
         return $user->fresh();
     }
 
+    public function toggleActive(User $user): User
+    {
+        $user->update(['is_active' => ! $user->is_active]);
+
+        return $user->refresh();
+    }
+
     public function delete(User $user): void
     {
         $user->delete();

@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Http\Middleware\CheckIfTenantIsActive;
+use App\Http\Middleware\CheckIfUserIsActive;
+use App\Http\Middleware\EnsureCentralDomain;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -21,10 +24,21 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
         ]);
 
+        $middleware->redirectGuestsTo(fn (Illuminate\Http\Request $request): string => $request->is('panel/central/superadmin*')
+            ? route('central.login')
+            : route('login'));
+
+        $middleware->redirectUsersTo(fn (Illuminate\Http\Request $request): string => $request->is('panel/central/superadmin*')
+            ? route('central.dashboard')
+            : route('tenant.dashboard'));
+
         $middleware->alias([
             'tenant' => InitializeTenancyByDomain::class,
             'permission' => Spatie\Permission\Middleware\PermissionMiddleware::class,
             'prevent-central' => PreventAccessFromCentralDomains::class,
+            'central' => EnsureCentralDomain::class,
+            'tenant-active' => CheckIfTenantIsActive::class,
+            'user-active' => CheckIfUserIsActive::class,
             'feature' => App\Http\Middleware\CheckFeature::class,
         ]);
     })

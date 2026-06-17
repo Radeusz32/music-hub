@@ -2,7 +2,7 @@
 import AppLayout from "@/layout/Tenant/AppLayout.vue";
 import IndexLayout from "@/layout/Tenant/IndexLayout.vue";
 import { useUserTable } from "@/composables/Tenant/useUserTable";
-import { useForm } from "@inertiajs/vue3";
+import { router, useForm, usePage } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
 import { computed, ref, watch } from "vue";
 import { useToast } from "@/composables/useToast";
@@ -11,6 +11,7 @@ import { useFeatures } from "@/composables/Tenant/useFeatures";
 import DataTable, {
     type Pagination,
 } from "@/Pages/Tenant/Components/DataTable.vue";
+import Tooltip from "@/Components/Tooltip.vue";
 import UserModal from "./UserModal.vue";
 import {
     defaultUserForm,
@@ -111,6 +112,39 @@ function handleDelete(row: Record<string, unknown>): void {
     });
 }
 
+/* ── Toggle active ── */
+const page = usePage();
+const authId = computed(
+    () =>
+        (page.props.auth as { user?: { id?: number } } | null)?.user?.id ??
+        null,
+);
+
+const togglingId = ref<number | null>(null);
+
+function toggleActive(row: Record<string, unknown>): void {
+    const id = row.id as number;
+    if (togglingId.value !== null) {
+        return;
+    }
+    togglingId.value = id;
+    const willActivate = !row.is_active;
+    router.post(
+        route("tenant.users.toggle-active", { user: id }),
+        {},
+        {
+            preserveScroll: true,
+            onSuccess: () =>
+                toast.success(
+                    willActivate
+                        ? "Użytkownik został aktywowany"
+                        : "Użytkownik został dezaktywowany",
+                ),
+            onFinish: () => (togglingId.value = null),
+        },
+    );
+}
+
 /* ── Bulk delete ── */
 const bulkDeleteForm = useForm<{ ids: Array<number | string> }>({ ids: [] });
 
@@ -171,6 +205,40 @@ function handleBulkDelete(ids: unknown[]): void {
                 @delete="handleDelete"
                 @bulk-delete="handleBulkDelete"
             >
+                <!-- activate / deactivate -->
+                <template v-if="canUpdate" #row-actions="{ row }">
+                    <Tooltip
+                        v-if="row.id !== authId"
+                        :content="
+                            row.is_active
+                                ? 'Dezaktywuj użytkownika'
+                                : 'Aktywuj użytkownika'
+                        "
+                    >
+                        <button
+                            type="button"
+                            class="row-toggle-btn"
+                            :class="
+                                row.is_active
+                                    ? 'row-toggle-btn--deactivate'
+                                    : 'row-toggle-btn--activate'
+                            "
+                            :disabled="togglingId === row.id"
+                            @click.stop="toggleActive(row)"
+                        >
+                            <i
+                                :class="
+                                    togglingId === (row.id as number)
+                                        ? 'pi pi-spin pi-spinner'
+                                        : row.is_active
+                                          ? 'pi pi-ban'
+                                          : 'pi pi-check-circle'
+                                "
+                            />
+                        </button>
+                    </Tooltip>
+                </template>
+
                 <!-- name + email subtitle -->
                 <template #cell-name="{ value, row }">
                     <span class="user-name">{{ value }}</span>
@@ -347,5 +415,42 @@ function handleBulkDelete(ids: unknown[]): void {
 }
 .verify-badge--pending {
     color: #fb923c;
+}
+
+/* ── Row toggle button ── */
+.row-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 6px;
+    border: 1px solid;
+    font-size: 0.74rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.18s;
+    white-space: nowrap;
+}
+.row-toggle-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.row-toggle-btn--deactivate {
+    background: rgba(248, 113, 113, 0.08);
+    border-color: rgba(248, 113, 113, 0.25);
+    color: #f87171;
+}
+.row-toggle-btn--deactivate:hover:not(:disabled) {
+    background: rgba(248, 113, 113, 0.16);
+    box-shadow: 0 0 12px rgba(248, 113, 113, 0.15);
+}
+.row-toggle-btn--activate {
+    background: rgba(74, 222, 128, 0.08);
+    border-color: rgba(74, 222, 128, 0.25);
+    color: #4ade80;
+}
+.row-toggle-btn--activate:hover:not(:disabled) {
+    background: rgba(74, 222, 128, 0.16);
+    box-shadow: 0 0 12px rgba(74, 222, 128, 0.15);
 }
 </style>

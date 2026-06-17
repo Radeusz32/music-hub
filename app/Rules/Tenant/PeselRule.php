@@ -20,7 +20,10 @@ final class PeselRule implements ValidationRule
     /**
      * @param  int|null  $ignoreUserId  user id to skip in the uniqueness check (for updates)
      */
-    public function __construct(private readonly ?int $ignoreUserId = null) {}
+    public function __construct(
+        private readonly ?int $ignoreUserId = null,
+        private readonly bool $checkUniqueness = true,
+    ) {}
 
     public static function hasValidChecksum(string $pesel): bool
     {
@@ -48,6 +51,10 @@ final class PeselRule implements ValidationRule
         if (! self::hasValidChecksum($pesel)) {
             $fail('Numer PESEL jest nieprawidłowy.');
 
+            return;
+        }
+
+        if (! $this->checkUniqueness) {
             return;
         }
 

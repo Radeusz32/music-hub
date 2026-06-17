@@ -3,7 +3,7 @@ import AppLayout from "@/layout/Tenant/AppLayout.vue";
 import ShowLayout from "@/layout/Tenant/ShowLayout.vue";
 import UserModal from "./UserModal.vue";
 import DataTableDeleteDialog from "@/Pages/Tenant/Components/DataTableComponents/DataTableDeleteDialog.vue";
-import { Link, useForm, usePage } from "@inertiajs/vue3";
+import { Link, router, useForm, usePage } from "@inertiajs/vue3";
 import { route } from "ziggy-js";
 import { computed, ref } from "vue";
 import { useToast } from "@/composables/useToast";
@@ -127,6 +127,25 @@ function confirmDelete(): void {
     });
 }
 
+/* ── Toggle active ── */
+const toggleForm = useForm({});
+
+function toggleActive(): void {
+    const willActivate = !props.user.is_active;
+    toggleForm.post(
+        route("tenant.users.toggle-active", { user: props.user.id }),
+        {
+            preserveScroll: true,
+            onSuccess: () =>
+                toast.success(
+                    willActivate
+                        ? "Użytkownik został aktywowany"
+                        : "Użytkownik został dezaktywowany",
+                ),
+        },
+    );
+}
+
 /* ── Resend e-mail verification ── */
 const resendForm = useForm({});
 
@@ -153,6 +172,27 @@ function resendVerification(): void {
                     <i class="pi pi-arrow-left" />
                     Powrót do listy
                 </Link>
+                <button
+                    v-if="canUpdate && !isSelf"
+                    type="button"
+                    class="action-btn"
+                    :class="
+                        user.is_active ? 'action-deactivate' : 'action-activate'
+                    "
+                    :disabled="toggleForm.processing"
+                    @click="toggleActive"
+                >
+                    <i
+                        :class="
+                            toggleForm.processing
+                                ? 'pi pi-spin pi-spinner'
+                                : user.is_active
+                                  ? 'pi pi-ban'
+                                  : 'pi pi-check-circle'
+                        "
+                    />
+                    {{ user.is_active ? "Dezaktywuj" : "Aktywuj" }}
+                </button>
                 <button
                     v-if="canUpdate && !user.email_verified_at"
                     type="button"
@@ -506,5 +546,33 @@ function resendVerification(): void {
 .action-delete:hover {
     background: rgba(248, 113, 113, 0.16);
     box-shadow: 0 0 14px rgba(248, 113, 113, 0.15);
+}
+
+.action-deactivate {
+    background: rgba(248, 113, 113, 0.08);
+    border-color: rgba(248, 113, 113, 0.22);
+    color: #f87171;
+}
+.action-deactivate:hover:not(:disabled) {
+    background: rgba(248, 113, 113, 0.16);
+    box-shadow: 0 0 14px rgba(248, 113, 113, 0.15);
+}
+.action-deactivate:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.action-activate {
+    background: rgba(74, 222, 128, 0.08);
+    border-color: rgba(74, 222, 128, 0.22);
+    color: #4ade80;
+}
+.action-activate:hover:not(:disabled) {
+    background: rgba(74, 222, 128, 0.16);
+    box-shadow: 0 0 14px rgba(74, 222, 128, 0.15);
+}
+.action-activate:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 </style>

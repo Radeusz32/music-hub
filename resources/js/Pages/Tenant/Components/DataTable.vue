@@ -364,6 +364,13 @@ onBeforeUnmount(() => {
                         >
                             <slot :name="name" v-bind="slotProps" />
                         </template>
+
+                        <template
+                            v-if="$slots['row-actions']"
+                            #row-actions="slotProps"
+                        >
+                            <slot name="row-actions" v-bind="slotProps" />
+                        </template>
                     </DataTableRow>
                 </tbody>
             </table>

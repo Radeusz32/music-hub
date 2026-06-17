@@ -199,7 +199,8 @@ export function useMenu() {
                     name: "tenant.settings.organization",
                     url: route("tenant.settings.organization"),
                     icon: "pi-briefcase",
-                    permission: "tenant.update",
+                    feature: "settings",
+                    permission: "setting-organization",
                 },
                 {
                     label: "Subskrypcja",

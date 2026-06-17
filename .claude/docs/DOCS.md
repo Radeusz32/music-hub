@@ -151,9 +151,10 @@ resources/js/
 │   ├── BaseCheckbox.vue  BasePassword.vue  BaseMaskedInput.vue
 │   ├── BaseDialog.vue                   # Modal shell (size + columns via Tailwind)
 │   ├── BaseTab.vue                      # Tabbed panel (used on Inventory Show)
+│   ├── StepByStep.vue                   # Multi-step wizard (explicit import)
 │   ├── FileUpload.vue  DatePicker.vue  Tooltip.vue  AppToast.vue
 ├── composables/
-│   ├── useToast.ts  useMoney.ts  useDate.ts
+│   ├── useToast.ts  useMoney.ts  useDate.ts  useStepByStep.ts
 │   └── Tenant/
 │       ├── useFeatures.ts  usePermissions.ts  useMenu.ts
 │       ├── useTable.ts                  # Generic server-side table state
@@ -194,6 +195,17 @@ resources/js/
 | `Integrations` | `integrations` | Integracje  |
 | `Users`        | `users`        | Użytkownicy |
 | `Settings`     | `settings`     | Ustawienia  |
+
+### `TenantInvitationStatusEnum` — invitation lifecycle
+
+| Case       | Value      | Label         |
+| ---------- | ---------- | ------------- |
+| `Pending`  | `PENDING`  | Oczekuje      |
+| `Filled`   | `FILLED`   | Wypełnione    |
+| `Accepted` | `ACCEPTED` | Zaakceptowane |
+| `Expired`  | `EXPIRED`  | Wygasłe       |
+
+`options()` / `label()` / `color()` follow the same pattern as other enums.
 
 ### `RoleEnum` — tenant user roles
 
@@ -315,6 +327,50 @@ Reads `search`, `sortBy`, `direction`, `perPage`, and filter params from the req
 
 ---
 
+## Step-by-Step Wizard
+
+A reusable multi-step form stack: the **`useStepByStep`** composable owns the state, and the **`StepByStep.vue`** component is the presentational stepper. First used by the public **Tenant Invitation** form (see **Tenant Invitations**).
+
+### `useStepByStep<T>` — `composables/useStepByStep.ts`
+
+```ts
+const stepper = useStepByStep({
+    steps,                                   // StepDefinition[]
+    data: form,                              // reactive form (e.g. Inertia useForm)
+    storageKey: `sb-invitation-${uuid}`,     // optional — persists to localStorage
+    excludeFromStorage: ["password", ...],   // fields never written to storage
+    onValidateStep: async (step, data) => true, // async per-step guard (false = stay)
+});
+```
+
+| Returns                            | Meaning                                                          |
+| ---------------------------------- | ---------------------------------------------------------------- |
+| `currentIndex` / `currentStep`     | active step (ref / computed)                                     |
+| `completed`                        | `number[]` of completed step indices                             |
+| `validating`                       | `true` while `onValidateStep` is in flight                       |
+| `isFirst` / `isLast` / `progress`  | navigation helpers                                               |
+| `next()`                           | awaits `onValidateStep`, marks complete, advances (returns bool) |
+| `prev()` / `goTo(i)` / `canAccess(i)` | navigation (back/completed steps are free; forward runs validation) |
+| `clearStorage()`                   | wipe the localStorage entry (call on successful submit)          |
+
+`StepDefinition` = `{ key, label, icon?, description?, fields?: string[] }`. The `fields` drive which values get persisted (minus `excludeFromStorage`). State is **hydrated from localStorage on init** (field values + position + completed) and re-persisted on change.
+
+### `StepByStep.vue` — `Components/StepByStep.vue`
+
+Presentational only — the parent owns the composable and passes state down + handles events:
+
+- **Props:** `steps`, `currentIndex`, `completed`, `validating`, `isFirst`, `isLast`, `nextLabel`, `finalLabel`, `finalProcessing`.
+- **Emits:** `next`, `prev`, `go(index)`, `finish`.
+- **Slots:** one per step, named by `step.key` (e.g. `#domain`, `#company`), receiving `{ step }`.
+
+Renders a stepper header (gradient fuchsia→indigo circles — completed = check, current = glow ring, pending = muted, clickable when accessible), the active step's body slot, and a Wstecz / Dalej / final-action footer with spinners.
+
+### Backend per-step validation pattern
+
+A FormRequest exposes a static **`stepRules()`** keyed by step; `rules()` merges all groups (final submit) while a controller endpoint validates a single group for the async per-step check. Errors come back as JSON `422` and are mapped onto `form.setError(...)`. Reference: `FillInvitationRequest::stepRules()` + `PublicInvitationController::validateStep()`.
+
+---
+
 ## Media Library
 
 `spatie/laravel-medialibrary` with a tenant-aware URL generator (`App\MediaLibrary\TenantUrlGenerator`). The `ManagesFiles` trait (used by services) wraps `uploadFile()` / `uploadFiles()` / `destroyFile()` / `destroyFiles()` with `beforeUpload`/`afterUpload`/`beforeDestroy` hooks (reserved for quota tracking + image optimization).
@@ -401,6 +457,7 @@ create/edit modal and the Show page.
 - **Password is set only on create** — `UpdateUserRequest` has no `password` rule and `UserService::update()` always strips it, so editing a user can never change their password. Users change their own password on the Profile page; password reset is a separate guest flow (see **Auth: E-mail Verification, Password Reset & Change**).
 - **Self-delete is blocked** — `destroy()` refuses the current user; `bulkDelete()` excludes the current user's id.
 - **New users start unverified** — `UserService::create()` fires `event(new Registered($user))`, which sends the e-mail-verification link. Admins can re-send it from the Show page (`resend-verification`, shown only while `email_verified_at` is null).
+- **Activate / Deactivate** — `POST /users/{user}/toggle-active` (`permission:users-update`) flips `is_active` via `UserService::toggleActive()`. Self-deactivation is blocked by the controller (`$user->id === auth()->id()` guard). Inactive users are blocked by the `user-active` middleware (`CheckIfUserIsActive`) and redirected to `tenant.user.inactive` (a notice page rendered by `UserInactiveController`). The `tenant.user.inactive` route lives **outside** the `user-active` middleware group to prevent a redirect loop. In the UI: an icon-only `<Tooltip>` button in `Users/Index.vue` row-actions slot; a Dezaktywuj/Aktywuj button in `Users/Show.vue` actions — both hidden when viewing your own account.
 
 **Frontend:** `resources/js/Pages/Tenant/Users/` (`Index.vue`, `Show.vue`,
 `UserModal.vue`, `users.resource.ts`) + `composables/Tenant/useUserTable.ts`.
@@ -571,7 +628,8 @@ synchronously.
 
 ### Central
 
-- `routes/web.php` — landing page
+- `routes/web.php` — landing page + public invitation form (`GET/POST /invitation/{uuid}`, `['web', 'central']`)
+- `routes/admin.php` — superadmin panel under `/panel/central/superadmin` (see **Superadmin Panel**)
 
 ### Tenant (`routes/tenant.php`)
 
@@ -598,7 +656,7 @@ Authenticated routes add `auth`. Feature groups add `feature:{name}`; write acti
 
 **Inventory sales routes (reference):** under `/inventory/sales`, `index` (GET, `inventory-sales-read`) and `store` (POST, `inventory-sales-create`). Names: `tenant.inventory.sales.*`. See **Inventory Sales** above.
 
-**Users routes:** `index`, `store`, `bulk-destroy` (collection) then `show`, `update`, `destroy` (`{user}` model-bound) and `resend-verification` (POST `{user}`, `permission:users-update`), under `feature:users`. Names: `tenant.users.*`. See **Users Module** above.
+**Users routes:** `index`, `store`, `bulk-destroy` (collection) then `show`, `update`, `destroy` (`{user}` model-bound), `resend-verification` (POST, `permission:users-update`), and `toggle-active` (POST `{user}/toggle-active`, `permission:users-update`), under `feature:users`. Names: `tenant.users.*`. See **Users Module** above.
 
 **Account routes (not feature-gated):** password reset is a `guest` flow
 (`password.request|email|reset|store`); while authenticated, `verification.notice`
@@ -611,12 +669,17 @@ sits outside the `auth` group. See **`AUTH_VERIFICATION_AND_PASSWORDS.md`**.
 
 ## Middleware
 
-| Alias             | Class                             | Purpose                                  |
-| ----------------- | --------------------------------- | ---------------------------------------- |
-| `tenant`          | `InitializeTenancyByDomain`       | Bootstraps tenant context                |
-| `prevent-central` | `PreventAccessFromCentralDomains` | Blocks central domain from tenant routes |
-| `permission`      | Spatie `PermissionMiddleware`     | Guards by Spatie permission              |
-| `feature`         | `CheckFeature`                    | Guards by tenant feature flag            |
+| Alias             | Class                             | Purpose                                                                       |
+| ----------------- | --------------------------------- | ----------------------------------------------------------------------------- |
+| `tenant`          | `InitializeTenancyByDomain`       | Bootstraps tenant context                                                     |
+| `prevent-central` | `PreventAccessFromCentralDomains` | Blocks central domain from tenant routes                                      |
+| `central`         | `EnsureCentralDomain`             | Blocks tenant subdomains from central routes                                  |
+| `permission`      | Spatie `PermissionMiddleware`     | Guards by Spatie permission                                                   |
+| `feature`         | `CheckFeature`                    | Guards by tenant feature flag                                                 |
+| `tenant-active`   | `CheckIfTenantIsActive`           | Redirects to `tenant.inactive` if `Tenant::$is_active === false`              |
+| `user-active`     | `CheckIfUserIsActive`             | Redirects to `tenant.user.inactive` if `User::$is_active === false`           |
+
+**Redirect-loop prevention:** `tenant.inactive` and `tenant.user.inactive` routes are in a dedicated middleware group that omits `tenant-active` and `user-active` respectively, so the notice pages are always reachable.
 
 ---
 
@@ -687,6 +750,10 @@ const table = useTable({
 const { success, error } = useToast(); // toast notifications (AppToast renders them)
 const { formatPrice } = useMoney(); // "240,00 zł" (PLN, null-safe)
 const { formatDate } = useDate(); // "04.06.2026" (pl-PL, null-safe)
+
+// Multi-step wizard (see Step-by-Step Wizard)
+const { currentIndex, completed, validating, isFirst, isLast, next, prev, goTo, clearStorage } =
+    useStepByStep({ steps, data: form, storageKey, excludeFromStorage, onValidateStep });
 ```
 
 ---
@@ -694,6 +761,7 @@ const { formatDate } = useDate(); // "04.06.2026" (pl-PL, null-safe)
 ## UI Components
 
 - **Base inputs** (globally registered in `plugins/base-components.ts`): `BaseInput`, `BaseInputNumber`, `BaseTextArea`, `BaseDropdown`, `BaseCheckbox`, `BasePassword`, `BaseMaskedInput`, `BaseDialog`. See **`README-BASE-COMPONENTS.md`**.
+- **`StepByStep`** — reusable multi-step wizard (stepper header + per-step slots + nav footer), paired with the `useStepByStep` composable. Imported explicitly (not globally registered). See **Step-by-Step Wizard**.
 - **`BaseDialog`** — the modal shell for every dialog; width/columns are managed with Tailwind at the call site (`panel-class`, `align`, `mobile-fullscreen`).
 - **`BaseTab`** — tabbed-panel wrapper (used on the Inventory Show page to split details from the stock-movement history).
 - **Layouts** — `IndexLayout` (list pages: title + `#toolbar` slot), `ShowLayout` (detail pages: title + `#actions` slot), both built on `PageToolbar`.
@@ -704,6 +772,179 @@ const { formatDate } = useDate(); // "04.06.2026" (pl-PL, null-safe)
 ## Building a New Module
 
 See **`CRUD_GENERATOR_AGENT_INSTRUCTIONS.md`** for the complete, step-by-step recipe (modeled on the Inventory module) covering backend (Controller + Request + Service + BaseService + DataTableConfig + Transformer + Model/migration/factory/seeder + permissions + routes + feature/menu) and frontend (Base components, composables, layouts, DataTable, BaseDialog modals).
+
+---
+
+## Superadmin Panel (Central Admin)
+
+A separate admin panel on the **central domain** (`localhost/panel/central/superadmin`) for managing tenants, features, and invitations. Fully isolated from tenant users — different guard, different model, different routes.
+
+### Guard & Model
+
+| Concern  | Detail                                           |
+| -------- | ------------------------------------------------ |
+| Guard    | `superadmin` (defined in `config/auth.php`)      |
+| Model    | `App\Models\Central\Admin` (central `admins` table) |
+| Provider | `admins` (Eloquent, `Admin::class`)              |
+
+Authentication: `POST /panel/central/superadmin/login` → `Central\Auth\AuthController`. Session is the standard web session scoped to the `superadmin` guard. Routes are protected by `auth:superadmin`; guest routes by `guest:superadmin`.
+
+### Routes (`routes/admin.php`)
+
+All routes are prefixed `/panel/central/superadmin` and use `['web', 'central']` middleware.
+
+| Route                                         | Name                              | Action                          |
+| --------------------------------------------- | --------------------------------- | ------------------------------- |
+| GET `/login`                                  | `central.login`                   | Login page                      |
+| POST `/login`                                 | `central.login.store`             | Authenticate                    |
+| POST `/logout`                                | `central.logout`                  | Logout                          |
+| GET `/`                                        | `central.dashboard`               | Dashboard                       |
+| GET `/tenants`                                | `central.tenants.index`           | Tenant list                     |
+| POST `/tenants`                               | `central.tenants.store`           | Create tenant                   |
+| POST `/tenants/bulk-destroy`                  | `central.tenants.bulk-destroy`    | Bulk delete                     |
+| GET `/tenants/{tenant}`                       | `central.tenants.show`            | Tenant detail                   |
+| PUT `/tenants/{tenant}`                       | `central.tenants.update`          | Update tenant                   |
+| DELETE `/tenants/{tenant}`                    | `central.tenants.destroy`         | Delete tenant                   |
+| POST `/tenants/{tenant}/toggle-active`        | `central.tenants.toggle-active`   | Activate / deactivate           |
+| GET `/invitations`                            | `central.invitations.index`       | Invitation list                 |
+| POST `/invitations`                           | `central.invitations.store`       | Send invitation e-mail          |
+| GET `/invitations/{invitation}`               | `central.invitations.show`        | Invitation detail               |
+| POST `/invitations/{invitation}/resend`       | `central.invitations.resend`      | Resend e-mail (PENDING only)    |
+| POST `/invitations/{invitation}/accept`       | `central.invitations.accept`      | Dispatch `ProvisionTenantJob`   |
+| DELETE `/invitations/{invitation}`            | `central.invitations.destroy`     | Delete invitation               |
+| GET `/features`                               | `central.features.index`          | Feature flags                   |
+| POST `/features/toggle`                       | `central.features.toggle`         | Toggle feature for a tenant     |
+
+### Backend pieces
+
+| Concern               | File                                                                    |
+| --------------------- | ----------------------------------------------------------------------- |
+| Tenant controller     | `app/Http/Controllers/Central/TenantController.php`                     |
+| Tenant service        | `app/Services/Central/TenantService.php`                                |
+| Tenant transformer    | `app/Transformers/Central/TenantTransformer.php`                        |
+| Invitation controller | `app/Http/Controllers/Central/InvitationController.php`                 |
+| Invitation service    | `app/Services/Central/InvitationService.php`                            |
+| Invitation transformer| `app/Transformers/Central/TenantInvitationTransformer.php`              |
+| Feature controller    | `app/Http/Controllers/Central/FeatureController.php`                    |
+| Feature service       | `app/Services/Central/FeatureService.php`                               |
+
+### Frontend
+
+`resources/js/Pages/Central/` — same Inertia/Vue 3 stack as the tenant side. Navigation is in `resources/js/layout/Central/AppLayout.vue`. Pages:
+
+| Page                              | Route                          |
+| --------------------------------- | ------------------------------ |
+| `Central/Auth/Login.vue`          | `central.login`                |
+| `Central/Dashboard.vue`           | `central.dashboard`            |
+| `Central/Tenants/Index.vue`       | `central.tenants.index`        |
+| `Central/Tenants/Show.vue`        | `central.tenants.show`         |
+| `Central/Invitations/Index.vue`   | `central.invitations.index`    |
+| `Central/Invitations/Show.vue`    | `central.invitations.show`     |
+| `Central/Features/Index.vue`      | `central.features.index`       |
+
+**Tenant activate / deactivate:** same pattern as user toggle — `POST /{tenant}/toggle-active` flips `is_active` on the `Tenant` model. Inactive tenants are blocked by `CheckIfTenantIsActive` (`tenant-active` middleware) and shown `TenantInactivePage.vue`.
+
+---
+
+## Tenant Invitations
+
+A superadmin-driven onboarding flow: the superadmin sends an e-mail invitation, the recipient fills a public web form, and upon confirmation a fully provisioned tenant is created in the background.
+
+### Lifecycle
+
+```
+PENDING  →  (recipient fills form)  →  FILLED
+FILLED   →  (superadmin confirms)   →  ACCEPTED  (ProvisionTenantJob runs)
+PENDING  →  (expires_at in past)    →  EXPIRED   (lazily marked on next visit)
+```
+
+### Database
+
+`tenant_invitations` (central DB):
+
+| Column         | Type              | Notes                                  |
+| -------------- | ----------------- | -------------------------------------- |
+| `id`           | bigint PK         |                                        |
+| `uuid`         | char(36) unique   | Used in the public URL                 |
+| `email`        | string            | Recipient                              |
+| `status`       | string            | `TenantInvitationStatusEnum`           |
+| `company_data` | JSON nullable     | Stored after the form is submitted     |
+| `owner_data`   | JSON nullable     | Stored after the form is submitted     |
+| `tenant_id`    | FK → `tenants.id` | Populated after `ProvisionTenantJob`   |
+| `expires_at`   | datetime          | `now() + 1 week` on creation           |
+
+### `TenantInvitation` model
+
+`App\Models\Central\TenantInvitation` — central model (no tenancy scope). Helpers: `isPending()`, `isFilled()`, `isAccepted()`, `isExpired()` (expired = `expires_at` in the past **and** still PENDING). Casts: `status → TenantInvitationStatusEnum`, `company_data / owner_data → array`, timestamps → `datetime`. Has `belongsTo(Tenant::class)`.
+
+### `InvitationService`
+
+| Method                              | What it does                                                                   |
+| ----------------------------------- | ------------------------------------------------------------------------------ |
+| `index(Request)`                    | `fetchForDataTable(TenantInvitationDataTable)` for the superadmin list         |
+| `showData(TenantInvitation)`        | Transformer → array for Show page props                                        |
+| `create(string $email)`             | Creates record (uuid + expires_at), sends `TenantInvitationMail`               |
+| `findByUuid(string)`                | Lookup by uuid (public controller)                                             |
+| `fill($inv, $companyData, $owner)`  | Updates `company_data`, `owner_data`, sets status → FILLED                     |
+| `resend(TenantInvitation)`          | Re-sends the same e-mail with the same URL (no status change)                  |
+| `accept(TenantInvitation)`          | Dispatches `ProvisionTenantJob`                                                |
+
+### Mail
+
+`App\Mail\TenantInvitationMail` — styled dark HTML e-mail (`resources/views/emails/tenant-invitation.blade.php`) with purple branding, invitation link button, and expiry notice.
+
+### `ProvisionTenantJob` (ShouldQueue)
+
+`App\Jobs\ProvisionTenantJob` — receives a `TenantInvitation` and runs the full provisioning:
+
+1. Takes the user-chosen `company_data['domain']` as the slug (fallback to `company_name`); `uniqueSlug()` checks the `domains` table and appends `-2`, `-3`, … on collision as a race-condition safety net.
+2. `Tenant::create(['id' => Str::uuid(), ...])` — the tenant **id is a random UUID** (decoupled from the name); the `TenantCreated` event (wired in `TenancyServiceProvider`) synchronously runs the pipeline: `CreateDatabase → MigrateDatabase → CreateTenantStorageLink`.
+3. `$tenant->domains()->create(['domain' => "$slug.$baseDomain"])`.
+4. `$tenant->features()->sync([Inventory, Users, Settings])` (default feature set).
+5. `tenancy()->initialize($tenant)` — enters tenant context.
+6. Runs `RolesSeeder` + `AllPermissionsSeeder` (new DB has no roles/permissions yet).
+7. `User::create(...)` with owner data, `syncRoles([RoleEnum::Owner])`, fires `Registered` event (triggers e-mail verification).
+8. `tenancy()->end()` in a `finally` block.
+9. Updates `invitation.status → ACCEPTED`, `invitation.tenant_id → $tenant->id`.
+
+> **Why seed roles inside the job?** `MigrateDatabase` runs migrations only — not seeders. Without the roles seeder, `syncRoles(['owner'])` would throw "There is no role named 'owner' for guard 'web'".
+
+### Public form routes (`routes/web.php`)
+
+Under `['web', 'central']` (central domain only, no auth):
+
+| Route                                | Name                       | Controller                   |
+| ------------------------------------ | -------------------------- | ---------------------------- |
+| GET `/invitation/{uuid}`             | `invitation.show`          | `PublicInvitationController` |
+| POST `/invitation/{uuid}/validate-step` | `invitation.validate-step` | `PublicInvitationController` |
+| POST `/invitation/{uuid}`            | `invitation.submit`        | `PublicInvitationController` |
+
+`show()` validates the invitation state (expired / already filled / not found → `Public/InvitationExpired`) and passes `baseDomain` (`config('app.base_domain')`) to the page for the live domain preview. `validateStep()` validates **only the requested wizard step's rules** and returns JSON (`422` with errors, or `{valid: true}`) — it's hit per-step via `window.axios`. `submit()` splits validated data into `companyData` (incl. `domain`) and `ownerData`, calls `InvitationService::fill()`, then renders `Public/InvitationSuccess`.
+
+### `FillInvitationRequest`
+
+Validation rules are **grouped per wizard step** in a static `stepRules()` (`domain`, `company`, `address`, `owner`, `security`); the full `rules()` merges all groups, so one definition powers both the per-step async endpoint and the final submit.
+
+- **`domain`** (the user-chosen subdomain label): `required`, `regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/`, `max:40`, plus a closure (`uniqueDomainRule()`) that checks `{slug}.{baseDomain}` is free in the `domains` table. **This — not `company_name` — drives the tenant domain.**
+- **`company`**: `company_name` required (legal name, no longer unique-checked) + optional `tax_id`/`regon`/`krs_number`/`company_email`/`company_phone`/`website`.
+- **`owner`**: `first_name`/`last_name` required, `phone` optional, `pesel` nullable via `new PeselRule(checkUniqueness: false)`.
+- **`security`**: `password` required + `confirmed`, min 8.
+
+The `checkUniqueness: false` flag skips the blind-index PESEL uniqueness check because the public form runs in the central context where the tenant DB doesn't exist yet.
+
+### `PeselRule` — `checkUniqueness` flag
+
+`app/Rules/Tenant/PeselRule.php` gained `private readonly bool $checkUniqueness = true` constructor parameter. The DB uniqueness check (`whereBlind`) is skipped when `false`. Used in `FillInvitationRequest` for the public invitation form.
+
+### Frontend pages
+
+| Page                          | Route             | Description                                              |
+| ----------------------------- | ----------------- | -------------------------------------------------------- |
+| `Public/Invitation.vue`       | `invitation.show` | 5-step wizard (`StepByStep` + `useStepByStep`) — see below; phone/PESEL use `BaseMaskedInput` |
+| `Public/InvitationSuccess.vue`| (after submit)    | Green check, shows email, "Aktywacja może zająć do 24 godzin" |
+| `Public/InvitationExpired.vue`| (guard fail)      | Red clock, dynamic message from `reason` prop (expired/FILLED/ACCEPTED/not_found) |
+
+The invitation form is a multi-step wizard built on the reusable **`StepByStep` + `useStepByStep`** stack (see **Step-by-Step Wizard** below). Steps: **Adres** (domain label + live `{domain}.{baseDomain}` preview, sanitized client-side to a valid slug) → **Dane firmy** → **Adres siedziby** → **Właściciel** → **Hasło**. Each "Dalej" validates that step on the backend; on final-submit error the wizard jumps back to the step holding the first error.
 
 ---
 
