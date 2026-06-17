@@ -131,7 +131,7 @@ function toggleActive(tenant: FeatureTenant): void {
                     <header class="card-header">
                         <div class="flex items-center gap-3">
                             <span class="tenant-title">{{
-                                tenant.company_name ?? "—"
+                                tenant.company_name ?? "-"
                             }}</span>
                             <span
                                 class="status-badge"

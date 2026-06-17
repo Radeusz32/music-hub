@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Restricts access to routes that must only be reachable on a central domain
- * (e.g. the superadmin panel). Any other host — including tenant subdomains —
+ * (e.g. the superadmin panel). Any other host - including tenant subdomains -
  * gets a 404 so the panel cannot be reached from a tenant's domain.
  */
 final class EnsureCentralDomain

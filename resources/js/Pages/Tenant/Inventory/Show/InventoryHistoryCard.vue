@@ -97,14 +97,14 @@ function formatDelta(delta: number): string {
                             <span v-if="movement.note">{{
                                 movement.note
                             }}</span>
-                            <span v-else class="muted">—</span>
+                            <span v-else class="muted">-</span>
                         </td>
                         <td>
                             <span v-if="movement.user" class="user-chip">
                                 <i class="pi pi-user" />
                                 {{ movement.user.name }}
                             </span>
-                            <span v-else class="muted">—</span>
+                            <span v-else class="muted">-</span>
                         </td>
                     </tr>
                 </tbody>

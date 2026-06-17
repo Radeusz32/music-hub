@@ -39,7 +39,7 @@ final class UserDataTable extends DataTableConfig
 
     /**
      * `role` filters through the Spatie `roles` relation and `email_verified_at`
-     * uses a null-status strategy (verified / unverified) — both are resolved by
+     * uses a null-status strategy (verified / unverified) - both are resolved by
      * BaseService. `is_active` is a plain boolean column.
      *
      * @return array<string, array{column: string, type: FilterTypeEnum, relation?: string, options?: array<int, array{value: string, label: string}>}>

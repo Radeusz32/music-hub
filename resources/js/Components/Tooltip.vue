@@ -182,7 +182,7 @@ onBeforeUnmount(hide);
     border-right-color: rgba(56, 189, 248, 0.18);
 }
 
-/* ── Fade transition (opacity only — transform is reserved for anchoring) ── */
+/* ── Fade transition (opacity only - transform is reserved for anchoring) ── */
 .tt-enter-active,
 .tt-leave-active {
     transition: opacity 0.15s ease;

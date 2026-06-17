@@ -117,8 +117,8 @@ final class InventoryRecordDictionarySheet implements ShouldAutoSize, WithEvents
                 $sheet->getRowDimension(1)->setRowHeight(22);
                 $sheet->mergeCells('A1:C1');
                 $sheet->mergeCells('E1:G1');
-                $sheet->setCellValue('A1', 'Format — dozwolone wartości');
-                $sheet->setCellValue('E1', 'Stan — dozwolone wartości');
+                $sheet->setCellValue('A1', 'Format - dozwolone wartości');
+                $sheet->setCellValue('E1', 'Stan - dozwolone wartości');
                 $sheet->getStyle('A1:C1')->applyFromArray($headerStyle);
                 $sheet->getStyle('E1:G1')->applyFromArray($headerStyle);
 

@@ -71,7 +71,7 @@ const selectedOption = computed(
     () => props.options.find((o) => o.value === props.modelValue) ?? null,
 );
 
-/** Options shown in the list — filtered by the search query when searchable. */
+/** Options shown in the list - filtered by the search query when searchable. */
 const visibleOptions = computed(() => {
     const query = searchQuery.value.trim().toLowerCase();
 
@@ -91,7 +91,7 @@ const isPlaceholder = computed(() => !selectedOption.value);
 /**
  * Every label the trigger can ever display (all options + the placeholder),
  * rendered as hidden ghosts so the control is always as wide as its widest
- * possible value — it never resizes when the selection changes.
+ * possible value - it never resizes when the selection changes.
  */
 const sizingLabels = computed(() => {
     const labels = props.options.map((o) => o.label);

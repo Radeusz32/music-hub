@@ -1,9 +1,9 @@
-# CRUD Generator — Agent Instructions
+# CRUD Generator - Agent Instructions
 
 A complete, opinionated recipe for building a **new tenant CRUD module** in this
 codebase, modeled 1:1 on the **Inventory / InventoryRecord** module. Follow it
 top-to-bottom. When unsure about a detail, **open the matching Inventory file and
-copy its structure** — Inventory is the canonical reference implementation.
+copy its structure** - Inventory is the canonical reference implementation.
 
 > Read first: `DOCS.md` (architecture), `FILTERABLE_COLUMNS_GUIDE.md` (table
 > filters), `README-BASE-COMPONENTS.md` (UI components).
@@ -17,19 +17,19 @@ Pick two names and stay consistent:
 - **Module** (feature group), e.g. `Inventory` → prefix `inventory`
 - **Entity** (the model), e.g. `InventoryRecord`, table `inventory_records`
 
-Worked placeholders used below — substitute throughout:
+Worked placeholders used below - substitute throughout:
 
-| Placeholder        | Inventory example            |
-| ------------------ | ---------------------------- |
-| `{Module}`         | `Inventory`                  |
-| `{module}`         | `inventory`                  |
-| `{Entity}`         | `InventoryRecord`            |
+| Placeholder        | Inventory example                     |
+| ------------------ | ------------------------------------- |
+| `{Module}`         | `Inventory`                           |
+| `{module}`         | `inventory`                           |
+| `{Entity}`         | `InventoryRecord`                     |
 | `{entity}`         | `inventoryRecord` (route param / var) |
-| `{entities}` table | `inventory_records`          |
-| `{plural}` segment | `records`                    |
-| permission prefix  | `inventory-records`          |
-| route name prefix  | `tenant.inventory.records`   |
-| Inertia page dir   | `Tenant/Inventory`           |
+| `{entities}` table | `inventory_records`                   |
+| `{plural}` segment | `records`                             |
+| permission prefix  | `inventory-records`                   |
+| route name prefix  | `tenant.inventory.records`            |
+| Inertia page dir   | `Tenant/Inventory`                    |
 
 **Hard rules (enforced by CLAUDE.md / tooling):**
 
@@ -49,14 +49,14 @@ Worked placeholders used below — substitute throughout:
 
 Build in this order (each step depends on the previous).
 
-### 1.1 Enums (optional) — `app/Enums/Tenant/{Name}Enum.php`
+### 1.1 Enums (optional) - `app/Enums/Tenant/{Name}Enum.php`
 
 For fixed option sets (status, type, condition…). Backed **string** enum with
 `label()`, `color()`, and a static `options(): list<array{value,label,color}>`
 used by both the frontend dropdowns/badges and column filters. Copy
 `DiscFormatEnum` / `DiscConditionEnum`.
 
-### 1.2 Migration — `database/migrations/tenant/xxxx_create_{entities}_table.php`
+### 1.2 Migration - `database/migrations/tenant/xxxx_create_{entities}_table.php`
 
 ```bash
 php artisan make:migration create_{entities}_table --no-interaction
@@ -72,7 +72,7 @@ php artisan make:migration create_{entities}_table --no-interaction
 If the entity stores files, also ensure the tenant `media` table migration exists
 (Inventory ships `…_create_media_table.php` under `migrations/tenant/`).
 
-### 1.3 Model — `app/Models/Tenant/{Entity}.php`
+### 1.3 Model - `app/Models/Tenant/{Entity}.php`
 
 ```php
 final class {Entity} extends Model // implements HasMedia (only if it has files)
@@ -110,36 +110,36 @@ final class {Entity} extends Model // implements HasMedia (only if it has files)
 
 Use `casts()` **method** (not `$casts`). Add a `@property-read` docblock like Inventory's.
 
-#### 1.3.1 Encrypting sensitive fields (optional — CipherSweet)
+#### 1.3.1 Encrypting sensitive fields (optional - CipherSweet)
 
 If the entity stores **PII or other sensitive data** (national IDs, full address,
 phone, bank/tax numbers, etc.), encrypt those columns at rest with CipherSweet
 instead of storing plaintext. See **`DOCS.md` → Encrypted Attributes** for the
 full mechanism. Quick recipe:
 
-1. **Migration** — make every encrypted column `text` (ciphertext is long), e.g.
+1. **Migration** - make every encrypted column `text` (ciphertext is long), e.g.
    `$table->text('pesel')->nullable();`. Do **not** add per-column hash columns.
-2. **Model** — `implements CipherSweetEncrypted` + `use UsesCipherSweet`, and:
-   ```php
-   public static function configureCipherSweet(EncryptedRow $row): void
-   {
-       $row->addOptionalTextField('pesel')              // Optional = tolerates null
-           ->addBlindIndex('pesel', new BlindIndex('pesel')); // only if it must be searchable
-   }
-   ```
-   Do **not** give encrypted columns a `'string'`/`'encrypted'` cast (CipherSweet
-   handles it via model events). Keep them in `$fillable`.
-3. **Blind index table** — ensure the polymorphic `blind_indexes` migration exists
+2. **Model** - `implements CipherSweetEncrypted` + `use UsesCipherSweet`, and:
+    ```php
+    public static function configureCipherSweet(EncryptedRow $row): void
+    {
+        $row->addOptionalTextField('pesel')              // Optional = tolerates null
+            ->addBlindIndex('pesel', new BlindIndex('pesel')); // only if it must be searchable
+    }
+    ```
+    Do **not** give encrypted columns a `'string'`/`'encrypted'` cast (CipherSweet
+    handles it via model events). Keep them in `$fillable`.
+3. **Blind index table** - ensure the polymorphic `blind_indexes` migration exists
    in `database/migrations/tenant/` (shipped already; only encrypted models need it).
-4. **Search / filters** — encrypted columns support **exact match only** (no `LIKE`,
+4. **Search / filters** - encrypted columns support **exact match only** (no `LIKE`,
    sort, or range). Keep them **out** of `searchableColumns()` /
    `allowedSortColumns()` / `filterableColumns()`, and search them by overriding
    `applySearch()` in the service with `orWhereBlind('col', 'col', $search)` (copy
    `UserService::applySearch()`).
-5. **Uniqueness** — validate with `EncryptedUniqueRule` or a closure using
+5. **Uniqueness** - validate with `EncryptedUniqueRule` or a closure using
    `Model::whereBlind('col', 'col', $value)` (copy `Store/UpdateUserRequest`).
 
-> If a sensitive field never needs to be searched, skip the blind index entirely —
+> If a sensitive field never needs to be searched, skip the blind index entirely -
 > just `addOptionalTextField()` and it becomes write/read-only encrypted data.
 
 ### 1.4 Factory + Seeder
@@ -154,7 +154,7 @@ php artisan make:factory Tenant/{Entity}Factory --no-interaction
   Grab the owner with `User::query()->first()`.
 - Register it in `TenantDatabaseSeeder::run()` (after `OwnerSeeder`).
 
-### 1.5 Permissions — `database/seeders/Tenant/{Module}PermissionsSeeder.php`
+### 1.5 Permissions - `database/seeders/Tenant/{Module}PermissionsSeeder.php`
 
 Extend `PermissionsBaseSeeder`. Permission names: `{module}-{plural}-{action}`.
 Assign to role groups `$all` / `$admins` / `$owners`:
@@ -182,7 +182,7 @@ final class {Module}PermissionsSeeder extends PermissionsBaseSeeder
 Then add it to `AllPermissionsSeeder::run()`'s `$this->call([...])`. (Convention:
 read → everyone, create/update → admins, delete → owners.)
 
-### 1.6 Transformer — `app/Transformers/Tenant/{Module}/{Entity}Transformer.php`
+### 1.6 Transformer - `app/Transformers/Tenant/{Module}/{Entity}Transformer.php`
 
 Shapes each row for the frontend (the JSON the table/detail pages consume).
 
@@ -222,7 +222,7 @@ final class {Entity}Transformer extends Transformer
 }
 ```
 
-### 1.7 DataTableConfig — `app/Http/Resources/Tenant/{Module}/{Entity}DataTable.php`
+### 1.7 DataTableConfig - `app/Http/Resources/Tenant/{Module}/{Entity}DataTable.php`
 
 Declares the server-side query rules (see `FILTERABLE_COLUMNS_GUIDE.md`).
 
@@ -259,7 +259,7 @@ final class {Entity}DataTable extends DataTableConfig
 }
 ```
 
-### 1.8 Service — `app/Services/Tenant/{Module}/{Entity}Service.php`
+### 1.8 Service - `app/Services/Tenant/{Module}/{Entity}Service.php`
 
 Extend `BaseService`. `index()` just delegates to `fetchForDataTable`. Keep CRUD
 methods small; add `bulkDelete` for table bulk actions. Use the `ManagesFiles`
@@ -303,17 +303,17 @@ final class {Entity}Service extends BaseService
 }
 ```
 
-### 1.9 FormRequests — `app/Http/Requests/Tenant/{Module}/`
+### 1.9 FormRequests - `app/Http/Requests/Tenant/{Module}/`
 
 One per write action. `authorize()` returns `true` (route middleware enforces
 permissions). Array-syntax rules + Polish `messages()`. Mirror Inventory:
 
-- `Store{Entity}Request` — full create rules (`required`, `Rule::enum(...)`, `max:`…).
-- `Update{Entity}Request` — usually the same rule set.
-- `BulkDestroy{Entities}Request` — `'ids' => ['required','array','min:1'], 'ids.*' => ['integer']`.
-- `Upload…Request` / `Import…Request` — file rules (`file`, `image`, `mimes:…`, `max:KB`) — only if relevant.
+- `Store{Entity}Request` - full create rules (`required`, `Rule::enum(...)`, `max:`…).
+- `Update{Entity}Request` - usually the same rule set.
+- `BulkDestroy{Entities}Request` - `'ids' => ['required','array','min:1'], 'ids.*' => ['integer']`.
+- `Upload…Request` / `Import…Request` - file rules (`file`, `image`, `mimes:…`, `max:KB`) - only if relevant.
 
-### 1.10 Controller — `app/Http/Controllers/Tenant/{Module}/{Entity}Controller.php`
+### 1.10 Controller - `app/Http/Controllers/Tenant/{Module}/{Entity}Controller.php`
 
 Thin. Constructor-inject the service. Return `Inertia::render` (reads) and
 `redirect()->route(...)->with('success', ...)` (writes). Pass enum `options()`
@@ -350,7 +350,7 @@ final class {Entity}Controller extends Controller
 }
 ```
 
-### 1.11 Routes — `routes/tenant.php`
+### 1.11 Routes - `routes/tenant.php`
 
 Inside the authenticated group, add a feature-gated prefix. **Literal collection
 routes first, model-bound `{param}` routes after.** Each write action gets a
@@ -394,7 +394,7 @@ If the module is new (not just a new entity inside an existing module):
 
 ## 2. Frontend (`resources/js/Pages/Tenant/{Module}/`)
 
-### 2.1 Resource file — `{module}.resource.ts`
+### 2.1 Resource file - `{module}.resource.ts`
 
 Single source of TS types + form defaults + display helpers + column builder.
 
@@ -428,7 +428,7 @@ export function build{Entity}Columns(o: BuildColumnsOptions): ColumnDef[] {
 
 Keep column `filter` keys in sync with the backend `filterableColumns()`.
 
-### 2.2 Table composable — `composables/Tenant/use{Entity}Table.ts`
+### 2.2 Table composable - `composables/Tenant/use{Entity}Table.ts`
 
 Wrap the generic `useTable` (server-side state) and expose columns + display
 helpers (pulling shared `useMoney`/`useDate`). Copy `useInventoryTable.ts`.
@@ -444,7 +444,7 @@ export function use{Entity}Table(options: { initialFilters?: TableFilters; statu
 }
 ```
 
-### 2.3 Index page — `Index.vue`
+### 2.3 Index page - `Index.vue`
 
 `IndexLayout` (title + `#toolbar`) wrapping `DataTable`. Wire all events to the
 composable. Modals for create/edit (and import if relevant). Handlers use
@@ -456,12 +456,19 @@ composable. Modals for create/edit (and import if relevant). Handlers use
     :columns="table.columns"
     :rows="records.data as unknown as Record<string, unknown>[]"
     :pagination="records as unknown as Pagination"
-    :sort-by="table.sortBy.value" :direction="table.direction.value"
+    :sort-by="table.sortBy.value"
+    :direction="table.direction.value"
     :filter-values="table.extraFilters.value"
-    searchable row-route="{routePrefix}.show"
-    @search="table.onSearchInput" @sort="table.toggleSort" @page="table.goToPage"
-    @filter="table.setFilter" @clear-filters="table.clearFilters"
-    @edit="openEdit" @delete="handleDelete" @bulk-delete="handleBulkDelete"
+    searchable
+    row-route="{routePrefix}.show"
+    @search="table.onSearchInput"
+    @sort="table.toggleSort"
+    @page="table.goToPage"
+    @filter="table.setFilter"
+    @clear-filters="table.clearFilters"
+    @edit="openEdit"
+    @delete="handleDelete"
+    @bulk-delete="handleBulkDelete"
 >
     <template #cell-status="{ value }"><!-- custom badge --></template>
     <template #delete-confirm-text="{ row }">Usunąć <strong>{{ row?.name }}</strong>?</template>
@@ -477,9 +484,9 @@ Handlers: `form.post/put` on submit, `deleteForm.delete(route('{routePrefix}.des
 - Emits: `search, update:search, sort, page, filter(key,value), clear-filters, edit(row), delete(row), bulk-delete(ids)`.
 - Slots: `cell-{key}`, `toolbar`, `delete-confirm-text`.
 - Built-in: search box, per-column filters, row selection, **bulk actions** (≥2 selected → "Akcje grupowe" with delete), **clear-filters**, top mirror scrollbar.
-- `canEdit` / `canDelete` (both default `true`) hide the per-row edit/delete buttons and the bulk-delete action when `false` — pass your permission flags here (see 2.7).
+- `canEdit` / `canDelete` (both default `true`) hide the per-row edit/delete buttons and the bulk-delete action when `false` - pass your permission flags here (see 2.7).
 
-### 2.4 Create/Edit modal — `{Entity}Modal.vue`
+### 2.4 Create/Edit modal - `{Entity}Modal.vue`
 
 Built on **`BaseDialog`**; manage width + columns with **Tailwind** at the call
 site (`panel-class`, `flex md:flex-row`). Use **Base\* components** for every
@@ -488,8 +495,16 @@ field with `:error="!!form.errors.x"` + a `<small>` error. Expose `show` /
 `InventoryRecordModal.vue`.
 
 ```vue
-<BaseDialog :visible="show" :title="title" panel-class="w-11/12 max-w-5xl"
-            @update:visible="(v) => { if (!v) emit('close'); }">
+<BaseDialog
+    :visible="show"
+    :title="title"
+    panel-class="w-11/12 max-w-5xl"
+    @update:visible="
+        (v) => {
+            if (!v) emit('close');
+        }
+    "
+>
     <form id="{entity}-form" class="flex w-full flex-col gap-5 md:flex-row" @submit.prevent="emit('submit')">
         <section class="flex flex-1 flex-col gap-3.5 rounded-xl border border-sky-400/10 bg-slate-950/40 p-4">
             <div class="flex flex-col gap-1.5">
@@ -507,7 +522,7 @@ field with `:error="!!form.errors.x"` + a `<small>` error. Expose `show` /
 </BaseDialog>
 ```
 
-### 2.5 Detail page — `Show.vue` + `Show/` components (if you need a detail view)
+### 2.5 Detail page - `Show.vue` + `Show/` components (if you need a detail view)
 
 `ShowLayout` (title + `#actions` slot for back/edit/delete buttons). Split the
 page into **section components** under `Show/` (e.g. `*HeroCard`, `*DetailsCard`,
@@ -525,7 +540,7 @@ The table's own row-delete + bulk-delete already use `DataTableDeleteDialog`.
 
 The route middleware (`feature:` + `permission:`) is the real enforcement, but
 **every CRUD action button must also be hidden on the frontend** when the user
-lacks the matching feature/permission — a second, UX layer of the same rule used
+lacks the matching feature/permission - a second, UX layer of the same rule used
 by `useMenu` (`hasFeature(...) && hasPermission(...)`).
 
 In the **Index** and **Show** pages, compute capability flags once and reuse them:
@@ -537,9 +552,15 @@ import { useFeatures } from "@/composables/Tenant/useFeatures";
 const { hasPermission } = usePermissions();
 const { hasFeature } = useFeatures();
 
-const canCreate = computed(() => hasFeature("{module}") && hasPermission("{module}-{plural}-create"));
-const canUpdate = computed(() => hasFeature("{module}") && hasPermission("{module}-{plural}-update"));
-const canDelete = computed(() => hasFeature("{module}") && hasPermission("{module}-{plural}-delete"));
+const canCreate = computed(
+    () => hasFeature("{module}") && hasPermission("{module}-{plural}-create"),
+);
+const canUpdate = computed(
+    () => hasFeature("{module}") && hasPermission("{module}-{plural}-update"),
+);
+const canDelete = computed(
+    () => hasFeature("{module}") && hasPermission("{module}-{plural}-delete"),
+);
 ```
 
 Then:
@@ -562,11 +583,11 @@ npx prettier --write resources/js/<changed files>
 php artisan test --filter={Entity}       # add/adjust Pest tests for the change
 ```
 
-- Routes are available to the frontend at runtime via the `@routes` directive — no rebuild needed, but `npm run dev` must be running to see UI changes.
+- Routes are available to the frontend at runtime via the `@routes` directive - no rebuild needed, but `npm run dev` must be running to see UI changes.
 - Re-seed after migration/permission changes: `make reset` (or `php artisan migrate:fresh --seed && php artisan tenants:seed`).
 
 > **Tests:** the project rule is "every change is programmatically tested" (Pest).
-> Tenant-DB feature tests need tenancy bootstrapped in the test — if the harness
+> Tenant-DB feature tests need tenancy bootstrapped in the test - if the harness
 > for that isn't set up yet, flag it and cover what you can (pure units like
 > filter resolution, transformers, request rules via datasets).
 
@@ -578,7 +599,7 @@ Backend:
 
 - [ ] Enum(s) with `label()/color()/options()` (if fixed option sets)
 - [ ] Tenant migration in `database/migrations/tenant/` (timestamps + softDeletes)
-- [ ] `App\Models\Tenant\{Entity}` — `casts()`, `$fillable`, relations, SoftDeletes (+ HasMedia if files)
+- [ ] `App\Models\Tenant\{Entity}` - `casts()`, `$fillable`, relations, SoftDeletes (+ HasMedia if files)
 - [ ] (Sensitive PII?) CipherSweet: `text` columns + `configureCipherSweet()` + blind-index search/uniqueness (§1.3.1)
 - [ ] Factory (+ states) and `{Entities}Seeder`, registered in `TenantDatabaseSeeder`
 - [ ] `{Module}PermissionsSeeder` registered in `AllPermissionsSeeder`
@@ -596,30 +617,30 @@ Frontend:
 - [ ] `use{Entity}Table.ts` (wraps `useTable`, columns + `useMoney`/`useDate`)
 - [ ] `Index.vue` (IndexLayout + DataTable + modals, all events wired)
 - [ ] `{Entity}Modal.vue` (BaseDialog + Base\* fields)
-- [ ] `Show.vue` (+ `Show/` section components) — if a detail page is needed
-- [ ] CRUD buttons gated by `hasFeature(...) && hasPermission(...)` — toolbar `v-if`, `DataTable :can-edit/:can-delete`, Show actions (see 2.7)
+- [ ] `Show.vue` (+ `Show/` section components) - if a detail page is needed
+- [ ] CRUD buttons gated by `hasFeature(...) && hasPermission(...)` - toolbar `v-if`, `DataTable :can-edit/:can-delete`, Show actions (see 2.7)
 - [ ] `useMenu.ts` nav entry (feature/permission keys)
 
 ---
 
 ## 5. Reference files (study these)
 
-| Concern            | File                                                                 |
-| ------------------ | -------------------------------------------------------------------- |
-| Controller         | `app/Http/Controllers/Tenant/Inventory/InventoryRecordController.php`|
-| Service            | `app/Services/Tenant/Inventory/InventoryRecordService.php`           |
-| BaseService        | `app/Services/BaseService.php`                                       |
-| DataTableConfig    | `app/Http/Resources/Tenant/Inventory/InventoryRecordDataTable.php`   |
-| Transformer        | `app/Transformers/Tenant/Inventory/InventoryRecordTransformer.php`   |
-| Model              | `app/Models/Tenant/InventoryRecord.php`                              |
-| FormRequests       | `app/Http/Requests/Tenant/Inventory/*`                               |
-| Permissions seeder | `database/seeders/Tenant/InventoryPermissionsSeeder.php`             |
-| Data seeder        | `database/seeders/Tenant/InventoryRecordsSeeder.php`                 |
-| Routes             | `routes/tenant.php` (inventory group)                                |
-| Resource (TS)      | `resources/js/Pages/Tenant/Inventory/inventory.resource.ts`          |
-| Table composable   | `resources/js/composables/Tenant/useInventoryTable.ts`               |
-| Index page         | `resources/js/Pages/Tenant/Inventory/Index.vue`                      |
-| Modal              | `resources/js/Pages/Tenant/Inventory/InventoryRecordModal.vue`       |
-| Detail page        | `resources/js/Pages/Tenant/Inventory/Show.vue` (+ `Show/`)           |
-| DataTable          | `resources/js/Pages/Tenant/Components/DataTable.vue`                 |
-| Layouts            | `resources/js/layout/Tenant/{IndexLayout,ShowLayout,PageToolbar}.vue`|
+| Concern            | File                                                                  |
+| ------------------ | --------------------------------------------------------------------- |
+| Controller         | `app/Http/Controllers/Tenant/Inventory/InventoryRecordController.php` |
+| Service            | `app/Services/Tenant/Inventory/InventoryRecordService.php`            |
+| BaseService        | `app/Services/BaseService.php`                                        |
+| DataTableConfig    | `app/Http/Resources/Tenant/Inventory/InventoryRecordDataTable.php`    |
+| Transformer        | `app/Transformers/Tenant/Inventory/InventoryRecordTransformer.php`    |
+| Model              | `app/Models/Tenant/InventoryRecord.php`                               |
+| FormRequests       | `app/Http/Requests/Tenant/Inventory/*`                                |
+| Permissions seeder | `database/seeders/Tenant/InventoryPermissionsSeeder.php`              |
+| Data seeder        | `database/seeders/Tenant/InventoryRecordsSeeder.php`                  |
+| Routes             | `routes/tenant.php` (inventory group)                                 |
+| Resource (TS)      | `resources/js/Pages/Tenant/Inventory/inventory.resource.ts`           |
+| Table composable   | `resources/js/composables/Tenant/useInventoryTable.ts`                |
+| Index page         | `resources/js/Pages/Tenant/Inventory/Index.vue`                       |
+| Modal              | `resources/js/Pages/Tenant/Inventory/InventoryRecordModal.vue`        |
+| Detail page        | `resources/js/Pages/Tenant/Inventory/Show.vue` (+ `Show/`)            |
+| DataTable          | `resources/js/Pages/Tenant/Components/DataTable.vue`                  |
+| Layouts            | `resources/js/layout/Tenant/{IndexLayout,ShowLayout,PageToolbar}.vue` |

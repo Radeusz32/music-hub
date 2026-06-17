@@ -43,7 +43,7 @@ final class InvitationController extends Controller
     public function resend(TenantInvitation $invitation): RedirectResponse
     {
         if ($invitation->isAccepted()) {
-            return back()->with('error', 'Nie można ponowić zaproszenia — organizacja już istnieje.');
+            return back()->with('error', 'Nie można ponowić zaproszenia - organizacja już istnieje.');
         }
 
         $this->invitationService->resend($invitation);

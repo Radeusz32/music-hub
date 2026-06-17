@@ -41,7 +41,7 @@ final class ProvisionTenantJob implements ShouldQueue
             (string) $baseDomain,
         );
 
-        // Create tenant — TenancyServiceProvider pipeline synchronously runs
+        // Create tenant - TenancyServiceProvider pipeline synchronously runs
         // CreateDatabase → MigrateDatabase → CreateTenantStorageLink on TenantCreated.
         $tenant = Tenant::create([
             'id' => Str::uuid()->toString(),

@@ -30,7 +30,7 @@ export function useUserTable(options: UseUserTableOptions) {
 
     function roleLabel(value: string | null): string {
         if (!value) {
-            return "—";
+            return "-";
         }
         return (
             options.roleOptions.find((o) => o.value === value)?.label ?? value

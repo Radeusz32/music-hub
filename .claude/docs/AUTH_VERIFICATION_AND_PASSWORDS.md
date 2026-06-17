@@ -13,24 +13,24 @@ e-mail link is scoped to the current tenant subdomain.
 
 ## Routes at a glance
 
-| Method | URI | Name | Middleware | Controller |
-| ------ | --- | ---- | ---------- | ---------- |
-| GET | `/forgot-password` | `password.request` | `guest` | `PasswordResetLinkController@create` |
-| POST | `/forgot-password` | `password.email` | `guest` | `PasswordResetLinkController@store` |
-| GET | `/reset-password/{token}` | `password.reset` | `guest` | `NewPasswordController@create` |
-| POST | `/reset-password` | `password.store` | `guest` | `NewPasswordController@store` |
-| GET | `/verify-email/{id}/{hash}` | `verification.verify` | `signed`, `throttle:6,1` | `VerifyEmailController` |
-| GET | `/verify-email` | `verification.notice` | `auth` | `EmailVerificationPromptController` |
-| POST | `/email/verification-notification` | `verification.send` | `auth`, `throttle:6,1` | `EmailVerificationNotificationController@store` |
-| PUT | `/settings/password` | `tenant.settings.password.update` | `auth` | `Settings\PasswordController@update` |
-| POST | `/users/{user}/resend-verification` | `tenant.users.resend-verification` | `feature:users`, `permission:users-update` | `Users\UserController@resendVerification` |
+| Method | URI                                 | Name                               | Middleware                                 | Controller                                      |
+| ------ | ----------------------------------- | ---------------------------------- | ------------------------------------------ | ----------------------------------------------- |
+| GET    | `/forgot-password`                  | `password.request`                 | `guest`                                    | `PasswordResetLinkController@create`            |
+| POST   | `/forgot-password`                  | `password.email`                   | `guest`                                    | `PasswordResetLinkController@store`             |
+| GET    | `/reset-password/{token}`           | `password.reset`                   | `guest`                                    | `NewPasswordController@create`                  |
+| POST   | `/reset-password`                   | `password.store`                   | `guest`                                    | `NewPasswordController@store`                   |
+| GET    | `/verify-email/{id}/{hash}`         | `verification.verify`              | `signed`, `throttle:6,1`                   | `VerifyEmailController`                         |
+| GET    | `/verify-email`                     | `verification.notice`              | `auth`                                     | `EmailVerificationPromptController`             |
+| POST   | `/email/verification-notification`  | `verification.send`                | `auth`, `throttle:6,1`                     | `EmailVerificationNotificationController@store` |
+| PUT    | `/settings/password`                | `tenant.settings.password.update`  | `auth`                                     | `Settings\PasswordController@update`            |
+| POST   | `/users/{user}/resend-verification` | `tenant.users.resend-verification` | `feature:users`, `permission:users-update` | `Users\UserController@resendVerification`       |
 
-`verification.verify` sits **outside** the `auth` group on purpose — see
+`verification.verify` sits **outside** the `auth` group on purpose - see
 [Why verification is session-independent](#why-verification-is-session-independent).
 
 ---
 
-## 1. Password reset ("przypomnienie hasła") — guest
+## 1. Password reset ("przypomnienie hasła") - guest
 
 Standard Laravel `Password` broker flow. The tenant `User` already has the
 `CanResetPassword` trait (via `Illuminate\Foundation\Auth\User`), and the tenant
@@ -72,7 +72,7 @@ use the shared `layout/Tenant/AuthLayout.vue`).
 
 ---
 
-## 2. Password change ("zmiana hasła") — authenticated, on the Profile page
+## 2. Password change ("zmiana hasła") - authenticated, on the Profile page
 
 **Flow:**
 
@@ -114,7 +114,7 @@ while unverified.
   `artisan event:list`) then sends the verification e-mail because the model is
   `MustVerifyEmail` and unverified.
 - The `UserFactory` still seeds users as **verified** (`email_verified_at = now()`),
-  with an `unverified()` state — so seeded/dev accounts (e.g. the owner) are not
+  with an `unverified()` state - so seeded/dev accounts (e.g. the owner) are not
   forced through verification.
 
 ### Verifying
@@ -142,7 +142,7 @@ new user isn't logged in (or an admin testing in the same browser is logged in
 as someone else), producing a **403**.
 
 So this route is **outside** `auth`. Security is preserved by the **signed URL**
-(tamper-proof, expiring) plus the `hash_equals` check on `sha1(email)` — the same
+(tamper-proof, expiring) plus the `hash_equals` check on `sha1(email)` - the same
 proof Laravel uses. Possession of the link (delivered only to the address being
 verified) is sufficient. After verifying, the controller **logs the user in** and
 regenerates the session, so clicking the link lands them straight in the panel.
@@ -173,7 +173,7 @@ VerifyEmailController,EmailVerificationNotificationController}.php`,
 
 `/settings/profile` (`tenant.settings.profile`) is gated by
 `permission:setting-profile` (seeded for **all** roles in
-`SettingsPermissionsSeeder`) and lives **outside** the `feature:settings` group —
+`SettingsPermissionsSeeder`) and lives **outside** the `feature:settings` group -
 account self-management must not depend on a paid feature flag (the dev tenant
 doesn't even have `settings`). `organization` / `billing` remain under
 `feature:settings`.
@@ -189,7 +189,7 @@ delegates to `UserService` rather than touching the model directly.
 `UpdateProfileRequest` covers name/email/phone/address/PESEL (no role, no
 `is_active`); email uniqueness + `PeselRule` ignore the current user's id.
 
-> **Note:** changing the e-mail here does **not** reset `email_verified_at` — the
+> **Note:** changing the e-mail here does **not** reset `email_verified_at` - the
 > user stays "verified" with the old timestamp. A Breeze-style re-verification on
 > e-mail change is not implemented.
 
@@ -197,16 +197,16 @@ delegates to `UserService` rather than touching the model directly.
 
 ## Key files
 
-| Concern | File |
-| ------- | ---- |
-| Password reset (request link) | `app/Http/Controllers/Tenant/Auth/PasswordResetLinkController.php` |
-| Password reset (set new) | `app/Http/Controllers/Tenant/Auth/NewPasswordController.php` |
-| Password change | `app/Http/Controllers/Tenant/Settings/PasswordController.php` |
-| Verify (signed link) | `app/Http/Controllers/Tenant/Auth/VerifyEmailController.php` |
+| Concern                       | File                                                                                    |
+| ----------------------------- | --------------------------------------------------------------------------------------- |
+| Password reset (request link) | `app/Http/Controllers/Tenant/Auth/PasswordResetLinkController.php`                      |
+| Password reset (set new)      | `app/Http/Controllers/Tenant/Auth/NewPasswordController.php`                            |
+| Password change               | `app/Http/Controllers/Tenant/Settings/PasswordController.php`                           |
+| Verify (signed link)          | `app/Http/Controllers/Tenant/Auth/VerifyEmailController.php`                            |
 | Verify notice / resend (self) | `app/Http/Controllers/Tenant/Auth/EmailVerification{Prompt,NotificationController}.php` |
-| Resend (admin) | `app/Http/Controllers/Tenant/Users/UserController.php@resendVerification` |
-| New-user verification trigger | `app/Services/Tenant/Users/UserService.php@create` (`event(new Registered(...))`) |
-| Broker lang strings | `lang/en/passwords.php` |
-| Guest pages | `resources/js/Pages/Tenant/Auth/{ForgotPassword,ResetPassword,VerifyEmail}.vue` |
-| Shared guest shell | `resources/js/layout/Tenant/AuthLayout.vue` |
-| Profile + password change UI | `resources/js/Pages/Tenant/Settings/Profile.vue` |
+| Resend (admin)                | `app/Http/Controllers/Tenant/Users/UserController.php@resendVerification`               |
+| New-user verification trigger | `app/Services/Tenant/Users/UserService.php@create` (`event(new Registered(...))`)       |
+| Broker lang strings           | `lang/en/passwords.php`                                                                 |
+| Guest pages                   | `resources/js/Pages/Tenant/Auth/{ForgotPassword,ResetPassword,VerifyEmail}.vue`         |
+| Shared guest shell            | `resources/js/layout/Tenant/AuthLayout.vue`                                             |
+| Profile + password change UI  | `resources/js/Pages/Tenant/Settings/Profile.vue`                                        |

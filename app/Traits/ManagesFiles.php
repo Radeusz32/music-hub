@@ -71,21 +71,21 @@ trait ManagesFiles
     // Wire StorageTracker and OptimizationService here when ready.
 
     /**
-     * Runs before upload — intended for tenant disk quota checks.
+     * Runs before upload - intended for tenant disk quota checks.
      *
      * @future app(StorageTracker::class)->assertHasSpace($file->getSize())
      */
     protected function beforeUpload(UploadedFile $file): void {}
 
     /**
-     * Runs after upload — intended for image optimization.
+     * Runs after upload - intended for image optimization.
      *
      * @future app(OptimizationService::class)->optimize($media)
      */
     protected function afterUpload(Media $media): void {}
 
     /**
-     * Runs before file removal — intended for freeing tracked storage quota.
+     * Runs before file removal - intended for freeing tracked storage quota.
      *
      * @future app(StorageTracker::class)->release($media->size)
      */

@@ -8,7 +8,7 @@ const props = withDefaults(
         visible: boolean;
         title?: string;
         /**
-         * Tailwind classes controlling the panel box — width, max-width and any
+         * Tailwind classes controlling the panel box - width, max-width and any
          * responsive breakpoints. Manage sizing here just like the reference
          * example, e.g. `panel-class="w-11/12 max-w-5xl"`.
          */
@@ -136,7 +136,7 @@ watch(
     align-items: center;
 }
 
-/* No width here — the panel box (width / max-width / breakpoints) is driven by
+/* No width here - the panel box (width / max-width / breakpoints) is driven by
    the `panelClass` Tailwind classes passed in by the consumer. */
 .dialog-panel {
     background: linear-gradient(145deg, #0d1728 0%, #080e1c 100%);

@@ -52,7 +52,7 @@ const artistItems = computed(() =>
 <template>
     <AppLayout>
         <IndexLayout
-            title="Analityka — Podsumowanie"
+            title="Analityka - Podsumowanie"
             subtitle="Najważniejsze wskaźniki sprzedaży i magazynu"
             icon="pi pi-chart-pie"
             icon-color="#a78bfa"
@@ -113,7 +113,7 @@ const artistItems = computed(() =>
             <!-- Trend + format split -->
             <div class="grid grid-cols-1 gap-5 lg:grid-cols-3">
                 <section class="panel lg:col-span-2">
-                    <h2 class="panel-title">Przychód — ostatnie 30 dni</h2>
+                    <h2 class="panel-title">Przychód - ostatnie 30 dni</h2>
                     <BarChart
                         :series="trendSeries"
                         :format-value="formatPrice"

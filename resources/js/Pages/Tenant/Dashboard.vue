@@ -281,7 +281,7 @@ function formatDelta(delta: number): string {
                                 }}
                             </span>
                         </template>
-                        <span v-else class="text-slate-600">—</span>
+                        <span v-else class="text-slate-600">-</span>
                     </template>
 
                     <template #cell-type="{ value }">
@@ -301,7 +301,7 @@ function formatDelta(delta: number): string {
 
                     <template #cell-note="{ value }">
                         <span v-if="value" class="note-text">{{ value }}</span>
-                        <span v-else class="text-slate-600">—</span>
+                        <span v-else class="text-slate-600">-</span>
                     </template>
 
                     <template #cell-user="{ row }">
@@ -312,7 +312,7 @@ function formatDelta(delta: number): string {
                             <i class="pi pi-user" />
                             {{ (row.user as { name: string }).name }}
                         </span>
-                        <span v-else class="text-slate-600">—</span>
+                        <span v-else class="text-slate-600">-</span>
                     </template>
                 </DataTable>
             </section>

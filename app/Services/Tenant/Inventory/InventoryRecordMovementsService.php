@@ -62,7 +62,7 @@ final class InventoryRecordMovementsService extends BaseService
 
             if ($after < 0) {
                 throw ValidationException::withMessages([
-                    'quantity' => "Nie można wydać {$quantity} szt. — dostępny stan magazynowy to {$before} szt.",
+                    'quantity' => "Nie można wydać {$quantity} szt. - dostępny stan magazynowy to {$before} szt.",
                 ]);
             }
 
@@ -91,7 +91,7 @@ final class InventoryRecordMovementsService extends BaseService
 
             if ($after < 0) {
                 throw ValidationException::withMessages([
-                    'quantity' => "Nie można sprzedać {$quantity} szt. — dostępny stan magazynowy to {$before} szt.",
+                    'quantity' => "Nie można sprzedać {$quantity} szt. - dostępny stan magazynowy to {$before} szt.",
                 ]);
             }
 

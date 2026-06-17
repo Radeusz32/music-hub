@@ -17,27 +17,27 @@ defineProps<{
         <div class="detail-grid">
             <div class="detail-field">
                 <span class="detail-label">Wytwórnia</span>
-                <span class="detail-value">{{ record.label ?? "—" }}</span>
+                <span class="detail-value">{{ record.label ?? "-" }}</span>
             </div>
             <div class="detail-field">
                 <span class="detail-label">Nr katalogowy</span>
                 <span class="detail-value mono">{{
-                    record.catalog_number ?? "—"
+                    record.catalog_number ?? "-"
                 }}</span>
             </div>
             <div class="detail-field">
                 <span class="detail-label">Barcode</span>
                 <span class="detail-value mono">{{
-                    record.barcode ?? "—"
+                    record.barcode ?? "-"
                 }}</span>
             </div>
             <div class="detail-field">
                 <span class="detail-label">Kraj wydania</span>
-                <span class="detail-value">{{ record.country ?? "—" }}</span>
+                <span class="detail-value">{{ record.country ?? "-" }}</span>
             </div>
             <div class="detail-field">
                 <span class="detail-label">Rok</span>
-                <span class="detail-value">{{ record.year ?? "—" }}</span>
+                <span class="detail-value">{{ record.year ?? "-" }}</span>
             </div>
             <div class="detail-field">
                 <span class="detail-label">Gatunek</span>

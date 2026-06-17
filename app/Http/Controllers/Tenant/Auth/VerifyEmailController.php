@@ -17,7 +17,7 @@ final class VerifyEmailController extends Controller
      * Verify the e-mail using the signed link, independent of the current
      * session, then log the user straight in. The link is signature-protected,
      * so possession of it (delivered only to the address being verified) is
-     * sufficient proof — this supports admin-created accounts whose owner is
+     * sufficient proof - this supports admin-created accounts whose owner is
      * not logged in when they click it.
      */
     public function __invoke(Request $request, int $id, string $hash): RedirectResponse

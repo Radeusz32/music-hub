@@ -1,7 +1,7 @@
 import { computed, ref, watch, type ComputedRef, type Ref } from "vue";
 
 export interface StepDefinition {
-    /** Unique key — also used as the slot name in StepByStep.vue. */
+    /** Unique key - also used as the slot name in StepByStep.vue. */
     key: string;
     label: string;
     description?: string;
@@ -15,7 +15,7 @@ export interface UseStepByStepOptions<T extends object> {
     steps: StepDefinition[];
     /** Reactive form data (e.g. an Inertia `useForm` object). */
     data: T;
-    /** localStorage key — when set, progress + field values are persisted. */
+    /** localStorage key - when set, progress + field values are persisted. */
     storageKey?: string;
     /** Field names that must never be written to localStorage (e.g. passwords). */
     excludeFromStorage?: string[];
@@ -111,7 +111,10 @@ export function useStepByStep<T extends object>(
     if (storageKey) {
         watch(
             [
-                () => persistableFields.map((f) => (data as Record<string, unknown>)[f]),
+                () =>
+                    persistableFields.map(
+                        (f) => (data as Record<string, unknown>)[f],
+                    ),
                 currentIndex,
                 completed,
             ],
@@ -139,7 +142,10 @@ export function useStepByStep<T extends object>(
         if (options.onValidateStep) {
             validating.value = true;
             try {
-                const ok = await options.onValidateStep(currentStep.value, data);
+                const ok = await options.onValidateStep(
+                    currentStep.value,
+                    data,
+                );
                 if (!ok) {
                     return false;
                 }

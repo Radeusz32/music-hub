@@ -13,7 +13,7 @@ use Inertia\Inertia;
 |--------------------------------------------------------------------------
 | Central / Superadmin panel
 |--------------------------------------------------------------------------
-| Runs on the central domain (e.g. localhost) — no tenancy bootstrapping.
+| Runs on the central domain (e.g. localhost) - no tenancy bootstrapping.
 | The prefix is deliberately obscure so the panel is hard to stumble upon.
 | Authentication is handled by the dedicated `superadmin` guard (central
 | `admins` table), fully separate from tenant users.

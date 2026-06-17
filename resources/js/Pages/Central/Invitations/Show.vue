@@ -31,7 +31,8 @@ function resend(): void {
         }),
         {
             preserveScroll: true,
-            onSuccess: () => toast.success("Zaproszenie zostało wysłane ponownie."),
+            onSuccess: () =>
+                toast.success("Zaproszenie zostało wysłane ponownie."),
         },
     );
 }
@@ -41,7 +42,9 @@ const acceptForm = useForm({});
 
 function accept(): void {
     acceptForm.post(
-        route("central.invitations.accept", { invitation: props.invitation.id }),
+        route("central.invitations.accept", {
+            invitation: props.invitation.id,
+        }),
         {
             preserveScroll: true,
             onSuccess: () =>
@@ -121,7 +124,11 @@ function formatDate(iso: string): string {
                                     : 'pi pi-send'
                             "
                         />
-                        {{ resendForm.processing ? "Wysyłanie..." : "Wyślij ponownie" }}
+                        {{
+                            resendForm.processing
+                                ? "Wysyłanie..."
+                                : "Wyślij ponownie"
+                        }}
                     </button>
                     <button
                         v-if="invitation.status === 'FILLED'"
@@ -208,7 +215,7 @@ function formatDate(iso: string): string {
                                 class="detail"
                             >
                                 <dt>{{ key }}</dt>
-                                <dd>{{ val || "—" }}</dd>
+                                <dd>{{ val || "-" }}</dd>
                             </div>
                         </dl>
                     </div>
@@ -223,17 +230,20 @@ function formatDate(iso: string): string {
                                 class="detail"
                             >
                                 <dt>{{ key }}</dt>
-                                <dd>{{ key === 'password' ? '••••••••' : (val || '—') }}</dd>
+                                <dd>
+                                    {{
+                                        key === "password"
+                                            ? "••••••••"
+                                            : val || "-"
+                                    }}
+                                </dd>
                             </div>
                         </dl>
                     </div>
                 </div>
             </template>
 
-            <div
-                v-else
-                class="empty-state"
-            >
+            <div v-else class="empty-state">
                 <i class="pi pi-hourglass text-2xl" style="color: #fb923c" />
                 <p>Formularz nie został jeszcze wypełniony.</p>
             </div>

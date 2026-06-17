@@ -56,7 +56,7 @@ const formatSegments = computed(() =>
 <template>
     <AppLayout>
         <IndexLayout
-            title="Analityka — Sprzedaż"
+            title="Analityka - Sprzedaż"
             subtitle="Przychody i trendy sprzedaży"
             icon="pi pi-dollar"
             icon-color="#4ade80"
@@ -92,7 +92,7 @@ const formatSegments = computed(() =>
             <!-- Monthly revenue -->
             <section class="panel">
                 <h2 class="panel-title">
-                    Przychód miesięczny — ostatnie 12 miesięcy
+                    Przychód miesięczny - ostatnie 12 miesięcy
                 </h2>
                 <BarChart
                     :series="monthlySeries"
@@ -105,7 +105,7 @@ const formatSegments = computed(() =>
             <div class="grid grid-cols-1 gap-5 lg:grid-cols-3">
                 <section class="panel lg:col-span-2">
                     <h2 class="panel-title">
-                        Przychód dzienny — ostatnie 30 dni
+                        Przychód dzienny - ostatnie 30 dni
                     </h2>
                     <BarChart
                         :series="dailySeries"
@@ -143,8 +143,8 @@ const formatSegments = computed(() =>
                         </thead>
                         <tbody>
                             <tr v-for="sale in recent" :key="sale.id">
-                                <td>{{ sale.name ?? "—" }}</td>
-                                <td class="muted">{{ sale.artist ?? "—" }}</td>
+                                <td>{{ sale.name ?? "-" }}</td>
+                                <td class="muted">{{ sale.artist ?? "-" }}</td>
                                 <td class="num">{{ sale.quantity }}</td>
                                 <td class="num">
                                     {{ formatPrice(sale.sale_price) }}

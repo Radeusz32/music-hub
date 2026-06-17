@@ -7,29 +7,29 @@ input for each column.
 
 > There is **no** legacy `filterMapping()` / `dateRangeColumns()` anymore.
 > `filterableColumns()` is the single source of truth (it is `abstract` on
-> `DataTableConfig`, so every config must implement it — return `[]` for none).
+> `DataTableConfig`, so every config must implement it - return `[]` for none).
 
 ---
 
 ## Filter Types
 
 The backend `type` is a **`App\Enums\FilterTypeEnum`** case (not a raw string).
-The enum's backing values are the strings below — they still flow through
+The enum's backing values are the strings below - they still flow through
 request params and the frontend `filter.type`, but inside `filterableColumns()`
 and `BaseService` you always work with the typed enum case.
 
-| Enum case (backing value)         | Use case                | SQL                                         | Frontend input             |
-| --------------------------------- | ----------------------- | ------------------------------------------- | -------------------------- |
-| `Select` (`select`)               | Dropdown, exact match   | `WHERE col = value`                         | `BaseDropdown`             |
-| `Text` (`text`)                   | Partial text match      | `WHERE col LIKE '%value%'`                   | `BaseInput`                |
-| `Number` (`number`)               | Number exact match      | `WHERE col = value`                         | `BaseInputNumber`          |
-| `DateRange` (`date-range`)        | Date from/to            | `WHERE col >= from AND col <= to` (`whereDate`) | `DatePicker` ×2        |
-| `NumberRange` (`number-range`)    | Numeric from/to (year, qty, price) | `WHERE col >= from AND col <= to` | `BaseInputNumber` ×2       |
-| `Boolean` (`boolean`)             | True/false toggle (e.g. `is_active`) | `WHERE col = true/false`           | `boolean` (clickable ✓/✗)  |
-| `NullStatus` (`null-status`)      | Nullable column presence (e.g. `email_verified_at`) | `WHERE col IS [NOT] NULL` | `boolean` (clickable ✓/✗)  |
-| `Relation` (`relation`)           | Exact match on a related model's column (e.g. Spatie `roles.name`) | `WHERE EXISTS (relation WHERE col = value)` (`whereHas`) | `select` |
+| Enum case (backing value)      | Use case                                                           | SQL                                                      | Frontend input            |
+| ------------------------------ | ------------------------------------------------------------------ | -------------------------------------------------------- | ------------------------- |
+| `Select` (`select`)            | Dropdown, exact match                                              | `WHERE col = value`                                      | `BaseDropdown`            |
+| `Text` (`text`)                | Partial text match                                                 | `WHERE col LIKE '%value%'`                               | `BaseInput`               |
+| `Number` (`number`)            | Number exact match                                                 | `WHERE col = value`                                      | `BaseInputNumber`         |
+| `DateRange` (`date-range`)     | Date from/to                                                       | `WHERE col >= from AND col <= to` (`whereDate`)          | `DatePicker` ×2           |
+| `NumberRange` (`number-range`) | Numeric from/to (year, qty, price)                                 | `WHERE col >= from AND col <= to`                        | `BaseInputNumber` ×2      |
+| `Boolean` (`boolean`)          | True/false toggle (e.g. `is_active`)                               | `WHERE col = true/false`                                 | `boolean` (clickable ✓/✗) |
+| `NullStatus` (`null-status`)   | Nullable column presence (e.g. `email_verified_at`)                | `WHERE col IS [NOT] NULL`                                | `boolean` (clickable ✓/✗) |
+| `Relation` (`relation`)        | Exact match on a related model's column (e.g. Spatie `roles.name`) | `WHERE EXISTS (relation WHERE col = value)` (`whereHas`) | `select`                  |
 
-`FilterTypeEnum::isRange()` returns `true` for `DateRange` / `NumberRange` —
+`FilterTypeEnum::isRange()` returns `true` for `DateRange` / `NumberRange` -
 `BaseService::resolveFilters()` uses it to pick the `{key}_from` / `{key}_to`
 reading strategy.
 
@@ -41,7 +41,7 @@ reads `?sale_price_from=...&sale_price_to=...`.
 **Backend type ≠ frontend type.** The backend `type` (a `FilterTypeEnum` case in
 `filterableColumns()`) picks the SQL strategy; the frontend `filter.type` (a
 string in the `ColumnDef`) picks the input. They are usually the same, but don't
-have to be — e.g. `role` is `FilterTypeEnum::Relation` on the backend but
+have to be - e.g. `role` is `FilterTypeEnum::Relation` on the backend but
 `select` on the frontend, and `email_verified_at` is `FilterTypeEnum::NullStatus`
 on the backend but `boolean` (✓/✗) on the frontend. Both `Boolean` and
 `NullStatus` are driven by the same `1` / `0` request value.
@@ -52,7 +52,7 @@ on the backend but `boolean` (✓/✗) on the frontend. Both `Boolean` and
 
 `filterableColumns()` returns a map of **request key → config**. Each config has
 a `column` (the DB column) and a `type`. `select` may also carry `options`
-(only used to ship choices to the frontend — the backend ignores them).
+(only used to ship choices to the frontend - the backend ignores them).
 
 ```php
 // app/Http/Resources/Tenant/Inventory/InventoryRecordDataTable.php
@@ -81,7 +81,7 @@ public static function filterableColumns(): array
 }
 ```
 
-That is all the backend needs — no controller changes, no manual `where`s.
+That is all the backend needs - no controller changes, no manual `where`s.
 
 For the relation / nullable / boolean strategies (from the Users module):
 
@@ -103,7 +103,7 @@ public static function filterableColumns(): array
 ```
 
 - `relation` requires an extra `relation` key (the relationship method); `column` is the column on the **related** table.
-- `null-status` and `boolean` need no `options` — the frontend renders fixed ✓/✗ toggles.
+- `null-status` and `boolean` need no `options` - the frontend renders fixed ✓/✗ toggles.
 
 ---
 
@@ -124,7 +124,7 @@ public static function filterableColumns(): array
    - builds resolved filters (skips empty values) + records all keys
      so they are preserved in the paginator's query string
    ↓
-5. BaseService::applyFilters() — match on the FilterTypeEnum case:
+5. BaseService::applyFilters() - match on the FilterTypeEnum case:
      Select       → where(col, value)
      Text         → where(col, 'like', "%value%")
      Number       → where(col, value)
@@ -141,7 +141,7 @@ public static function filterableColumns(): array
 The `match` in `applyFilters()` is **exhaustive over `FilterTypeEnum`** (no
 `default` arm), so adding a new strategy is: add a `case` to the enum, add the
 matching `case` in `BaseService::applyFilters()`, and write a small
-`applyXxxFilter()` method — every config that uses that case then works
+`applyXxxFilter()` method - every config that uses that case then works
 automatically.
 
 ---
@@ -159,8 +159,21 @@ component per type. **The two must stay in sync** (same keys, same range
 export type ColumnFilter =
     | { type: "select"; options: FilterOption[] }
     | { type: "date-range"; fromKey: string; toKey: string }
-    | { type: "number"; currency?: boolean; min?: number; max?: number; placeholder?: string }
-    | { type: "number-range"; fromKey: string; toKey: string; currency?: boolean; min?: number; max?: number }
+    | {
+          type: "number";
+          currency?: boolean;
+          min?: number;
+          max?: number;
+          placeholder?: string;
+      }
+    | {
+          type: "number-range";
+          fromKey: string;
+          toKey: string;
+          currency?: boolean;
+          min?: number;
+          max?: number;
+      }
     | { type: "boolean"; trueLabel?: string; falseLabel?: string };
 ```
 
@@ -263,13 +276,13 @@ one navigation.
 
 ## Checklist for adding a filter to a column
 
-1. **Backend** — add an entry to `filterableColumns()` with the right `column` + `type` (a `FilterTypeEnum` case).
-2. **Frontend** — add a `filter` descriptor to that column in `buildXxxColumns()`.
+1. **Backend** - add an entry to `filterableColumns()` with the right `column` + `type` (a `FilterTypeEnum` case).
+2. **Frontend** - add a `filter` descriptor to that column in `buildXxxColumns()`.
    For ranges, use `fromKey: "{key}_from"`, `toKey: "{key}_to"` matching the backend key.
 3. Give numeric/price columns enough `width` so the stacked inputs fit; use
    `currency: true` for money columns.
 4. Searchable free-text columns usually belong in `searchableColumns()` (global
-   search) rather than a per-column `text` filter — pick whichever the UX needs.
+   search) rather than a per-column `text` filter - pick whichever the UX needs.
 
 ---
 
@@ -279,6 +292,6 @@ one navigation.
 - Backend types are `FilterTypeEnum` cases: `Select`, `Text`, `Number`, `DateRange`, `NumberRange`, `Boolean`, `NullStatus`, `Relation`.
 - Ranges use `{key}_from` / `{key}_to` on both sides (`FilterTypeEnum::isRange()` flags them).
 - `Relation` adds a `relation` key; `Boolean` / `NullStatus` are driven by `1` / `0` and need no `options`.
-- Backend `type` (SQL strategy) and frontend `filter.type` (input string) are independent — e.g. `Relation`→`select`, `NullStatus`→`boolean`.
+- Backend `type` (SQL strategy) and frontend `filter.type` (input string) are independent - e.g. `Relation`→`select`, `NullStatus`→`boolean`.
 - `BaseService` resolves + applies automatically; add a new strategy by adding an enum case + a `case` in `applyFilters()`.
 - The frontend renders inputs from each column's `filter` descriptor via `DataTableColumnFilter.vue`; keep the request **keys** in sync with the backend.

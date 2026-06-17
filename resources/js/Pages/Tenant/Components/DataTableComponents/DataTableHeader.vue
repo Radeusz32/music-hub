@@ -103,7 +103,7 @@ const hasColumnFilters = computed(() => props.columns.some((c) => c.filter));
 .dt-thead-filters .dt-th-filter-cell {
     padding: 0.6rem 1rem;
     vertical-align: middle;
-    /* no border-bottom here — separator comes after the whole filter row */
+    /* no border-bottom here - separator comes after the whole filter row */
 }
 
 /* Thin separator between filter row and label row */

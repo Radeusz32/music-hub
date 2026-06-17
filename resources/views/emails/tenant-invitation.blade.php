@@ -34,7 +34,7 @@
             </p>
         </div>
         <div class="footer">
-            SoundBased · Wiadomość wysłana automatycznie — nie odpowiadaj na tego e-maila.
+            SoundBased · Wiadomość wysłana automatycznie - nie odpowiadaj na tego e-maila.
         </div>
     </div>
 </body>

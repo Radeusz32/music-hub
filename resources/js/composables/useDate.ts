@@ -1,7 +1,7 @@
 export function useDate() {
     function formatDate(value: string | null | undefined): string {
         if (!value) {
-            return "—";
+            return "-";
         }
         return new Date(value).toLocaleDateString("pl-PL", {
             day: "2-digit",
@@ -12,7 +12,7 @@ export function useDate() {
 
     function formatDateTime(value: string | null | undefined): string {
         if (!value) {
-            return "—";
+            return "-";
         }
         return new Date(value).toLocaleString("pl-PL", {
             day: "2-digit",

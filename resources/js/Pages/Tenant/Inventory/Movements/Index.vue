@@ -180,7 +180,7 @@ function handleBulkDelete(ids: unknown[]): void {
                             }}
                         </span>
                     </template>
-                    <span v-else class="text-slate-600">—</span>
+                    <span v-else class="text-slate-600">-</span>
                 </template>
 
                 <!-- type colored badge -->
@@ -203,7 +203,7 @@ function handleBulkDelete(ids: unknown[]): void {
                 <!-- note -->
                 <template #cell-note="{ value }">
                     <span v-if="value" class="note-text">{{ value }}</span>
-                    <span v-else class="text-slate-600">—</span>
+                    <span v-else class="text-slate-600">-</span>
                 </template>
 
                 <!-- user -->
@@ -215,7 +215,7 @@ function handleBulkDelete(ids: unknown[]): void {
                         <i class="pi pi-user" />
                         {{ (row.user as { name: string }).name }}
                     </span>
-                    <span v-else class="text-slate-600">—</span>
+                    <span v-else class="text-slate-600">-</span>
                 </template>
 
                 <!-- delete confirm text -->

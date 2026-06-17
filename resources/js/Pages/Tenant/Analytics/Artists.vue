@@ -31,13 +31,13 @@ const stockItems = computed(() =>
     })),
 );
 
-const topArtist = computed(() => props.byRevenue[0]?.artist ?? "—");
+const topArtist = computed(() => props.byRevenue[0]?.artist ?? "-");
 </script>
 
 <template>
     <AppLayout>
         <IndexLayout
-            title="Analityka — Top artyści"
+            title="Analityka - Top artyści"
             subtitle="Najlepiej sprzedający się i najliczniej reprezentowani artyści"
             icon="pi pi-star"
             icon-color="#fbbf24"

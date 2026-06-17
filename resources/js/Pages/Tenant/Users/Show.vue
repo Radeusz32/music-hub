@@ -54,7 +54,7 @@ const initials = computed(() =>
 const roleLabel = computed(() =>
     props.user.role
         ? resolveOptionLabel(props.roleOptions, props.user.role)
-        : "—",
+        : "-",
 );
 
 const roleBadgeStyle = computed(() => {
@@ -75,7 +75,7 @@ const addressLine = computed(() => {
         .join("/");
     const line1 = [u.street, buildingApartment].filter(Boolean).join(" ");
     const line2 = [u.postal_code, u.city].filter(Boolean).join(" ");
-    return [line1, line2].filter(Boolean).join(", ") || "—";
+    return [line1, line2].filter(Boolean).join(", ") || "-";
 });
 
 /* ── Edit modal ── */
@@ -287,11 +287,11 @@ function resendVerification(): void {
                     </div>
                     <div class="detail">
                         <dt>Telefon</dt>
-                        <dd>{{ user.phone || "—" }}</dd>
+                        <dd>{{ user.phone || "-" }}</dd>
                     </div>
                     <div class="detail">
                         <dt>PESEL</dt>
-                        <dd>{{ user.pesel || "—" }}</dd>
+                        <dd>{{ user.pesel || "-" }}</dd>
                     </div>
                     <div class="detail">
                         <dt>Rola</dt>

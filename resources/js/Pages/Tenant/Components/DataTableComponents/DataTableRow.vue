@@ -53,7 +53,7 @@ function onRowClick(): void {
         >
             <!-- Custom slot per column -->
             <slot :name="`cell-${col.key}`" :value="row[col.key]" :row="row">
-                {{ row[col.key] ?? "—" }}
+                {{ row[col.key] ?? "-" }}
             </slot>
         </td>
 

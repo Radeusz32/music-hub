@@ -169,7 +169,7 @@ function handleBulkDelete(ids: unknown[]): void {
             >
                 <!-- company name -->
                 <template #cell-company_name="{ value }">
-                    <span class="tenant-name">{{ value ?? "—" }}</span>
+                    <span class="tenant-name">{{ value ?? "-" }}</span>
                 </template>
 
                 <!-- status badge -->
@@ -206,7 +206,7 @@ function handleBulkDelete(ids: unknown[]): void {
                 <!-- nip -->
                 <template #cell-tax_id="{ value }">
                     <span v-if="value" class="mono">{{ value }}</span>
-                    <span v-else class="text-slate-600">—</span>
+                    <span v-else class="text-slate-600">-</span>
                 </template>
 
                 <!-- domains -->
@@ -222,7 +222,7 @@ function handleBulkDelete(ids: unknown[]): void {
                         <span
                             v-if="!((row.domains as string[]) ?? []).length"
                             class="text-slate-600"
-                            >—</span
+                            >-</span
                         >
                     </div>
                 </template>

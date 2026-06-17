@@ -256,7 +256,7 @@ function handleBulkDelete(ids: unknown[]): void {
                         <i class="pi pi-phone" />
                         {{ value }}
                     </span>
-                    <span v-else class="text-slate-600">—</span>
+                    <span v-else class="text-slate-600">-</span>
                 </template>
 
                 <!-- role colored badge -->
@@ -268,7 +268,7 @@ function handleBulkDelete(ids: unknown[]): void {
                     >
                         {{ table.roleLabel(String(value)) }}
                     </span>
-                    <span v-else class="text-slate-600">—</span>
+                    <span v-else class="text-slate-600">-</span>
                 </template>
 
                 <!-- verification status -->

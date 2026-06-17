@@ -151,7 +151,7 @@ const addressFields: Field[] = [
                             class="field-row"
                         >
                             <dt>{{ f.label }}</dt>
-                            <dd>{{ f.value || "—" }}</dd>
+                            <dd>{{ f.value || "-" }}</dd>
                         </div>
                     </dl>
                 </section>
@@ -166,7 +166,7 @@ const addressFields: Field[] = [
                             class="field-row"
                         >
                             <dt>{{ f.label }}</dt>
-                            <dd>{{ f.value || "—" }}</dd>
+                            <dd>{{ f.value || "-" }}</dd>
                         </div>
                     </dl>
                 </section>

@@ -139,7 +139,7 @@ const labelClass = "mb-2 block text-xs font-semibold uppercase tracking-wider";
                                 style="color: rgba(148, 163, 184, 0.75)"
                             >
                                 Kompleksowy system zarządzania dla sklepów z
-                                muzyką. Magazyn, giełdy, analityka — wszystko w
+                                muzyką. Magazyn, giełdy, analityka - wszystko w
                                 jednym miejscu.
                             </p>
                         </div>

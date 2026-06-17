@@ -23,7 +23,7 @@ use Inertia\Inertia;
 
 /*
 |--------------------------------------------------------------------------
-| Deactivated tenant notice (NOT gated by `tenant-active` — otherwise the
+| Deactivated tenant notice (NOT gated by `tenant-active` - otherwise the
 | redirect from the middleware would loop)
 |--------------------------------------------------------------------------
 */

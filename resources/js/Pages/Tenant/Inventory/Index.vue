@@ -266,7 +266,7 @@ function submitImport(): void {
                         <i class="pi pi-user" />
                         {{ (row.user as { name: string }).name }}
                     </span>
-                    <span v-else class="text-slate-600">—</span>
+                    <span v-else class="text-slate-600">-</span>
                 </template>
 
                 <!-- created_at / updated_at -->

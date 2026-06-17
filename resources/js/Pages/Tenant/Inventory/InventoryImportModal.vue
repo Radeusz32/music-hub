@@ -74,14 +74,14 @@ watch(
                     <strong class="font-semibold text-slate-300"
                         >Pobierz szablon</strong
                     >
-                    — Kliknij poniższy link, aby pobrać wzorcowy plik Excel z
+                    - Kliknij poniższy link, aby pobrać wzorcowy plik Excel z
                     prawidłową strukturą kolumn
                 </li>
                 <li>
                     <strong class="font-semibold text-slate-300"
                         >Wypełnij dane</strong
                     >
-                    — Uzupełnij plik danymi płyt. Zachowaj nazwy kolumn i
+                    - Uzupełnij plik danymi płyt. Zachowaj nazwy kolumn i
                     kolejność
                 </li>
                 <li>
@@ -94,7 +94,7 @@ watch(
                     <strong class="font-semibold text-slate-300"
                         >Wgraj plik</strong
                     >
-                    — Wybierz wypełniony plik (.xlsx, .xls lub .csv) poniżej
+                    - Wybierz wypełniony plik (.xlsx, .xls lub .csv) poniżej
                 </li>
             </ol>
             <a

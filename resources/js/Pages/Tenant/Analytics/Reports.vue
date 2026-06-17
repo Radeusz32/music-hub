@@ -53,7 +53,7 @@ const monthlySeries = computed(() =>
 <template>
     <AppLayout>
         <IndexLayout
-            title="Analityka — Raporty"
+            title="Analityka - Raporty"
             subtitle="Zestawienia magazynu i sprzedaży"
             icon="pi pi-file"
             icon-color="#60a5fa"
@@ -140,7 +140,7 @@ const monthlySeries = computed(() =>
                             </thead>
                             <tbody>
                                 <tr v-for="row in topGenres" :key="row.genre">
-                                    <td>{{ row.genre || "—" }}</td>
+                                    <td>{{ row.genre || "-" }}</td>
                                     <td class="num">{{ row.titles }}</td>
                                     <td class="num">{{ row.units }}</td>
                                 </tr>
@@ -158,7 +158,7 @@ const monthlySeries = computed(() =>
             <!-- Monthly revenue -->
             <section class="panel">
                 <h2 class="panel-title">
-                    Przychód miesięczny — ostatnie 12 miesięcy
+                    Przychód miesięczny - ostatnie 12 miesięcy
                 </h2>
                 <BarChart
                     :series="monthlySeries"

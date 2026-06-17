@@ -11,7 +11,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table): void {
-            // Encrypted at rest via CipherSweet — must be TEXT to hold ciphertext.
+            // Encrypted at rest via CipherSweet - must be TEXT to hold ciphertext.
             // Blind indexes for searching live in the separate `blind_indexes` table.
             $table->text('phone')->nullable()->after('email');
             $table->text('street')->nullable()->after('phone');

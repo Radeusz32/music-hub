@@ -5,12 +5,19 @@ Globalne komponenty input z pełną kontrolą nad stylem i funkcjonalnością.
 ## 📦 Komponenty
 
 ### 1. **BaseInput** - Uniwersalny input
+
 ### 2. **BaseInputNumber** - Input numeryczny ze spinnerami
+
 ### 3. **BasePassword** - Input hasła z togglem i wskaźnikiem siły
+
 ### 4. **BaseCheckbox** - Checkbox z animacjami
+
 ### 5. **BaseDropdown** - Dropdown/Select z gradientem
+
 ### 6. **BaseTextArea** - Wielowierszowe pole tekstowe
+
 ### 7. **BaseMaskedInput** - Input z maską wzorcową (telefon, kod itp.)
+
 ### 8. **BaseDialog** - Modal (rozmiar + kolumny zarządzane Tailwindem)
 
 > **Komponenty towarzyszące** (nie `Base*`, ale używane w tych samych miejscach):
@@ -22,7 +29,7 @@ Globalne komponenty input z pełną kontrolą nad stylem i funkcjonalnością.
 
 Wszystkie `Base*` są rejestrowane globalnie w
 `resources/js/plugins/base-components.ts` (`app.component(...)`), więc **nie
-importujesz ich** w komponentach — używasz `<BaseInput ... />` bezpośrednio.
+importujesz ich** w komponentach - używasz `<BaseInput ... />` bezpośrednio.
 `FileUpload`, `DatePicker`, `Tooltip` importujesz normalnie (`@/Components/...`).
 Dodając nowy `Base*` komponent, dopisz go do `base-components.ts`.
 
@@ -34,19 +41,19 @@ Uniwersalny input z opcjami prefix/suffix (ikony lub tekst).
 
 ### Props
 
-| Prop | Typ | Default | Opis |
-|------|-----|---------|------|
-| `modelValue` | `string \| number` | `""` | Wartość inputu (v-model) |
-| `type` | `string` | `"text"` | Typ inputu (text, email, url, etc.) |
-| `placeholder` | `string` | `""` | Placeholder |
-| `disabled` | `boolean` | `false` | Wyłączony |
-| `readonly` | `boolean` | `false` | Tylko do odczytu |
-| `prefix` | `string` | - | Tekst przed inputem |
-| `suffix` | `string` | - | Tekst po inpucie |
-| `prefixIcon` | `string` | - | Klasa ikony przed inputem (np. `pi pi-search`) |
-| `suffixIcon` | `string` | - | Klasa ikony po inpucie (np. `pi pi-times`) |
-| `error` | `boolean` | `false` | Stan błędu (czerwony border) |
-| `id` | `string` | - | ID dla label |
+| Prop          | Typ                | Default  | Opis                                           |
+| ------------- | ------------------ | -------- | ---------------------------------------------- |
+| `modelValue`  | `string \| number` | `""`     | Wartość inputu (v-model)                       |
+| `type`        | `string`           | `"text"` | Typ inputu (text, email, url, etc.)            |
+| `placeholder` | `string`           | `""`     | Placeholder                                    |
+| `disabled`    | `boolean`          | `false`  | Wyłączony                                      |
+| `readonly`    | `boolean`          | `false`  | Tylko do odczytu                               |
+| `prefix`      | `string`           | -        | Tekst przed inputem                            |
+| `suffix`      | `string`           | -        | Tekst po inpucie                               |
+| `prefixIcon`  | `string`           | -        | Klasa ikony przed inputem (np. `pi pi-search`) |
+| `suffixIcon`  | `string`           | -        | Klasa ikony po inpucie (np. `pi pi-times`)     |
+| `error`       | `boolean`          | `false`  | Stan błędu (czerwony border)                   |
+| `id`          | `string`           | -        | ID dla label                                   |
 
 ### Events
 
@@ -75,12 +82,7 @@ Uniwersalny input z opcjami prefix/suffix (ikony lub tekst).
 />
 
 <!-- Z suffixem tekstowym -->
-<BaseInput
-    v-model="price"
-    type="number"
-    suffix="PLN"
-    placeholder="0.00"
-/>
+<BaseInput v-model="price" type="number" suffix="PLN" placeholder="0.00" />
 
 <!-- Email z ikoną -->
 <BaseInput
@@ -127,27 +129,27 @@ Input numeryczny z opcjonalnymi spinnerami (góra/dół).
 
 ### Props
 
-| Prop | Typ | Default | Opis |
-|------|-----|---------|------|
-| `modelValue` | `number \| null` | `null` | Wartość (v-model) |
-| `placeholder` | `string` | `""` | Placeholder |
-| `disabled` | `boolean` | `false` | Wyłączony |
-| `readonly` | `boolean` | `false` | Tylko do odczytu |
-| `min` | `number` | - | Minimalna wartość |
-| `max` | `number` | - | Maksymalna wartość |
-| `step` | `number` | `1` | Krok zmiany |
-| `prefix` | `string` | - | Tekst przed inputem |
-| `suffix` | `string` | - | Tekst po inpucie |
-| `prefixIcon` | `string` | - | Ikona przed inputem |
-| `suffixIcon` | `string` | - | Ikona po inpucie |
-| `error` | `boolean` | `false` | Stan błędu |
-| `showButtons` | `boolean` | `false` | Pokaż przyciski +/- |
-| `format` | `"decimal" \| "currency"` | - | Tryb formatowania. Bez niego input działa jak zwykły `type="number"`. Z nim wyświetla sformatowaną liczbę (przecinek, grupowanie tysięcy) po utracie focusa, a model zostaje `number` |
-| `locale` | `string` | `"pl-PL"` | Locale do formatowania (separatory) |
-| `grouping` | `boolean` | `true` | Grupowanie tysięcy (np. `1 234,50`) |
-| `minFractionDigits` | `number` | `0` | Min cyfr po przecinku (dla `format="decimal"`; `currency` wymusza 2) |
-| `maxFractionDigits` | `number` | `2` | Max cyfr po przecinku (dla `format="decimal"`; `currency` wymusza 2) |
-| `id` | `string` | - | ID dla label |
+| Prop                | Typ                       | Default   | Opis                                                                                                                                                                                  |
+| ------------------- | ------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `modelValue`        | `number \| null`          | `null`    | Wartość (v-model)                                                                                                                                                                     |
+| `placeholder`       | `string`                  | `""`      | Placeholder                                                                                                                                                                           |
+| `disabled`          | `boolean`                 | `false`   | Wyłączony                                                                                                                                                                             |
+| `readonly`          | `boolean`                 | `false`   | Tylko do odczytu                                                                                                                                                                      |
+| `min`               | `number`                  | -         | Minimalna wartość                                                                                                                                                                     |
+| `max`               | `number`                  | -         | Maksymalna wartość                                                                                                                                                                    |
+| `step`              | `number`                  | `1`       | Krok zmiany                                                                                                                                                                           |
+| `prefix`            | `string`                  | -         | Tekst przed inputem                                                                                                                                                                   |
+| `suffix`            | `string`                  | -         | Tekst po inpucie                                                                                                                                                                      |
+| `prefixIcon`        | `string`                  | -         | Ikona przed inputem                                                                                                                                                                   |
+| `suffixIcon`        | `string`                  | -         | Ikona po inpucie                                                                                                                                                                      |
+| `error`             | `boolean`                 | `false`   | Stan błędu                                                                                                                                                                            |
+| `showButtons`       | `boolean`                 | `false`   | Pokaż przyciski +/-                                                                                                                                                                   |
+| `format`            | `"decimal" \| "currency"` | -         | Tryb formatowania. Bez niego input działa jak zwykły `type="number"`. Z nim wyświetla sformatowaną liczbę (przecinek, grupowanie tysięcy) po utracie focusa, a model zostaje `number` |
+| `locale`            | `string`                  | `"pl-PL"` | Locale do formatowania (separatory)                                                                                                                                                   |
+| `grouping`          | `boolean`                 | `true`    | Grupowanie tysięcy (np. `1 234,50`)                                                                                                                                                   |
+| `minFractionDigits` | `number`                  | `0`       | Min cyfr po przecinku (dla `format="decimal"`; `currency` wymusza 2)                                                                                                                  |
+| `maxFractionDigits` | `number`                  | `2`       | Max cyfr po przecinku (dla `format="decimal"`; `currency` wymusza 2)                                                                                                                  |
+| `id`                | `string`                  | -         | ID dla label                                                                                                                                                                          |
 
 > **Formatowanie (`format`)**: bez tego propa komponent zachowuje się jak natywny `type="number"` (model `number | null`). Z `format="currency"` lub `format="decimal"` przełącza się na `type="text"` z `inputmode="decimal"`: podczas edycji pozwala wpisywać z przecinkiem lub kropką, a po blur pokazuje sformatowaną wartość (np. `1 234,50`). Model nadal jest liczbą (`1234.5`). `format="currency"` wymusza zawsze 2 miejsca po przecinku.
 
@@ -196,11 +198,7 @@ Input numeryczny z opcjonalnymi spinnerami (góra/dół).
 />
 
 <!-- Liczba dziesiętna z grupowaniem (1 234,5) -->
-<BaseInputNumber
-    v-model="amount"
-    format="decimal"
-    :max-fraction-digits="3"
-/>
+<BaseInputNumber v-model="amount" format="decimal" :max-fraction-digits="3" />
 
 <!-- Procent z ikoną -->
 <BaseInputNumber
@@ -248,16 +246,16 @@ Input hasła z togglem widoczności i wskaźnikiem siły.
 
 ### Props
 
-| Prop | Typ | Default | Opis |
-|------|-----|---------|------|
-| `modelValue` | `string` | `""` | Wartość (v-model) |
-| `placeholder` | `string` | `""` | Placeholder |
-| `disabled` | `boolean` | `false` | Wyłączony |
-| `readonly` | `boolean` | `false` | Tylko do odczytu |
-| `error` | `boolean` | `false` | Stan błędu |
-| `showToggle` | `boolean` | `true` | Pokaż przycisk show/hide |
+| Prop           | Typ       | Default | Opis                      |
+| -------------- | --------- | ------- | ------------------------- |
+| `modelValue`   | `string`  | `""`    | Wartość (v-model)         |
+| `placeholder`  | `string`  | `""`    | Placeholder               |
+| `disabled`     | `boolean` | `false` | Wyłączony                 |
+| `readonly`     | `boolean` | `false` | Tylko do odczytu          |
+| `error`        | `boolean` | `false` | Stan błędu                |
+| `showToggle`   | `boolean` | `true`  | Pokaż przycisk show/hide  |
 | `showStrength` | `boolean` | `false` | Pokaż wskaźnik siły hasła |
-| `id` | `string` | - | ID dla label |
+| `id`           | `string`  | -       | ID dla label              |
 
 ### Events
 
@@ -268,12 +266,14 @@ Input hasła z togglem widoczności i wskaźnikiem siły.
 ### Siła hasła
 
 Wskaźnik siły ocenia hasło na podstawie:
+
 - Długość (≥8, ≥12 znaków)
 - Małe i wielkie litery
 - Cyfry
 - Znaki specjalne
 
 **Poziomy:**
+
 - 🔴 **Słabe** (0-2 punkty) - czerwony
 - 🟠 **Średnie** (3 punkty) - pomarańczowy
 - 🟢 **Silne** (4-5 punktów) - zielony
@@ -329,13 +329,13 @@ Checkbox z custom designem i animacjami.
 
 ### Props
 
-| Prop | Typ | Default | Opis |
-|------|-----|---------|------|
-| `modelValue` | `boolean` | `false` | Wartość (v-model) |
-| `label` | `string` | `""` | Tekst obok checkboxa |
-| `disabled` | `boolean` | `false` | Wyłączony |
-| `error` | `boolean` | `false` | Stan błędu |
-| `id` | `string` | auto | ID dla label |
+| Prop         | Typ       | Default | Opis                 |
+| ------------ | --------- | ------- | -------------------- |
+| `modelValue` | `boolean` | `false` | Wartość (v-model)    |
+| `label`      | `string`  | `""`    | Tekst obok checkboxa |
+| `disabled`   | `boolean` | `false` | Wyłączony            |
+| `error`      | `boolean` | `false` | Stan błędu           |
+| `id`         | `string`  | auto    | ID dla label         |
 
 ### Events
 
@@ -378,11 +378,7 @@ Checkbox z custom designem i animacjami.
 </div>
 
 <!-- Z disabled -->
-<BaseCheckbox
-    v-model="readonly"
-    label="Opcja zablokowana"
-    disabled
-/>
+<BaseCheckbox v-model="readonly" label="Opcja zablokowana" disabled />
 
 <!-- Formularz z walidacją -->
 <div>
@@ -406,17 +402,17 @@ Dropdown/Select z gradientowym tłem i animacjami.
 
 ### Props
 
-| Prop | Typ | Default | Opis |
-|------|-----|---------|------|
-| `modelValue` | `string \| number \| null` | `null` | Wartość (v-model) |
-| `options` | `DropdownOption[]` | `[]` | Lista opcji |
-| `placeholder` | `string` | `""` | Placeholder |
-| `disabled` | `boolean` | `false` | Wyłączony |
-| `error` | `boolean` | `false` | Stan błędu |
-| `prefixIcon` | `string` | - | Ikona przed selectem |
-| `suffixIcon` | `string` | - | Ikona po selecie |
-| `emptyLabel` | `string` | `"Select option"` | Label dla pustej opcji |
-| `id` | `string` | - | ID dla label |
+| Prop          | Typ                        | Default           | Opis                   |
+| ------------- | -------------------------- | ----------------- | ---------------------- |
+| `modelValue`  | `string \| number \| null` | `null`            | Wartość (v-model)      |
+| `options`     | `DropdownOption[]`         | `[]`              | Lista opcji            |
+| `placeholder` | `string`                   | `""`              | Placeholder            |
+| `disabled`    | `boolean`                  | `false`           | Wyłączony              |
+| `error`       | `boolean`                  | `false`           | Stan błędu             |
+| `prefixIcon`  | `string`                   | -                 | Ikona przed selectem   |
+| `suffixIcon`  | `string`                   | -                 | Ikona po selecie       |
+| `emptyLabel`  | `string`                   | `"Select option"` | Label dla pustej opcji |
+| `id`          | `string`                   | -                 | ID dla label           |
 
 ### DropdownOption Interface
 
@@ -498,11 +494,7 @@ interface DropdownOption {
 </BaseDropdown>
 
 <!-- Disabled state -->
-<BaseDropdown
-    v-model="lockedValue"
-    :options="options"
-    disabled
-/>
+<BaseDropdown v-model="lockedValue" :options="options" disabled />
 
 <!-- W formularzu -->
 <div class="field">
@@ -523,13 +515,13 @@ interface DropdownOption {
 ### TypeScript Example
 
 ```typescript
-import type { DropdownOption } from '@/Components/BaseDropdown.vue';
+import type { DropdownOption } from "@/Components/BaseDropdown.vue";
 
 const formatOptions: DropdownOption[] = [
-    { value: 'vinyl', label: 'Vinyl' },
-    { value: 'cd', label: 'CD' },
-    { value: 'cassette', label: 'Cassette' },
-    { value: 'digital', label: 'Digital' },
+    { value: "vinyl", label: "Vinyl" },
+    { value: "cd", label: "CD" },
+    { value: "cassette", label: "Cassette" },
+    { value: "digital", label: "Digital" },
 ];
 
 const selectedFormat = ref<string | null>(null);
@@ -553,15 +545,15 @@ Wielowierszowe pole tekstowe ze spójnym designem (taki sam wygląd i stany jak 
 
 ### Props
 
-| Prop | Typ | Default | Opis |
-|------|-----|---------|------|
-| `modelValue` | `string` | `""` | Wartość (v-model) |
-| `placeholder` | `string` | `""` | Placeholder |
-| `disabled` | `boolean` | `false` | Wyłączony |
-| `readonly` | `boolean` | `false` | Tylko do odczytu |
-| `error` | `boolean` | `false` | Stan błędu (czerwony border) |
-| `rows` | `number` | `3` | Liczba widocznych wierszy |
-| `id` | `string` | - | ID dla label |
+| Prop          | Typ       | Default | Opis                         |
+| ------------- | --------- | ------- | ---------------------------- |
+| `modelValue`  | `string`  | `""`    | Wartość (v-model)            |
+| `placeholder` | `string`  | `""`    | Placeholder                  |
+| `disabled`    | `boolean` | `false` | Wyłączony                    |
+| `readonly`    | `boolean` | `false` | Tylko do odczytu             |
+| `error`       | `boolean` | `false` | Stan błędu (czerwony border) |
+| `rows`        | `number`  | `3`     | Liczba widocznych wierszy    |
+| `id`          | `string`  | -       | ID dla label                 |
 
 ### Events
 
@@ -576,11 +568,7 @@ Wielowierszowe pole tekstowe ze spójnym designem (taki sam wygląd i stany jak 
 <BaseTextArea v-model="notes" placeholder="Dodatkowe informacje..." />
 
 <!-- Z większą liczbą wierszy -->
-<BaseTextArea
-    v-model="description"
-    :rows="6"
-    placeholder="Opis produktu"
-/>
+<BaseTextArea v-model="description" :rows="6" placeholder="Opis produktu" />
 
 <!-- Stan błędu -->
 <BaseTextArea
@@ -619,32 +607,32 @@ Wielowierszowe pole tekstowe ze spójnym designem (taki sam wygląd i stany jak 
 
 ## 📞 BaseMaskedInput
 
-Input tekstowy z **maską wzorcową** — telefon, kod pocztowy, nr karty itp. Model to **string** (sformatowana, zamaskowana wartość).
+Input tekstowy z **maską wzorcową** - telefon, kod pocztowy, nr karty itp. Model to **string** (sformatowana, zamaskowana wartość).
 
 ### Tokeny maski
 
-| Token | Znaczenie |
-|-------|-----------|
-| `#` | cyfra `[0-9]` |
-| `A` | litera `[A-Za-z]` |
-| `*` | znak alfanumeryczny `[A-Za-z0-9]` |
+| Token     | Znaczenie                                               |
+| --------- | ------------------------------------------------------- |
+| `#`       | cyfra `[0-9]`                                           |
+| `A`       | litera `[A-Za-z]`                                       |
+| `*`       | znak alfanumeryczny `[A-Za-z0-9]`                       |
 | inny znak | literał (wstawiany automatycznie, np. spacja, `+`, `-`) |
 
 ### Props
 
-| Prop | Typ | Default | Opis |
-|------|-----|---------|------|
-| `modelValue` | `string` | `""` | Wartość (v-model) |
-| `mask` | `string` | **wymagane** | Wzorzec maski, np. `"### ### ###"` |
-| `placeholder` | `string` | `""` | Placeholder |
-| `disabled` | `boolean` | `false` | Wyłączony |
-| `readonly` | `boolean` | `false` | Tylko do odczytu |
-| `prefix` | `string` | - | Tekst przed inputem |
-| `suffix` | `string` | - | Tekst po inpucie |
-| `prefixIcon` | `string` | - | Ikona przed inputem |
-| `suffixIcon` | `string` | - | Ikona po inpucie |
-| `error` | `boolean` | `false` | Stan błędu |
-| `id` | `string` | - | ID dla label |
+| Prop          | Typ       | Default      | Opis                               |
+| ------------- | --------- | ------------ | ---------------------------------- |
+| `modelValue`  | `string`  | `""`         | Wartość (v-model)                  |
+| `mask`        | `string`  | **wymagane** | Wzorzec maski, np. `"### ### ###"` |
+| `placeholder` | `string`  | `""`         | Placeholder                        |
+| `disabled`    | `boolean` | `false`      | Wyłączony                          |
+| `readonly`    | `boolean` | `false`      | Tylko do odczytu                   |
+| `prefix`      | `string`  | -            | Tekst przed inputem                |
+| `suffix`      | `string`  | -            | Tekst po inpucie                   |
+| `prefixIcon`  | `string`  | -            | Ikona przed inputem                |
+| `suffixIcon`  | `string`  | -            | Ikona po inpucie                   |
+| `error`       | `boolean` | `false`      | Stan błędu                         |
+| `id`          | `string`  | -            | ID dla label                       |
 
 ### Events
 
@@ -661,11 +649,7 @@ Input tekstowy z **maską wzorcową** — telefon, kod pocztowy, nr karty itp. M
 
 ```vue
 <!-- Telefon -->
-<BaseMaskedInput
-    v-model="phone"
-    mask="### ### ###"
-    placeholder="123 456 789"
-/>
+<BaseMaskedInput v-model="phone" mask="### ### ###" placeholder="123 456 789" />
 
 <!-- Telefon z kierunkowym -->
 <BaseMaskedInput
@@ -700,6 +684,7 @@ Input tekstowy z **maską wzorcową** — telefon, kod pocztowy, nr karty itp. M
 Wszystkie komponenty używają spójnego designu:
 
 **Kolory:**
+
 - Główny: `#38bdf8` (niebieski)
 - Błąd: `#f87171` (czerwony)
 - Sukces: `#4ade80` (zielony)
@@ -708,12 +693,14 @@ Wszystkie komponenty używają spójnego designu:
 - Border: `rgba(56, 189, 248, 0.1)`
 
 **Stany:**
+
 - `:focus` - niebieski border + shadow ring
 - `:error` - czerwony border + shadow ring
 - `:disabled` - opacity 0.5
 - `:readonly` - ciemniejsze tło
 
 **Transitions:**
+
 - Wszystkie: `0.2s ease`
 - Hover: `0.15s ease`
 
@@ -722,6 +709,7 @@ Wszystkie komponenty używają spójnego designu:
 ## 💡 Best Practices
 
 ### 1. Używaj v-model
+
 ```vue
 <!-- ✅ Dobrze -->
 <BaseInput v-model="name" />
@@ -731,28 +719,23 @@ Wszystkie komponenty używają spójnego designu:
 ```
 
 ### 2. Łącz z walidacją
+
 ```vue
-<BaseInput
-    v-model="form.email"
-    :error="!!form.errors.email"
-    type="email"
-/>
+<BaseInput v-model="form.email" :error="!!form.errors.email" type="email" />
 <p v-if="form.errors.email" class="error">
     {{ form.errors.email }}
 </p>
 ```
 
 ### 3. Używaj ID dla accessibility
+
 ```vue
 <label for="user-email">Email</label>
-<BaseInput
-    id="user-email"
-    v-model="email"
-    type="email"
-/>
+<BaseInput id="user-email" v-model="email" type="email" />
 ```
 
 ### 4. Prefix/Suffix dla kontekstu
+
 ```vue
 <!-- Waluta -->
 <BaseInputNumber v-model="price" suffix="PLN" />
@@ -765,15 +748,13 @@ Wszystkie komponenty używają spójnego designu:
 ```
 
 ### 5. Pokazuj siłę hasła przy rejestracji
+
 ```vue
 <!-- Login - bez wskaźnika -->
 <BasePassword v-model="password" />
 
 <!-- Rejestracja - ze wskaźnikiem -->
-<BasePassword
-    v-model="newPassword"
-    :show-strength="true"
-/>
+<BasePassword v-model="newPassword" :show-strength="true" />
 ```
 
 ---
@@ -867,6 +848,7 @@ function submit() {
 ## ✨ Przykłady zaawansowane
 
 ### Custom filter w DataTable
+
 ```vue
 <BaseInput
     v-model="filters.search"
@@ -887,6 +869,7 @@ function submit() {
 ```
 
 ### Kalkulator rabatu
+
 ```vue
 <div class="calculator">
     <BaseInputNumber
@@ -912,6 +895,7 @@ function submit() {
 ```
 
 ### Wyszukiwanie z auto-complete
+
 ```vue
 <BaseInput
     v-model="searchQuery"
@@ -953,23 +937,23 @@ const password: Ref<string> = ref("");
 
 Powłoka modala (Teleport + backdrop + panel + animacja `modal-fade`) w ciemnym
 stylu projektu. **Rozmiar i układ kolumn zarządzasz Tailwindem w miejscu
-wywołania** — komponent nie narzuca szerokości ani siatki.
+wywołania** - komponent nie narzuca szerokości ani siatki.
 
 ### Props
 
-| Prop | Typ | Default | Opis |
-|------|-----|---------|------|
-| `visible` | `boolean` | — | `v-model:visible` |
-| `title` | `string` | `""` | Tytuł w nagłówku (albo użyj slotu `header`) |
-| `panelClass` | `string` | `"w-full max-w-2xl"` | Klasy Tailwind sterujące szerokością panelu (`w-…`, `max-w-…`, breakpointy) |
-| `align` | `"top" \| "center"` | `"top"` | Pionowe ułożenie panelu (formularze: `top`, potwierdzenia: `center`) |
-| `mobileFullscreen` | `boolean` | `true` | Pełny ekran na mobile (`false` dla małych dialogów potwierdzeń) |
-| `closeOnBackdrop` | `boolean` | `true` | Zamknięcie po kliknięciu tła |
-| `showClose` | `boolean` | `true` | Pokaż przycisk × |
+| Prop               | Typ                 | Default              | Opis                                                                        |
+| ------------------ | ------------------- | -------------------- | --------------------------------------------------------------------------- |
+| `visible`          | `boolean`           | -                    | `v-model:visible`                                                           |
+| `title`            | `string`            | `""`                 | Tytuł w nagłówku (albo użyj slotu `header`)                                 |
+| `panelClass`       | `string`            | `"w-full max-w-2xl"` | Klasy Tailwind sterujące szerokością panelu (`w-…`, `max-w-…`, breakpointy) |
+| `align`            | `"top" \| "center"` | `"top"`              | Pionowe ułożenie panelu (formularze: `top`, potwierdzenia: `center`)        |
+| `mobileFullscreen` | `boolean`           | `true`               | Pełny ekran na mobile (`false` dla małych dialogów potwierdzeń)             |
+| `closeOnBackdrop`  | `boolean`           | `true`               | Zamknięcie po kliknięciu tła                                                |
+| `showClose`        | `boolean`           | `true`               | Pokaż przycisk ×                                                            |
 
 ### Events / Slots
 
-- `@update:visible` — zmiana widoczności (zamknięcie emituje `false`)
+- `@update:visible` - zmiana widoczności (zamknięcie emituje `false`)
 - Sloty: `default` (treść/body), `header` (zamiast `title`), `footer` (przyciski)
 - Zamyka się na `Escape`, kliknięcie tła i `×`; blokuje scroll `body`.
 
@@ -981,7 +965,11 @@ wywołania** — komponent nie narzuca szerokości ani siatki.
     :visible="show"
     title="Edytuj płytę"
     panel-class="w-11/12 max-w-5xl"
-    @update:visible="(v) => { if (!v) emit('close'); }"
+    @update:visible="
+        (v) => {
+            if (!v) emit('close');
+        }
+    "
 >
     <form class="flex w-full flex-col gap-5 md:flex-row" @submit.prevent="emit('submit')">
         <section class="flex flex-1 flex-col gap-3.5 rounded-xl border border-sky-400/10 bg-slate-950/40 p-4">
@@ -1005,7 +993,11 @@ wywołania** — komponent nie narzuca szerokości ani siatki.
     align="center"
     :mobile-fullscreen="false"
     :show-close="false"
-    @update:visible="(v) => { if (!v) emit('cancel'); }"
+    @update:visible="
+        (v) => {
+            if (!v) emit('cancel');
+        }
+    "
 >
     <div class="text-center"><!-- ikona + tytuł + treść + przyciski --></div>
 </BaseDialog>
@@ -1020,15 +1012,15 @@ wywołania** — komponent nie narzuca szerokości ani siatki.
 
 ## 🧩 Komponenty towarzyszące
 
-- **`FileUpload`** — pole wyboru pliku (dropzone + chip z nazwą/rozmiarem),
+- **`FileUpload`** - pole wyboru pliku (dropzone + chip z nazwą/rozmiarem),
   walidacja `maxFileSize`, prop `accept`, event `@select="{ files }"`,
   `defineExpose({ clearFile, openFilePicker })`. Można go ukryć i sterować
   programowo (`ref.openFilePicker()`), np. przy uploadzie okładki.
-- **`DatePicker`** — owijka na PrimeVue DatePicker, ostylowana pod motyw
+- **`DatePicker`** - owijka na PrimeVue DatePicker, ostylowana pod motyw
   (panel teleportowany do `body`, style globalne). `v-model` jako `string`
   `yyyy-mm-dd`.
-- **`Tooltip`** — prosty tooltip (`content`, `position`).
-- **`AppToast`** — renderer powiadomień; treść dodajesz przez composable
+- **`Tooltip`** - prosty tooltip (`content`, `position`).
+- **`AppToast`** - renderer powiadomień; treść dodajesz przez composable
   `useToast()`.
 
 ---
@@ -1040,9 +1032,9 @@ import { useToast } from "@/composables/useToast";
 import { useMoney } from "@/composables/useMoney";
 import { useDate } from "@/composables/useDate";
 
-const { success, error } = useToast();   // success("Zapisano"); error("Błąd")
-const { formatPrice } = useMoney();      // formatPrice("240.00") → "240,00 zł" (PLN, null-safe)
-const { formatDate } = useDate();        // formatDate("2026-06-04") → "04.06.2026" (pl-PL, null-safe)
+const { success, error } = useToast(); // success("Zapisano"); error("Błąd")
+const { formatPrice } = useMoney(); // formatPrice("240.00") → "240,00 zł" (PLN, null-safe)
+const { formatDate } = useDate(); // formatDate("2026-06-04") → "04.06.2026" (pl-PL, null-safe)
 ```
 
 `useToast` trzyma listę toastów w module-level singletonie, więc powiadomienia

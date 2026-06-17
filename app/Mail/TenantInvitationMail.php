@@ -23,7 +23,7 @@ final class TenantInvitationMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Zaproszenie do SoundBased — skonfiguruj swoją organizację',
+            subject: 'Zaproszenie do SoundBased - skonfiguruj swoją organizację',
         );
     }
 
