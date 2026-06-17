@@ -9,7 +9,6 @@
             color: rgba(148, 163, 184, 0.4);
         "
     >
-        © {{ new Date().getFullYear() }} SoundBase &mdash; Wszelkie prawa
-        zastrzeżone
+        © {{ new Date().getFullYear() }} SoundBase - Wszelkie prawa zastrzeżone
     </footer>
 </template>
