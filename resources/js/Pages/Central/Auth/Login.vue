@@ -12,7 +12,7 @@ interface LoginForm {
 const isDev = import.meta.env.DEV;
 
 const form = useForm<LoginForm>({
-    email: isDev ? "superadmin@soundbased.pl" : "",
+    email: isDev ? "superadmin@musichub.pl" : "",
     password: isDev ? "password" : "",
     remember: false,
 });

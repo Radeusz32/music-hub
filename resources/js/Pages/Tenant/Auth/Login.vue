@@ -4,7 +4,7 @@ import { route } from "ziggy-js";
 import { computed, ref } from "vue";
 
 const companyName = computed<string>(
-    () => (usePage().props.tenant as any)?.company_name ?? "SoundBase",
+    () => (usePage().props.tenant as any)?.company_name ?? "MusicHub",
 );
 
 interface LoginForm {

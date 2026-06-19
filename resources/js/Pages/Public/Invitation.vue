@@ -225,7 +225,7 @@ const labelClass = "text-xs font-semibold uppercase tracking-wide" as const;
             <!-- Branding -->
             <div class="mb-8 text-center">
                 <div class="mb-2 text-2xl font-bold" style="color: #d946ef">
-                    SoundBased
+                    MusicHub
                 </div>
                 <h1
                     class="text-xl font-bold"

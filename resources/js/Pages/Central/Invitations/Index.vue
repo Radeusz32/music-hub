@@ -83,7 +83,7 @@ function formatDate(iso: string): string {
                         Zaproszenia
                     </h1>
                     <p class="text-sm" style="color: var(--text-color-secondary)">
-                        Zaproś organizacje do platformy SoundBased.
+                        Zaproś organizacje do platformy MusicHub.
                     </p>
                 </div>
                 <button type="button" class="invite-btn" @click="openModal">

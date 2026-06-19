@@ -4,36 +4,37 @@ declare(strict_types=1);
 
 namespace App\Mail;
 
-use App\Models\Central\TenantInvitation;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-final class TenantInvitationMail extends Mailable
+final class TenantProvisionedMail extends Mailable
 {
     use Queueable, SerializesModels;
 
     public function __construct(
-        public readonly TenantInvitation $invitation,
-        public readonly string $invitationUrl,
+        public readonly string $companyName,
+        public readonly string $ownerName,
+        public readonly string $loginUrl,
     ) {}
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Zaproszenie do MusicHub - skonfiguruj swoją organizację',
+            subject: 'Twoja organizacja w MusicHub jest gotowa',
         );
     }
 
     public function content(): Content
     {
         return new Content(
-            view: 'emails.tenant-invitation',
+            view: 'emails.tenant-provisioned',
             with: [
-                'invitationUrl' => $this->invitationUrl,
-                'expiresAt' => $this->invitation->expires_at->format('d.m.Y H:i'),
+                'companyName' => $this->companyName,
+                'ownerName' => $this->ownerName,
+                'loginUrl' => $this->loginUrl,
             ],
         );
     }

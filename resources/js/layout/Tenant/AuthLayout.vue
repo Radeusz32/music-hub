@@ -10,7 +10,7 @@ interface Props {
 defineProps<Props>();
 
 const companyName = computed<string>(
-    () => (usePage().props.tenant as any)?.company_name ?? "SoundBase",
+    () => (usePage().props.tenant as any)?.company_name ?? "MusicHub",
 );
 </script>
 

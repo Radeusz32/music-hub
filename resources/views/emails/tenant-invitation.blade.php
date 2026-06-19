@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zaproszenie do SoundBased</title>
+    <title>Zaproszenie do MusicHub</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0f1e; color: #e2e8f0; margin: 0; padding: 40px 20px; }
         .card { max-width: 560px; margin: 0 auto; background: #0d1428; border: 1px solid rgba(56,189,248,0.15); border-radius: 16px; overflow: hidden; }
@@ -20,11 +20,11 @@
 <body>
     <div class="card">
         <div class="header">
-            <div class="logo">SoundBased</div>
+            <div class="logo">MusicHub</div>
         </div>
         <div class="body">
             <h1>Zaproszenie do platformy</h1>
-            <p>Zostałeś/aś zaproszony/a do skonfigurowania swojej organizacji na platformie SoundBased. Kliknij poniższy przycisk, aby wypełnić formularz i aktywować konto.</p>
+            <p>Zostałeś/aś zaproszony/a do skonfigurowania swojej organizacji na platformie MusicHub. Kliknij poniższy przycisk, aby wypełnić formularz i aktywować konto.</p>
             <a href="{{ $invitationUrl }}" class="btn">Skonfiguruj organizację</a>
             <div class="expiry">
                 ⏰ Zaproszenie wygasa: <strong style="color: #94a3b8">{{ $expiresAt }}</strong>
@@ -34,7 +34,7 @@
             </p>
         </div>
         <div class="footer">
-            SoundBased · Wiadomość wysłana automatycznie - nie odpowiadaj na tego e-maila.
+            MusicHub · Wiadomość wysłana automatycznie - nie odpowiadaj na tego e-maila.
         </div>
     </div>
 </body>

@@ -3,7 +3,7 @@ import { ref, computed } from "vue";
 import { Link, useForm, usePage } from "@inertiajs/vue3";
 
 const companyName = computed<string>(
-    () => (usePage().props.tenant as any)?.company_name ?? "SoundBase",
+    () => (usePage().props.tenant as any)?.company_name ?? "MusicHub",
 );
 import { route } from "ziggy-js";
 import { useMenu } from "@/composables/Tenant/useMenu";

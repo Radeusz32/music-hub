@@ -13,7 +13,7 @@ final class CentralAdminSeeder extends Seeder
     public function run(): void
     {
         Admin::query()->updateOrCreate(
-            ['email' => 'superadmin@soundbased.pl'],
+            ['email' => 'superadmin@musichub.pl'],
             [
                 'name' => 'Super Admin',
                 'password' => Hash::make('password'),

@@ -1,10 +1,10 @@
-# SoundBased - Project Documentation
+# MusicHub - Project Documentation
 
 ## Overview
 
 Multi-tenant SaaS platform for music stores. Each tenant (store) runs on its own subdomain with an isolated database. The central database manages tenants, domains, and feature flags.
 
-**App name:** SoundBased
+**App name:** MusicHub
 **Base domain:** `localhost` (dev) - tenants at `{slug}.localhost`
 **Default tenant (dev):** `music1.localhost`
 

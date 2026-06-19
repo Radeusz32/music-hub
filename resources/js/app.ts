@@ -10,7 +10,7 @@ import { registerPrimeVue } from "./plugins/primevue";
 import { registerPrimeComponents } from "./plugins/prime-components";
 import { registerBaseComponents } from "./plugins/base-components";
 
-const appName = import.meta.env.VITE_APP_NAME || "SoundBase";
+const appName = import.meta.env.VITE_APP_NAME || "MusicHub";
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
