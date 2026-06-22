@@ -1063,6 +1063,111 @@ The invitation form is a multi-step wizard built on the reusable **`StepByStep` 
 
 ---
 
+## Testing
+
+Pest 4 test suite covering the multi-tenant stack: feature (HTTP), unit (pure
+logic + models), architecture, and browser (Playwright) tests. Run everything
+through Sail.
+
+### Running tests
+
+```bash
+./vendor/bin/sail pest                              # whole suite
+./vendor/bin/sail pest tests/Feature/Tenant/Inventory   # a folder
+./vendor/bin/sail pest --filter="records a sale"    # by name
+./vendor/bin/sail pest tests/Unit                   # unit + arch only (fast)
+```
+
+**Prerequisites (one-time):**
+
+| Requirement           | Why / how                                                                                                           |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `testing` central DB  | `RefreshDatabase` migrates it. Create once: `CREATE DATABASE testing` on the MySQL box.                             |
+| Sail containers up    | `./vendor/bin/sail up -d` (the `sail` MySQL user has global CREATE/DROP for tenant DBs).                            |
+| Playwright Chromium   | Browser tests only: `./vendor/bin/sail npx playwright install chromium`.                                            |
+| `npm run dev` running | Browser tests only — `public/hot` points `@vite` at `localhost:5173`; without the dev server the SPA renders blank. |
+
+`phpunit.xml` pins the test env: central DB `testing`, `CACHE_STORE=array`,
+`QUEUE_CONNECTION=sync`, `MAIL_MAILER=array`. `CIPHERSWEET_KEY` is read from
+`.env` (there is no `.env.testing`).
+
+### How tenancy works in tests
+
+This is the crux of the suite. Tenant databases are **real, separate MySQL
+databases**, created and migrated synchronously by the `TenantCreated` job
+pipeline (`shouldBeQueued(false)` in `TenancyServiceProvider`).
+
+- `RefreshDatabase` only wraps the **central** connection in a transaction.
+  Tenant DBs are **not** rolled back, so `tests/Pest.php` `afterEach` ends
+  tenancy and drops every tenant via `Tenant::all()->each->delete()` (fires the
+  `DeleteDatabase` job). Each tenant test therefore pays ~3s (create + migrate +
+  seed + drop). Central-only tests are sub-second.
+- Tenant routes are identified by domain, so HTTP tests must hit the tenant's
+  domain (a non-central host such as `acme.test`). The browser test server binds
+  to `127.0.0.1` (a central domain), so **tenant pages cannot be exercised in
+  browser tests** — browser coverage is central-panel only.
+
+### Tenancy helpers (`tests/Pest.php`)
+
+Global functions available in every test:
+
+| Helper                                      | Purpose                                                                                        |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `createTenant($features, $domain, $active)` | Creates a tenant + domain + enabled features. DB is created & migrated by the job pipeline.    |
+| `bootTenant($tenant)`                       | Initializes tenancy and seeds roles + the full permission matrix; clears the permission cache. |
+| `createBootedTenant(...)`                   | `createTenant` + `bootTenant` in one call (tenancy left initialized for the test).             |
+| `tenantUser($role, $attributes)`            | Creates a tenant user with a role (tenancy must already be booted). Defaults to Owner, active. |
+| `tenantUrl($tenant, $path)`                 | Builds `http://{domain}/{path}` so requests route through `InitializeTenancyByDomain`.         |
+
+Typical feature-test setup:
+
+```php
+beforeEach(function (): void {
+    $this->tenant = createBootedTenant();
+    $this->owner = tenantUser(RoleEnum::Owner);
+    $this->actingAs($this->owner);
+});
+
+it('stores a record', function (): void {
+    $this->post(tenantUrl($this->tenant, '/inventory/records'), [...])
+        ->assertSessionHasNoErrors();
+});
+```
+
+### Suite layout & coverage
+
+| Area                | Path                                                       | What it asserts                                                                                  |
+| ------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Tenancy foundation  | `tests/Feature/Tenancy/TenancyFoundationTest.php`          | tenant DB create/migrate, role/permission seeding, domain routing                                |
+| Tenant isolation    | `tests/Feature/Tenancy/TenantIsolationTest.php`            | data scoped per tenant, same email across tenants, per-domain routing                            |
+| Tenant auth         | `tests/Feature/Tenant/Auth/AuthenticationTest.php`         | login/logout, validation, password reset, signed e-mail verification, verified gate              |
+| Central auth        | `tests/Feature/Central/Auth/AuthenticationTest.php`        | superadmin guard login/logout, guest redirect                                                    |
+| Inventory records   | `tests/Feature/Tenant/Inventory/InventoryRecordTest.php`   | CRUD, opening-stock movement, correction on edit, soft delete, bulk delete                       |
+| Inventory movements | `tests/Feature/Tenant/Inventory/InventoryMovementTest.php` | stock +/- per type, negative-stock block, non-manual type rejection, reversal                    |
+| Inventory sales     | `tests/Feature/Tenant/Inventory/InventorySaleTest.php`     | sale decreases stock + records price, over-sell block, validation                                |
+| Permissions         | `tests/Feature/Tenant/Authorization/PermissionTest.php`    | spatie permission middleware allows/forbids (403)                                                |
+| Feature gating      | `tests/Feature/Tenant/Authorization/FeatureAccessTest.php` | `feature:` middleware allows/blocks per tenant feature set                                       |
+| Active-state gating | `tests/Feature/Tenant/Authorization/ActiveStateTest.php`   | inactive tenant / inactive user redirects                                                        |
+| Enums               | `tests/Unit/Enum/*`                                        | all 8 enums: `options`/`label`/`color`, plus `sign`, `manualOptions`, `isRange`, `values`        |
+| Validation rule     | `tests/Unit/Rules/PeselRuleTest.php`                       | PESEL checksum, length, non-digit, valid/invalid samples                                         |
+| Models (central)    | `tests/Unit/Models/Central/*`                              | Admin, Feature, Tenant, Domain, TenantInvitation: casts, relations, helpers                      |
+| Models (tenant)     | `tests/Unit/Models/Tenant/*`                               | User (name accessor, CipherSweet PESEL + blind index, roles), InventoryRecord, InventoryMovement |
+| Architecture        | `tests/Unit/ArchTest.php`                                  | see below                                                                                        |
+| Browser (central)   | `tests/Browser/CentralSmokeTest.php`                       | central login renders without JS errors + full login interaction                                 |
+
+### Architecture tests (`tests/Unit/ArchTest.php`)
+
+Enforced conventions: `php` + `security` presets (the latter ignores the
+intentional `sha1` in `VerifyEmailController`), `strict_types` everywhere, no
+debug helpers, no `env()` outside config, enums in `App\Enums`, models `final`
+and only used in allowed layers, controllers `final` + `Controller` suffix +
+extend the base controller, form requests `final` + `Request` suffix + extend
+`FormRequest`, middleware/jobs `final`, services `Service` suffix + `final`
+(except `BaseService`), transformers `Transformer` suffix + `final` (except the
+base), mailables `Mail` suffix + `final`.
+
+---
+
 # Roadmap / Upcoming Tasks
 
 - _(done)_ Inventory: sales module (`tenant.inventory.sales.*`) - see **Inventory Sales**.
