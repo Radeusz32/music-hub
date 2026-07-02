@@ -26,7 +26,6 @@ fresh:
 
 start: up npm-install dev
 
-# 🔥 Pełne czyszczenie środowiska
 clear:
 	$(SAIL) down -v --remove-orphans
 	docker volume prune -f
@@ -34,8 +33,6 @@ clear:
 	docker container prune -f
 	$(SAIL) up -d --build
 	$(SAIL) artisan optimize:clear
-
-# 🔥 Hard rebuild bez czyszczenia sieci/systemu
 rebuild:
 	$(SAIL) down -v
 	docker volume prune -f

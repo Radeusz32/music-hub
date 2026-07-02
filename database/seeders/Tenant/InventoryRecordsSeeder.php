@@ -7,6 +7,7 @@ namespace Database\Seeders\Tenant;
 use App\Models\Tenant\InventoryRecord;
 use App\Models\Tenant\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Carbon;
 
 final class InventoryRecordsSeeder extends Seeder
 {
@@ -216,13 +217,29 @@ final class InventoryRecordsSeeder extends Seeder
         ];
 
         foreach ($classics as $data) {
-            InventoryRecord::factory()->create(
-                array_merge($data, ['user_id' => $owner?->id])
-            );
+            $this->createRecord(array_merge($data, ['user_id' => $owner?->id]));
         }
 
-        InventoryRecord::factory()
-            ->count(35)
-            ->create(['user_id' => $owner?->id]);
+        for ($i = 0; $i < 35; $i++) {
+            $this->createRecord(['user_id' => $owner?->id]);
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    private function createRecord(array $attributes): InventoryRecord
+    {
+        $record = InventoryRecord::factory()->make($attributes);
+
+        $createdAt = Carbon::now()
+            ->subDays(fake()->numberBetween(20, 420))
+            ->setTime(fake()->numberBetween(8, 19), fake()->numberBetween(0, 59));
+
+        $record->created_at = $createdAt;
+        $record->updated_at = $createdAt;
+        $record->save();
+
+        return $record;
     }
 }

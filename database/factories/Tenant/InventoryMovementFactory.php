@@ -48,4 +48,21 @@ final class InventoryMovementFactory extends Factory
             'user_id' => null,
         ];
     }
+
+    public function sale(): self
+    {
+        return $this->state(function (array $attributes): array {
+            $quantity = fake()->numberBetween(1, 3);
+            $before = $quantity + fake()->numberBetween(0, 6);
+
+            return [
+                'type' => InventoryMovementTypeEnum::Sale,
+                'quantity' => $quantity,
+                'quantity_before' => $before,
+                'quantity_after' => $before - $quantity,
+                'sale_price' => fake()->randomFloat(2, 40, 320),
+                'note' => null,
+            ];
+        });
+    }
 }
