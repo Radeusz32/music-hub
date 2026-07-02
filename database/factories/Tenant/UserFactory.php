@@ -25,17 +25,17 @@ final class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'first_name' => fake()->firstName(),
-            'last_name' => fake()->lastName(),
-            'email' => fake()->unique()->safeEmail(),
-            'phone' => fake()->numerify('### ### ###'),
-            'street' => fake()->streetName(),
-            'building_number' => (string) fake()->numberBetween(1, 200),
-            'apartment_number' => fake()->boolean(60) ? (string) fake()->numberBetween(1, 80) : null,
-            'postal_code' => fake()->numerify('##-###'),
-            'city' => fake()->city(),
+            'first_name' => $this->faker->firstName(),
+            'last_name' => $this->faker->lastName(),
+            'email' => $this->faker->unique()->safeEmail(),
+            'phone' => $this->faker->numerify('### ### ###'),
+            'street' => $this->faker->streetName(),
+            'building_number' => (string) $this->faker->numberBetween(1, 200),
+            'apartment_number' => $this->faker->boolean(60) ? (string) $this->faker->numberBetween(1, 80) : null,
+            'postal_code' => $this->faker->numerify('##-###'),
+            'city' => $this->faker->city(),
             'pesel' => $this->generatePesel(),
-            'is_active' => fake()->boolean(80),
+            'is_active' => $this->faker->boolean(80),
             'email_verified_at' => now(),
             'password' => self::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
@@ -91,7 +91,7 @@ final class UserFactory extends Factory
     private function generatePesel(): string
     {
         $weights = [1, 3, 7, 9, 1, 3, 7, 9, 1, 3];
-        $base = fake()->unique()->numerify('##########');
+        $base = $this->faker->unique()->numerify('##########');
 
         $sum = 0;
         for ($i = 0; $i < 10; $i++) {
