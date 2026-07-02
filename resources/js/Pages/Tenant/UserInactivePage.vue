@@ -1,12 +1,19 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { usePage } from "@inertiajs/vue3";
+import { useForm, usePage } from "@inertiajs/vue3";
+import { route } from "ziggy-js";
 
 const userName = computed<string>(
     () =>
         (usePage().props.auth as { user?: { name?: string } } | null)?.user
             ?.name ?? "Twoje konto",
 );
+
+const logoutForm = useForm({});
+
+function logout(): void {
+    logoutForm.post(route("logout"));
+}
 </script>
 
 <template>
@@ -96,6 +103,27 @@ const userName = computed<string>(
                     Skontaktuj się z administratorem organizacji, aby przywrócić
                     dostęp.
                 </div>
+
+                <!-- Logout -->
+                <button
+                    type="button"
+                    :disabled="logoutForm.processing"
+                    class="mt-2 flex items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-medium transition-all duration-150 disabled:opacity-60"
+                    style="
+                        color: #f87171;
+                        background: rgba(248, 113, 113, 0.08);
+                        border: 1px solid rgba(248, 113, 113, 0.25);
+                        cursor: pointer;
+                    "
+                    @click="logout"
+                >
+                    <i class="pi pi-sign-out text-base" />
+                    <span>{{
+                        logoutForm.processing
+                            ? "Wylogowywanie..."
+                            : "Wyloguj się"
+                    }}</span>
+                </button>
             </div>
         </div>
     </div>

@@ -87,10 +87,16 @@ Route::middleware([
     |----------------------------------------------------------------------
     */
 
-    Route::middleware(['auth', 'user-active'])->group(function (): void {
-        Route::post('/logout', [AuthController::class, 'logout'])
-            ->name('logout');
+    /*
+    |----------------------------------------------------------------------
+    | Logout (auth only — must stay reachable for deactivated users so they
+    | can sign out from the notice page; `user-active` would loop them back)
+    |----------------------------------------------------------------------
+    */
+    Route::middleware('auth')->post('/logout', [AuthController::class, 'logout'])
+        ->name('logout');
 
+    Route::middleware(['auth', 'user-active'])->group(function (): void {
         /*
         |------------------------------------------------------------------
         | Email verification
