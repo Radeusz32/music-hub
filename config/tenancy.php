@@ -20,6 +20,7 @@ return [
         '127.0.0.1',
         'localhost',
         'music-hub-production-iy947p.laravel.cloud',
+        'musichubapp.uk',
     ],
 
     /**
